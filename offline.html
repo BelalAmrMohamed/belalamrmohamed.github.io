@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Offline - Belal's Portfolio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: linear-gradient(
+          135deg,
+          #0a0a0a 0%,
+          #1a1a2e 50%,
+          #16213e 100%
+        );
+        color: #fff;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Animated background particles */
+      .particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .particle {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s infinite linear;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(100vh) translateX(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh) translateX(50px);
+          opacity: 0;
+        }
+      }
+
+      /* Glassmorphism container */
+      .container {
+        position: relative;
+        z-index: 2;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        max-width: 500px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.8s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(50px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Profile image with glowing effect */
+      .profile-container {
+        position: relative;
+        margin-bottom: 2rem;
+        animation: profileGlow 3s ease-in-out infinite alternate;
+      }
+
+      .profile-img {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 2;
+      }
+
+      .profile-glow {
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+        border-radius: 50%;
+        filter: blur(20px);
+        opacity: 0.3;
+        z-index: 1;
+        animation: rotate 4s linear infinite;
+      }
+
+      @keyframes rotate {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes profileGlow {
+        0% {
+          transform: scale(1);
+        }
+        100% {
+          transform: scale(1.05);
+        }
+      }
+
+      /* Typography */
+      .offline-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: textShine 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes textShine {
+        0% {
+          filter: brightness(1);
+        }
+        100% {
+          filter: brightness(1.2);
+        }
+      }
+
+      .offline-message {
+        margin-bottom: 2.5rem;
+      }
+
+      .offline-message p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 2rem;
+      }
+
+      /* Modern buttons */
+      .button-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 2.5rem;
+      }
+
+      .btn {
+        padding: 0.875rem 2rem;
+        border: none;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary:hover {
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      /* Profile section */
+      .profile-section {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 2rem;
+        animation: fadeInUp 1s ease-out 0.3s both;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #fff;
+      }
+
+      .bio {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 1.5rem;
+      }
+
+      .contact-link {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .contact-link:hover {
+        color: #764ba2;
+        text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+      }
+
+      .contact-link::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease;
+      }
+
+      .contact-link:hover::after {
+        width: 100%;
+      }
+
+      /* Connection status indicator */
+      .status-indicator {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 12px;
+        height: 12px;
+        background: #ff6b6b;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(1.2);
+        }
+      }
+
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .container {
+          padding: 2rem 1.5rem;
+          margin: 1rem;
+        }
+
+        .offline-title {
+          font-size: 2rem;
+        }
+
+        .button-group {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .btn {
+          width: 100%;
+          max-width: 250px;
+        }
+
+        .name {
+          font-size: 1.5rem;
+        }
+      }
+
+      /* Loading animation for retry */
+      .btn-loading {
+        pointer-events: none;
+        opacity: 0.7;
+      }
+
+      .btn-loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Animated background particles -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+      <div class="status-indicator" title="Offline"></div>
+
+      <div class="profile-container">
+        <div class="profile-glow"></div>
+        <img
+          src="images/about-photo.jpg"
+          alt="Belal Amr Mohamed"
+          class="profile-img"
+          loading="lazy"
+        />
+      </div>
+
+      <h1 class="offline-title">You're Offline</h1>
+
+      <div class="offline-message">
+        <p>
+          It looks like you don't have an internet connection.<br />
+          Please check your connection and try again.
+        </p>
+
+        <div class="button-group">
+          <button class="btn btn-primary" onclick="handleRetry(this)">
+            <span class="btn-text">🔄 Retry Connection</span>
+          </button>
+          <a href="./" class="btn btn-secondary"> 🏠 Go to Home </a>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h2 class="name">Belal Amr Mohamed</h2>
+        <div class="bio">
+          <p>
+            Web developer, designer, and creator of interactive web tools and
+            games.<br />
+            Passionate about building engaging digital experiences and sharing
+            knowledge.
+          </p>
+          <p>
+            <a href="mailto:belalamrmohamed@gmail.com" class="contact-link">
+              📧 Contact Me
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Create floating particles
+      function createParticles() {
+        const particlesContainer = document.getElementById("particles");
+        const particleCount = 50;
+
+        for (let i = 0; i < particleCount; i++) {
+          const particle = document.createElement("div");
+          particle.className = "particle";
+          particle.style.left = Math.random() * 100 + "%";
+          particle.style.animationDelay = Math.random() * 6 + "s";
+          particle.style.animationDuration = Math.random() * 3 + 4 + "s";
+          particlesContainer.appendChild(particle);
+        }
+      }
+
+      // Enhanced retry function with loading state
+      function handleRetry(button) {
+        const originalText = button.innerHTML;
+        button.classList.add("btn-loading");
+        button.innerHTML =
+          '<span style="opacity: 0;">Checking Connection...</span>';
+
+        setTimeout(() => {
+          location.reload();
+        }, 1500);
+      }
+
+      // Check online status
+      function updateConnectionStatus() {
+        const indicator = document.querySelector(".status-indicator");
+        const title = document.querySelector(".offline-title");
+
+        if (navigator.onLine) {
+          indicator.style.background = "#51cf66";
+          indicator.title = "Online";
+          title.textContent = "Connection Restored!";
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        }
+      }
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        createParticles();
+
+        // Listen for connection changes
+        window.addEventListener("online", updateConnectionStatus);
+        window.addEventListener("offline", () => {
+          const indicator = document.querySelector(".status-indicator");
+          indicator.style.background = "#ff6b6b";
+          indicator.title = "Offline";
+        });
+      });
+
+      // Add smooth scrolling for better UX
+      document.documentElement.style.scrollBehavior = "smooth";
+    </script>
+  </body>
+</html>
