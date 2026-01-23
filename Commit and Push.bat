@@ -1,0 +1,36 @@
+@echo off
+:: Sets the window title
+Title GitHub Automation Tool
+
+:: Move into the script's directory
+cd /d "%~dp0"
+
+echo ----------------------------------------
+echo [1/2] Preparing Commit...
+echo ----------------------------------------
+
+:: Ask for input. If empty, use a default.
+set /p "commitMsg=Enter commit message (Press Enter for default): "
+if "%commitMsg%"=="" set "commitMsg=Automated update"
+
+git add .
+git commit -m "%commitMsg%"
+
+echo.
+echo ----------------------------------------
+echo [2/2] Pushing to GitHub...
+echo ----------------------------------------
+git push
+
+:: Check if the push succeeded
+if %ERRORLEVEL% EQU 0 (
+    color 0A
+    echo.
+    echo Success! All changes pushed.
+) else (
+    color 0C
+    echo.
+    echo Error: Push failed.
+)
+
+pause
