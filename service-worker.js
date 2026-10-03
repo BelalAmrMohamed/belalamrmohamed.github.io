@@ -24,8 +24,8 @@ const filesToCache = [
   "js/plugins.js",
 
   //images
-  "images/about-photo.jpg",
-  "images/about-photo@2x.jpg",
+  "images/about-photo.png",
+  "images/about-photo@2x.png",
 
   // Icons
   "images/icons/icon-72x72.png",
@@ -57,7 +57,7 @@ const filesToCache = [
 
   //gellary images
   "images/portfolio/gellary/g-RailFence.jpg",
-  "images/portfolio/gellary/about-photo.jpg",
+  "images/portfolio/gellary/about-photo.png",
   "images/portfolio/gellary/g-calculator.jpg",
   "images/portfolio/gellary/g-ceaser.jpg",
   "images/portfolio/gellary/g-numbersystems - web.jpg",

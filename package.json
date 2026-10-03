@@ -1,0 +1,23 @@
+{
+  "name": "belal-amr-mohamed-portfolio",
+  "version": "8.3.4",
+  "description": "Belal Amr Mohamed's portfolio website",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev:vercel",
+    "dev:vercel": "concurrently -k -n vercel,sync -c blue,magenta \"npx vercel dev --local --listen 8081\" \"npx wait-on tcp:8081 && npx browser-sync start --proxy localhost:8081 --port 8080 --files 'public/**/*.html,public/src/**/*.js,public/src/**/*.css,api/**/*.js' --reload-delay 250 --no-open\"",
+    "dev:static": "npx http-server public -p 8080 -o -c-1",
+    "vercel": "vercel dev",
+    "map": "node scripts/map.js",
+    "commit": "node scripts/commit.js",
+    "release": "node scripts/release.js",
+    "zip": "node scripts/commit.js && git archive --format=zip --output=belal-amr-mohamed-portfolio.zip HEAD && echo belal-amr-mohamed-portfolio.zip is ready",
+    "seo:check": "node scripts/seo-check.mjs"
+  },
+  "keywords": [
+    "Portfolio",
+    "Belal Amr Mohamed"
+  ],
+  "author": "Belal Amr Mohamed",
+  "license": "MIT"
+}
