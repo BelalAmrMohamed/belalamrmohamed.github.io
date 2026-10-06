@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://portfolio-of-belal.vercel.app/sitemap.xml
+Sitemap: https://belal-amr.vercel.app/sitemap.xml

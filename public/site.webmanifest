@@ -8,11 +8,14 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone", "window-controls-overlay", "browser"],
+  "display_override": [
+    "standalone",
+    "window-controls-overlay",
+    "browser"
+  ],
   "background_color": "#141516",
   "theme_color": "#141516",
   "orientation": "any",
-
   "icons": [
     {
       "src": "images/icons/icon-72x72.png",
@@ -61,18 +64,21 @@
       "label": "Desktop view of portfolio"
     }
   ],
-
-  "categories": ["portfolio", "development", "games"],
+  "categories": [
+    "portfolio",
+    "development",
+    "games"
+  ],
   "related_applications": [
     {
       "platform": "web",
-      "url": "https://portfolio-of-belal.vercel.app/"
+      "url": "https://belal-amr.vercel.app/"
     }
   ],
   "prefer_related_applications": false,
   "version": "1.0.0",
   "author": {
     "name": "Belal Amr Mohamed",
-    "url": "https://portfolio-of-belal.vercel.app/"
+    "url": "https://belal-amr.vercel.app/"
   }
 }
