@@ -19,5 +19,9 @@
     "Belal Amr Mohamed"
   ],
   "author": "Belal Amr Mohamed",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2"
+  }
 }
