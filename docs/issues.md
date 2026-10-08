@@ -7,7 +7,8 @@ Issues in here have to be studies and tested well, then turned into a plan, befo
 
 ## Patches
 
-* The 
+* The `/admin` page is missing these features:
+  * Rearrange: To give me the ability to rearrange the 
 
 ## New Features
 الموقع ده أنا عملته عن طريق إني اخت Template مجانية ، وغيرت الصور والكلام اللي مكتوب فقط

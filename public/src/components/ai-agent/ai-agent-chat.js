@@ -434,6 +434,8 @@ export function createChatPanel(options = {}) {
     '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>';
   const ATTACHMENT_LESSON_ICON_SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
+  const ATTACHMENT_PROJECT_ICON_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>';
   const ATTACHMENT_REMOVE_ICON_SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
 
@@ -476,6 +478,17 @@ export function createChatPanel(options = {}) {
    * @param {{kind: "quiz"|"lesson"|"course"|"folder", title: string, summary?: string}} att
    */
   function expandPlatformAttachment(att) {
+    if (att.kind === "project") {
+      return [
+        `[Selected published portfolio project: ${att.title}${att.id ? ` (id: ${att.id})` : ""}]`,
+        att.category ? `Category: ${att.category}` : "",
+        att.summary ? `Description: ${att.summary}` : "",
+        att.project_url ? `Project link: ${att.project_url}` : "",
+        att.github_url ? `Source code: ${att.github_url}` : "",
+        att.image_url ? `Project image: ${att.image_url}` : "",
+        "Answer questions using this specific published project as context. Do not substitute a different project.",
+      ].filter(Boolean).join("\n");
+    }
     const kindLabelAr = { quiz: "امتحان", lesson: "درس", course: "مادة", folder: "مجلد" }[att.kind] || att.kind;
     const body = att.payload
       ? JSON.stringify(att.payload)
@@ -488,6 +501,7 @@ export function createChatPanel(options = {}) {
     if (att.kind === "lesson") return ATTACHMENT_LESSON_ICON_SVG;
     if (att.kind === "course") return ATTACHMENT_COURSE_ICON_SVG;
     if (att.kind === "folder") return ATTACHMENT_FOLDER_ICON_SVG;
+    if (att.kind === "project") return ATTACHMENT_PROJECT_ICON_SVG;
     return ATTACHMENT_FILE_ICON_SVG;
   }
 
@@ -495,7 +509,17 @@ export function createChatPanel(options = {}) {
     return att.kind === "file" ? att.name : att.title;
   }
 
-  const ATTACHMENT_KIND_LABEL_AR = { quiz: "امتحان", lesson: "درس", course: "مادة", folder: "مجلد", file: "ملف" };
+  const ATTACHMENT_KIND_LABEL_AR = { quiz: "امتحان", lesson: "درس", course: "مادة", folder: "مجلد", project: "Project", file: "ملف" };
+
+  function safeProjectImageUrl(value) {
+    if (!value) return null;
+    try {
+      const url = new URL(value, window.location.origin);
+      return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+    } catch {
+      return null;
+    }
+  }
 
   /**
    * Standard fade-out-then-remove dismiss animation (opacity + translateY
@@ -548,12 +572,14 @@ export function createChatPanel(options = {}) {
     closeBtn.innerHTML = ATTACHMENT_REMOVE_ICON_SVG;
     card.appendChild(closeBtn);
 
-    const isImage = att.kind === "file" && att.mimeType?.startsWith("image/") && att.base64;
+    const fileImage = att.kind === "file" && att.mimeType?.startsWith("image/") && att.base64;
+    const projectImage = att.kind === "project" ? safeProjectImageUrl(att.image_url) : null;
+    const isImage = fileImage || projectImage;
     if (isImage) {
       const img = document.createElement("img");
       img.className = "ai-agent-attachment-preview-image";
-      img.src = `data:${att.mimeType};base64,${att.base64}`;
-      img.alt = "";
+      img.src = fileImage ? `data:${att.mimeType};base64,${att.base64}` : projectImage;
+      img.alt = att.kind === "project" ? labelForAttachment(att) || "Portfolio project" : "";
       card.appendChild(img);
     } else {
       const iconWrap = document.createElement("div");
@@ -578,6 +604,9 @@ export function createChatPanel(options = {}) {
     // for platform items), fall back to file metadata for plain files —
     // there's no summary for those, but size/type is still useful context.
     let contextText = att.summary || "";
+    if (att.kind === "project") {
+      contextText = [att.category, att.summary].filter(Boolean).join(" — ");
+    }
     if (!contextText && att.kind === "file") {
       const sizeLabel = typeof att.base64 === "string"
         ? `${Math.max(1, Math.round((att.base64.length * 0.75) / 1024))} KB`
@@ -657,6 +686,13 @@ export function createChatPanel(options = {}) {
       img.className = "ai-agent-attachment-tile-thumb";
       img.src = `data:${att.mimeType};base64,${att.base64}`;
       img.alt = "";
+      preview.appendChild(img);
+    } else if (att.kind === "project" && safeProjectImageUrl(att.image_url)) {
+      const img = document.createElement("img");
+      img.className = "ai-agent-attachment-tile-thumb";
+      img.src = safeProjectImageUrl(att.image_url);
+      img.alt = "";
+      img.loading = "eager";
       preview.appendChild(img);
     } else {
       preview.innerHTML = iconForAttachment(att);
@@ -2225,7 +2261,7 @@ export function createChatPanel(options = {}) {
         .filter((a) => a.kind === "file" || (!a.kind && a.base64))
         .map(({ mimeType, base64, name }) => ({ mimeType, base64, name }));
       const platformAttachments = (attachments || []).filter(
-        (a) => a.kind === "quiz" || a.kind === "lesson" || a.kind === "course" || a.kind === "folder",
+        (a) => a.kind === "quiz" || a.kind === "lesson" || a.kind === "course" || a.kind === "folder" || a.kind === "project",
       );
       const expandedContext = platformAttachments.length
         ? platformAttachments.map(expandPlatformAttachment).join("\n\n")
@@ -2476,6 +2512,8 @@ export function createChatPanel(options = {}) {
     let isSlashCommand = false;
     let slashCmdName = "";
     let slashDirective = "";
+    let localAction = null;
+    let localActionArgument = "";
 
     if (text.startsWith("/")) {
       const slashMatch = text.match(/^\/([^\s]+)(?:\s+([\s\S]*))?$/);
@@ -2484,8 +2522,10 @@ export function createChatPanel(options = {}) {
         slashCmdName = slashMatch[1];
         const pageActions = getPageActions(pageKey, options.actions);
         const action = pageActions.find(
-          (a) => a.command.toLowerCase() === slashCmdName.toLowerCase() || a.id.toLowerCase() === slashCmdName.toLowerCase()
+          (a) => a.command?.toLowerCase() === slashCmdName.toLowerCase() || a.id?.toLowerCase() === slashCmdName.toLowerCase()
         );
+        localAction = action?.execute && !attachments.length ? action : null;
+        localActionArgument = slashMatch[2] || "";
         if (action?.systemDirective) {
           slashDirective = action.systemDirective;
         } else {
@@ -2507,6 +2547,39 @@ export function createChatPanel(options = {}) {
     // reads history[] by index, not by object identity.
     history.push(outgoingUserMessage);
     appendMessage("user", text, attachments, history.length - 1);
+    if (localAction) {
+      isGenerating = true;
+      sendBtn.disabled = true;
+      try {
+        const result = await localAction.execute(localActionArgument.trim());
+        if (typeof result !== "string") {
+          throw new Error(`Slash action /${slashCmdName} returned no displayable result.`);
+        }
+        history.push({ role: "assistant", content: result });
+        appendMessage("assistant", result);
+        try {
+          await saveConversation({
+            id: conversationId,
+            pageKey,
+            title: deriveConversationTitle(history),
+            createdAt: conversationCreatedAt,
+            updatedAt: Date.now(),
+            messages: toPersistedMessages(history),
+          });
+          if (typeof onHistoryChanged === "function") onHistoryChanged();
+        } catch (error) {
+          console.error("[ai-agent-chat] failed to save slash-action result:", error);
+        }
+      } catch (error) {
+        console.error(`[ai-agent-chat] slash action /${slashCmdName} failed:`, error);
+        appendError(error?.message || `Unable to run /${slashCmdName}.`);
+      } finally {
+        isGenerating = false;
+        sendBtn.disabled = false;
+        updateAvailabilityGate();
+      }
+      return;
+    }
     await resendLastUserTurn();
   }
 
@@ -2534,10 +2607,12 @@ export function createChatPanel(options = {}) {
 
   /** Keep Send visible and use its disabled state to show when a message is ready. */
   function updateSendBtnVisibility() {
-    sendBtn.hidden = false;
+    const hasDraft = Boolean(textarea.value.trim() || pendingAttachments.length);
+    sendBtn.hidden = !hasDraft && !isDictating;
     sendBtn.disabled = textarea.disabled
       || isGenerating
-      || (!textarea.value.trim() && !pendingAttachments.length);
+      || (!hasDraft && !isDictating);
+    if (micBtn) micBtn.hidden = isDictating || hasDraft;
   }
 
   textarea.addEventListener("input", () => {
@@ -2611,8 +2686,10 @@ export function createChatPanel(options = {}) {
       lesson: ATTACHMENT_LESSON_ICON_SVG,
       course: ATTACHMENT_COURSE_ICON_SVG,
       folder: ATTACHMENT_FOLDER_ICON_SVG,
+      project: ATTACHMENT_PROJECT_ICON_SVG,
     },
     positionMenu: positionAgentDropdown,
+    getProjects: options.getProjects,
   });
 
   textarea.addEventListener("keydown", (e) => {

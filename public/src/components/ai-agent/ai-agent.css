@@ -1,9 +1,10 @@
 /* =============================================================================
    public/src/components/ai-agent/ai-agent.css
-   Scoped styles for the modular AI Helper widget. Its palette maps the
-   portfolio's dark charcoal, white, and
-   warm-gold colors into component-scoped tokens below. No global theme
-   stylesheet or page-wide color override is required.
+   Scoped styles for the modular AI Helper widget. Fully self-contained: the
+   only things this file still reaches outside the ai-agent/ component are
+   the app's global design tokens (--color-*, --gradient-accent, --shadow-*,
+   --z-*, etc. — see src/styles/themes.css), which every host page already
+   loads for theming and which no widget in a themed app should re-invent.
    No shared COMPONENT — no other stylesheet's classes — is depended on
    anymore: every class used by ai-agent.js/*.js is defined in this file.
 
@@ -23,20 +24,18 @@
    only this one stylesheet — no prerequisite imports.
    ============================================================================= */
 
-/* Map component tokens to this portfolio's palette without changing page
-   colors or adding theme state to the host document. */
+/* Component-local compatibility tokens for the portfolio's charcoal/gold palette. */
 .ai-agent-overlay,
 .ai-agent-dropdown-menu,
 .ai-agent-fab {
   font-family: inherit;
-  font-size: 16px;
-  --color-background: var(--color-gray-10, #141516);
+  --color-background: #141516;
   --color-background-secondary: #202122;
   --color-surface: #1b1c1d;
-  --color-text-primary: var(--color-white, #fff);
-  --color-text-secondary: var(--color-gray-3, #b9b9b9);
-  --color-text-tertiary: var(--color-gray-4, #a1a1a2);
-  --color-primary: var(--color-1, #eabe7c);
+  --color-text-primary: #fff;
+  --color-text-secondary: #b9b9b9;
+  --color-text-tertiary: #a1a1a2;
+  --color-primary: #eabe7c;
   --color-primary-light: rgba(234, 190, 124, 0.14);
   --color-error: #f87171;
   --color-error-light: rgba(248, 113, 113, 0.14);
@@ -45,9 +44,6 @@
   --color-warning: #f5c66a;
   --color-warning-light: rgba(245, 198, 106, 0.14);
   --color-danger: #f87171;
-  --color-hover-overlay: rgba(234, 190, 124, 0.08);
-  --color-selected-bg: rgba(234, 190, 124, 0.14);
-  --color-focus-ring: rgba(234, 190, 124, 0.55);
   --gradient-accent: linear-gradient(135deg, #eabe7c, #d89d3c);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.22);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.28);
@@ -57,6 +53,17 @@
   --z-modal-top: 11000;
   --z-toast: 7000;
   --z-tooltip: 5000;
+}
+
+.ai-agent-overlay :where(button),
+.ai-agent-dropdown-menu :where(button),
+.ai-agent-fab {
+  height: auto;
+  margin: 0;
+  padding: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: normal;
 }
 
 /* ── Self-contained modal shell ──
@@ -76,16 +83,6 @@
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal, 6000);
-}
-
-.ai-agent-overlay :where(button),
-.ai-agent-dropdown-menu :where(button),
-.ai-agent-fab {
-  margin: 0;
-  padding: 0;
-  text-transform: none;
-  letter-spacing: normal;
-  line-height: normal;
 }
 
 /* Same phone bottom-nav reservation as .modal-overlay's own rule — see that
@@ -123,7 +120,7 @@
 .ai-agent-modal-header h2 {
   margin: 0;
   color: var(--color-text-primary);
-  font-size: 19.2px;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -133,7 +130,7 @@
 .ai-agent-close-btn {
   background: transparent;
   border: none;
-  font-size: 24px;
+  font-size: 1.5rem;
   cursor: pointer;
   color: var(--color-text-secondary);
   width: 36px;
@@ -196,7 +193,7 @@
 .ai-agent-dropdown-menu .ai-agent-dropdown-item {
   padding: 10px 12px;
   border-radius: 10px;
-  font-size: 14.4px;
+  font-size: 0.9rem;
 }
 
 .ai-agent-dropdown-item {
@@ -210,7 +207,7 @@
   background: var(--color-background-secondary);
   color: var(--color-text-primary);
   font-family: inherit;
-  font-size: 15.2px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   direction: ltr;
@@ -253,7 +250,7 @@
 @media (max-width: 768px) {
   .ai-agent-dropdown-menu .ai-agent-dropdown-item {
     padding: 6px 10px;
-    font-size: 14.4px;
+    font-size: 0.9rem;
   }
 }
 
@@ -281,9 +278,6 @@
   box-shadow: var(--shadow-md);
   overflow: hidden;
   font-family: inherit;
-  font-size: 1em;
-  direction: ltr;
-  text-align: left;
   max-width: 100%;
 }
 
@@ -348,7 +342,7 @@
   max-width: 85%;
   padding: 10px 14px;
   border-radius: 12px;
-  font-size: 14.08px;
+  font-size: 0.88rem;
   line-height: 1.6;
   word-break: break-word;
   position: relative;
@@ -372,7 +366,11 @@
 }
 
 /* Wraps a bubble + its controls row (copy/edit) as one column, so the
-   controls sit below the bubble and align to the same side. */
+   controls sit BELOW the bubble as a normal sibling instead of layered
+   inside/on top of the message text. Shares the bubble's own alignment
+   (flex-start/right for user, flex-end/left for assistant) so the
+   controls land under the correct edge — see .ai-agent-msg--user/
+   --assistant below for the actual align-self values these mirror. */
 .ai-agent-msg-wrap {
   display: flex;
   flex-direction: column;
@@ -381,12 +379,12 @@
 
 .ai-agent-msg-wrap--user {
   align-self: flex-end;
-  align-items: flex-start;
+  align-items: flex-end;
 }
 
 .ai-agent-msg-wrap--assistant {
   align-self: flex-start;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 /* The wrapped bubble itself no longer needs its own max-width/alignment —
@@ -425,9 +423,14 @@
   }
 }
 
-/* Keep action order consistent with the assistant message controls. */
+/* DOM order is copy-then-edit (see appendMessage/addCopyButton/
+   addEditButton in ai-agent-chat.js), but a user bubble's controls read
+   right-to-left visually (row-reverse) so Edit ends up closer to the
+   bubble's own right edge and Copy further out — same left/right
+   grouping the assistant side gets for free from normal (non-reversed)
+   flex order on its own left-aligned edge. */
 .ai-agent-msg-controls--user {
-  flex-direction: row;
+  flex-direction: row-reverse;
 }
 
 .ai-agent-msg-copy-btn,
@@ -510,7 +513,7 @@
   border-radius: 8px;
   padding: 8px 10px;
   font-family: inherit;
-  font-size: 14.08px;
+  font-size: 0.88rem;
   line-height: 1.5;
   background: var(--color-background);
   color: var(--color-text-primary);
@@ -524,7 +527,7 @@
 
 .ai-agent-msg-edit-actions {
   display: flex;
-  direction: ltr;
+  direction: rtl;
   gap: 8px;
   margin-top: 8px;
 }
@@ -536,7 +539,7 @@
   border-radius: 8px;
   padding: 7px 12px;
   font-family: inherit;
-  font-size: 13.12px;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -567,7 +570,7 @@
 }
 
 .ai-agent-msg--user {
-  align-self: flex-start;
+  align-self: flex-end;
   background: var(--gradient-accent);
   color: #fff;
 }
@@ -584,7 +587,7 @@
   background: rgba(255, 255, 255, 0.18);
   color: inherit;
   font-family: inherit;
-  font-size: 12.48px;
+  font-size: 0.78rem;
   font-weight: 600;
   direction: ltr;
   cursor: pointer;
@@ -608,7 +611,7 @@
 }
 
 .ai-agent-msg--assistant {
-  align-self: flex-end;
+  align-self: flex-start;
   background: var(--color-background-secondary);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border);
@@ -619,7 +622,7 @@
   background: var(--color-error-light);
   color: var(--color-error);
   border: 1px solid var(--color-error);
-  font-size: 13.12px;
+  font-size: 0.82rem;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -636,7 +639,7 @@
    same Arabic error text flooding the chat on every click. */
 .ai-agent-msg-error-count {
   flex-shrink: 0;
-  font-size: 11.52px;
+  font-size: 0.72rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 999px;
@@ -662,13 +665,13 @@
   flex-shrink: 0;
   align-self: center;
   color: var(--color-text-tertiary);
-  font-size: 13.6px;
+  font-size: 0.85rem;
   text-align: center;
   padding: 24px 12px;
 }
 
 .ai-agent-typing {
-  align-self: flex-end;
+  align-self: flex-start;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -743,7 +746,7 @@
 
 /* Step badge for multi-step tools e.g. "خطوة 1 من 2" */
 .ai-agent-typing-step {
-  font-size: 10.88px;
+  font-size: 0.68rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 6px;
@@ -758,7 +761,7 @@
 }
 
 .ai-agent-typing-label {
-  font-size: 12.8px;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text-primary);
   line-height: 1.3;
@@ -815,7 +818,7 @@
 }
 
 .ai-agent-typing-timer {
-  font-size: 11.52px;
+  font-size: 0.72rem;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -836,7 +839,7 @@
   border: 1px solid color-mix(in srgb, var(--color-error, #ef4444) 35%, transparent);
   background: color-mix(in srgb, var(--color-error, #ef4444) 10%, transparent);
   color: var(--color-error, #ef4444);
-  font-size: 11.84px;
+  font-size: 0.74rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -863,8 +866,8 @@
 /* ── Suggested prompt chips ──
    Shown above the input row only before the first message is sent (see
    ai-agent-chat.js). Vertical stacked list (each chip full-width, its own
-   row) rather than a horizontal scroller — keeps prompts easy to scan
-   when their lengths vary, matching the pattern YouTube's "Ask" panel
+   row) rather than a horizontal scroller — reads much better for Arabic
+   prompt text of varying length, matches the pattern YouTube's "Ask" panel
    uses for its own suggested questions. */
 .ai-agent-suggestions {
   display: flex;
@@ -872,6 +875,7 @@
   gap: 8px;
   padding: 10px;
   direction: ltr;
+  align-items: flex-end;
 }
 
 .ai-agent-suggestion-chip {
@@ -882,7 +886,7 @@
   padding: 10px 14px;
   background: var(--color-surface);
   color: var(--color-text-primary);
-  font-size: 13.6px;
+  font-size: 0.85rem;
   font-family: inherit;
   line-height: 1.4;
   cursor: pointer;
@@ -973,7 +977,7 @@
 
 .ai-agent-attachment-tile-name {
   width: 100%;
-  font-size: 9.92px;
+  font-size: 0.62rem;
   line-height: 1.2;
   text-align: center;
   color: var(--color-text-primary);
@@ -1092,12 +1096,15 @@
   border-radius: 0;
   padding: 8px 10px;
   font-family: inherit;
-  font-size: 14.08px;
+  font-size: 0.88rem;
   background: transparent;
   color: var(--color-text-primary);
   min-height: 36px;
   max-height: 120px;
   overflow-y: hidden;
+  height: auto;
+  box-sizing: border-box;
+  margin: 0;
   direction: ltr;
   unicode-bidi: plaintext;
 }
@@ -1150,10 +1157,7 @@
 }
 
 .ai-agent-send-btn:disabled {
-  opacity: 1;
-  color: var(--color-text-tertiary);
-  background: var(--color-background-secondary);
-  border: 1px solid var(--color-border);
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -1198,7 +1202,7 @@
   padding: 0 10px;
   border: none;
   border-radius: 10px;
-  font-size: 12.48px;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -1262,7 +1266,7 @@
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-warning, #d97706) 12%, transparent);
   color: var(--color-warning, #b45309);
-  font-size: 12.16px;
+  font-size: 0.76rem;
   line-height: 1.4;
 }
 
@@ -1270,7 +1274,7 @@
 .ai-agent-history-panel {
   padding: 8px;
   overflow-y: auto;
-  direction: ltr;
+  direction: rtl;
 }
 
 .ai-agent-history-list {
@@ -1284,7 +1288,7 @@
   padding: 24px 12px;
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 13.6px;
+  font-size: 0.85rem;
 }
 
 .ai-agent-history-item {
@@ -1328,7 +1332,7 @@
 }
 
 .ai-agent-history-item-title {
-  font-size: 13.92px;
+  font-size: 0.87rem;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1336,7 +1340,7 @@
 }
 
 .ai-agent-history-item-time {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
   margin-top: 2px;
 }
@@ -1362,7 +1366,7 @@
   border-radius: 6px;
   padding: 2px 6px;
   font-family: inherit;
-  font-size: 13.92px;
+  font-size: 0.87rem;
   font-weight: 600;
   background: var(--color-surface);
   color: var(--color-text-primary);
@@ -1493,6 +1497,7 @@ body.sidebar-expanded .ai-agent-fab {
 .ai-agent-modal-card .ai-agent-modal-header {
   padding: 18px 20px 14px;
   flex-shrink: 0;
+  direction: ltr;
 }
 
 .ai-agent-modal-card #aiAgentModalTitle {
@@ -1587,7 +1592,8 @@ body.sidebar-expanded .ai-agent-fab {
     left: 0;
     right: auto;
     z-index: 5;
-    width: min(80vw, 320px);
+    /* width: min(76vw, 300px) !important; */
+    width: 100%;
     height: 100%;
     border-inline-end: none;
     border-inline-end: 1px solid var(--color-border);
@@ -1761,7 +1767,7 @@ body.sidebar-expanded .ai-agent-fab {
 }
 
 .ai-agent-sidebar-brand-name {
-  font-size: 13.6px;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -1843,7 +1849,7 @@ body.sidebar-expanded .ai-agent-fab {
   background: transparent;
   color: var(--color-text-primary);
   font-family: inherit;
-  font-size: 13.28px;
+  font-size: 0.83rem;
   font-weight: 700;
   text-align: start;
   cursor: pointer;
@@ -1875,10 +1881,7 @@ body.sidebar-expanded .ai-agent-fab {
    to fight with !important otherwise). */
 .ai-agent-sidebar-btn:disabled,
 .ai-agent-sidebar-btn--disabled {
-  opacity: 1;
-  color: var(--color-text-tertiary);
-  background: var(--color-background);
-  border-color: var(--color-border);
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -1893,7 +1896,7 @@ body.sidebar-expanded .ai-agent-fab {
   padding: 12px 14px 9px;
   color: var(--color-text-secondary, #64748b);
   border-bottom: 1px solid var(--color-border);
-  font-size: 12.48px;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
@@ -1922,7 +1925,7 @@ body.sidebar-expanded .ai-agent-fab {
   border-radius: 9px;
   background: var(--color-primary-light);
   color: var(--color-primary);
-  font-size: 9.92px;
+  font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
@@ -1952,12 +1955,12 @@ body.sidebar-expanded .ai-agent-fab {
 }
 
 .ai-agent-export-menu-copy strong {
-  font-size: 12.8px;
+  font-size: 0.8rem;
 }
 
 .ai-agent-export-menu-copy span {
   color: var(--color-text-secondary, #64748b);
-  font-size: 12.16px;
+  font-size: 0.76rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1997,7 +2000,7 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-sidebar-label {
   padding: 0 10px;
-  font-size: 11.52px;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--color-text-tertiary);
@@ -2021,7 +2024,7 @@ body.sidebar-expanded .ai-agent-fab {
   background: transparent;
   color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 12.8px;
+  font-size: 0.8rem;
   text-align: start;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2050,7 +2053,7 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-sidebar-recents-empty {
   padding: 8px 10px;
-  font-size: 12.48px;
+  font-size: 0.78rem;
   color: var(--color-text-tertiary);
 }
 
@@ -2218,8 +2221,12 @@ body.sidebar-expanded .ai-agent-fab {
    are ordinary block children of that div, not flex items themselves. The
    two categories need different treatment below.
 
-   The component-scoped interactive tokens distinguish persistent selected,
-   hover, and keyboard-focus states without changing the host page palette. */
+   Every var(--color-...) used below was checked against a real search of
+   themes.css (all three themes: light, dark, dark-slate) — none are
+   invented. --color-selected-bg / --color-hover-overlay / --color-focus-ring
+   are the theme's own "interactive state" tokens, used for the persistent
+   attached / hover / keyboard-focus states respectively so they read as
+   three distinct, real states rather than one recolored blob. */
 .ai-agent-mention-menu {
   max-height: 320px;
   overflow-y: auto;
@@ -2228,7 +2235,7 @@ body.sidebar-expanded .ai-agent-fab {
 .ai-agent-mention-section-header {
   padding: 10px 8px 4px;
   margin-top: 4px;
-  font-size: 11.52px;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -2320,7 +2327,7 @@ body.sidebar-expanded .ai-agent-fab {
   text-overflow: ellipsis;
   white-space: nowrap;
   unicode-bidi: plaintext;
-  font-size: 12.16px;
+  font-size: 0.76rem;
   font-weight: 400;
   line-height: 1.3;
   color: var(--color-text-secondary);
@@ -2380,7 +2387,7 @@ body.sidebar-expanded .ai-agent-fab {
 .ai-agent-mention-loading,
 .ai-agent-trigger-menu-empty {
   padding: 10px 8px;
-  font-size: 13.6px;
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
   text-align: center;
 }
@@ -2540,7 +2547,7 @@ body.sidebar-expanded .ai-agent-fab {
 }
 
 .ai-agent-attachment-preview-kind {
-  font-size: 11.52px;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -2550,14 +2557,14 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-attachment-preview-title {
   margin: 0 0 10px;
-  font-size: 18.4px;
+  font-size: 1.15rem;
   line-height: 1.4;
   word-break: break-word;
 }
 
 .ai-agent-attachment-preview-context {
   margin: 0;
-  font-size: 14.4px;
+  font-size: 0.9rem;
   line-height: 1.6;
   color: var(--color-text-secondary);
   white-space: pre-wrap;
@@ -2573,7 +2580,7 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-slash-section-header {
   padding: 8px 10px 4px;
-  font-size: 11.52px;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -2642,14 +2649,14 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-slash-row-title {
   font-weight: 600;
-  font-size: 14.08px;
+  font-size: 0.88rem;
   color: var(--color-text-primary);
   line-height: 1.35;
 }
 
 .ai-agent-slash-row-cmd {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11.84px;
+  font-size: 0.74rem;
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
@@ -2660,7 +2667,7 @@ body.sidebar-expanded .ai-agent-fab {
 }
 
 .ai-agent-slash-row-desc {
-  font-size: 12.16px;
+  font-size: 0.76rem;
   color: var(--color-text-secondary);
   line-height: 1.35;
   white-space: normal;
@@ -2671,7 +2678,7 @@ body.sidebar-expanded .ai-agent-fab {
 .ai-agent-slash-empty {
   padding: 16px 12px;
   text-align: center;
-  font-size: 13.6px;
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
 }
 
@@ -2712,7 +2719,7 @@ body.sidebar-expanded .ai-agent-fab {
   color: inherit;
   cursor: pointer;
   opacity: 0.6;
-  font-size: 12.8px;
+  font-size: 0.8rem;
 }
 
 .ai-agent-telegram-banner-dismiss:hover {

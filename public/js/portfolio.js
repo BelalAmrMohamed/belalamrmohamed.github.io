@@ -2,6 +2,7 @@
   const config = window.BELAL_PORTFOLIO_CONFIG || {};
   const listRoot = document.getElementById('portfolioList');
   const modalRoot = document.getElementById('portfolioModals');
+  window.BELAL_PORTFOLIO_PROJECTS = null;
   if (!listRoot || !modalRoot) return;
 
   function safeLink(value, allowRelative = false) {
@@ -178,9 +179,11 @@
         loadPublicSettings(client),
       ]);
       if (error) throw error;
-      renderProjects(data || []);
+      window.BELAL_PORTFOLIO_PROJECTS = data || [];
+      renderProjects(window.BELAL_PORTFOLIO_PROJECTS);
     } catch (error) {
       console.error('Public portfolio data failed to load', error);
+      window.BELAL_PORTFOLIO_PROJECTS = null;
       renderProjects([]);
       const notice = document.createElement('p');
       notice.className = 'portfolio-empty';
@@ -189,5 +192,5 @@
     }
   }
 
-  loadPortfolio();
+  window.BELAL_PORTFOLIO_PROJECTS_READY = loadPortfolio();
 })();

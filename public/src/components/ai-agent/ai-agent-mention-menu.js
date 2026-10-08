@@ -152,6 +152,7 @@ export function createMentionMenu(options) {
         onConsumeTriggerText,
         icons,
         positionMenu, // (menuEl, anchorEl) => void — host's positionAgentDropdown
+        getProjects = null,
     } = options;
 
     let menuEl = null;
@@ -201,7 +202,17 @@ export function createMentionMenu(options) {
         rows[activeIndex]?.scrollIntoView({ block: "nearest" });
     }
 
-    function buildRow({ id, kind, title, description, disabled, checked }, onClick) {
+    function safeImageUrl(value) {
+        if (!value) return null;
+        try {
+            const url = new URL(value, window.location.origin);
+            return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+        } catch {
+            return null;
+        }
+    }
+
+    function buildRow({ id, kind, title, description, disabled, checked, imageUrl }, onClick) {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.setAttribute("data-mention-row", "");
@@ -218,14 +229,42 @@ export function createMentionMenu(options) {
         // rendering trailing/last was exactly this). Arabic titles/
         // descriptions from searched items are unaffected since `dir="auto"`
         // reads their own script direction per line.
-        btn.innerHTML = `
-      ${iconFor(kind)}
-      <span class="ai-agent-mention-row-text">
-        <span class="ai-agent-mention-row-title" dir="auto">${title}</span>
-        ${description ? `<span class="ai-agent-mention-row-desc" dir="auto">${description}</span>` : ""}
-      </span>
-      <span class="ai-agent-mention-row-check" aria-hidden="true">✓</span>
-    `;
+        const imageSrc = safeImageUrl(imageUrl);
+        if (imageSrc) {
+            const image = document.createElement("img");
+            image.className = "ai-agent-mention-row-thumb";
+            image.src = imageSrc;
+            image.alt = "";
+            image.loading = "eager";
+            btn.appendChild(image);
+        } else {
+            const icon = document.createElement("span");
+            icon.className = "ai-agent-mention-row-icon";
+            icon.innerHTML = iconFor(kind);
+            btn.appendChild(icon);
+        }
+
+        const text = document.createElement("span");
+        text.className = "ai-agent-mention-row-text";
+        const titleEl = document.createElement("span");
+        titleEl.className = "ai-agent-mention-row-title";
+        titleEl.dir = "auto";
+        titleEl.textContent = title;
+        text.appendChild(titleEl);
+        if (description) {
+            const descriptionEl = document.createElement("span");
+            descriptionEl.className = "ai-agent-mention-row-desc";
+            descriptionEl.dir = "auto";
+            descriptionEl.textContent = description;
+            text.appendChild(descriptionEl);
+        }
+        btn.appendChild(text);
+
+        const check = document.createElement("span");
+        check.className = "ai-agent-mention-row-check";
+        check.setAttribute("aria-hidden", "true");
+        check.textContent = "✓";
+        btn.appendChild(check);
         if (!disabled && !checked) {
             btn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -275,6 +314,72 @@ export function createMentionMenu(options) {
             full.className = "ai-agent-trigger-menu-empty";
             full.textContent = "تم الوصول للحد الأقصى من المرفقات.";
             menuEl.appendChild(full);
+            return;
+        }
+
+        if (typeof getProjects === "function") {
+            const section = renderSectionHeader("Published projects");
+            menuEl.appendChild(section);
+            const resultsHost = document.createElement("div");
+            resultsHost.className = "ai-agent-mention-project-results";
+            resultsHost.innerHTML = '<div class="ai-agent-mention-loading">Loading published projects…</div>';
+            menuEl.appendChild(resultsHost);
+            reposition();
+            const myToken = ++platformSearchToken;
+            try {
+                const projects = await getProjects();
+                if (myToken !== platformSearchToken || !menuEl) return;
+                const cleanQuery = query.trim().toLocaleLowerCase();
+                const filtered = projects.filter((project) => {
+                    const searchable = `${project.title || ""} ${project.category || ""} ${project.summary || ""}`;
+                    return searchable.toLocaleLowerCase().includes(cleanQuery);
+                });
+                resultsHost.replaceChildren();
+                if (!filtered.length) {
+                    const empty = document.createElement("div");
+                    empty.className = "ai-agent-trigger-menu-empty";
+                    empty.textContent = query
+                        ? "No published projects match that search."
+                        : "No published projects are available.";
+                    resultsHost.appendChild(empty);
+                } else {
+                    filtered.forEach((project) => {
+                        const title = project.title || "Untitled project";
+                        const row = buildRow(
+                            {
+                                id: project.id,
+                                kind: "project",
+                                title,
+                                description: project.category || project.summary || "",
+                                imageUrl: project.image_url,
+                                checked: isAttached(project.id),
+                            },
+                            () => pickAndClose({
+                                kind: "project",
+                                id: project.id,
+                                title,
+                                summary: project.summary || "",
+                                category: project.category || "",
+                                project_url: project.project_url || "",
+                                github_url: project.github_url || "",
+                                image_url: project.image_url || "",
+                                source: "portfolio",
+                            }),
+                        );
+                        resultsHost.appendChild(row);
+                    });
+                }
+                reposition();
+            } catch (error) {
+                if (myToken !== platformSearchToken || !menuEl) return;
+                console.error("[ai-agent-mention-menu] published projects failed to load:", error);
+                resultsHost.replaceChildren();
+                const failure = document.createElement("div");
+                failure.className = "ai-agent-trigger-menu-empty";
+                failure.textContent = "Published projects could not be loaded. Please try again later.";
+                resultsHost.appendChild(failure);
+                reposition();
+            }
             return;
         }
 
