@@ -289,7 +289,9 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
   sidebarCollapseBtn.title = "Collapse sidebar";
   sidebarCollapseBtn.innerHTML = SIDEBAR_COLLAPSE_DEFAULT_ICON_SVG + SIDEBAR_COLLAPSE_HOVER_ICON_SVG;
 
-  sidebarHeader.append(sidebarCollapseBtn, sidebarBrand, sidebarFaviconBtn);
+  // Brand at the sidebar's outer edge, collapse toggle at the inner edge
+  // (next to the chat) — the template's physical arrangement.
+  sidebarHeader.append(sidebarBrand, sidebarFaviconBtn, sidebarCollapseBtn);
 
   function applySidebarCollapsedState(collapsed) {
     sidebarCollapsed = collapsed;

@@ -29,6 +29,12 @@
 .ai-agent-dropdown-menu,
 .ai-agent-fab {
   font-family: inherit;
+  /* The portfolio's <body> is 300 weight / 19px / 32px line-height. The
+     template was authored against a normal 400 / 16px / 1.6 baseline, so the
+     Agent sets that once on its own roots instead of inheriting the page's. */
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
   --color-background: #141516;
   --color-background-secondary: #202122;
   --color-surface: #1b1c1d;
@@ -38,6 +44,9 @@
   --color-border: rgba(255, 255, 255, 0.05);
   --color-primary: #eabe7c;
   --color-primary-light: rgba(234, 190, 124, 0.14);
+  --color-hover-overlay: rgba(234, 190, 124, 0.08);
+  --color-selected-bg: rgba(234, 190, 124, 0.16);
+  --color-focus-ring: rgba(234, 190, 124, 0.55);
   --color-error: #f87171;
   --color-error-light: rgba(248, 113, 113, 0.14);
   --color-success: #a3d977;
@@ -65,6 +74,71 @@
   text-transform: none;
   letter-spacing: normal;
   line-height: normal;
+}
+
+/* ── Host-page isolation (scoped to Agent elements only) ──
+   css/styles.css styles bare elements globally (img/p/ul/pre/table/... get a
+   32px bottom margin, h1–h6 get the serif display face, textarea/input get a
+   gold focus underline, a gets a colour + 0.3s transition). Those rules leaked
+   into the Agent and pushed logos out of line with their labels. Each selector
+   below is "<Agent root> <element>" with the root wrapped in :where(), so its
+   specificity equals the host's bare-element rule, it wins only because this
+   stylesheet loads later, and every Agent class rule still beats it. Nothing
+   outside the Agent is affected. */
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) img,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) svg,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) p,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) ul,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) ol,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) dl,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) pre,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) blockquote,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) figure,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) figcaption,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) table,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) form,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) fieldset,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) input,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) textarea,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) select,
+img:where([class*="ai-agent-"]) {
+  margin-bottom: 0;
+}
+
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) h1,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) h2,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) h3,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) h4,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) h5,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) h6 {
+  font-family: inherit;
+  color: inherit;
+  font-weight: 700;
+  margin-top: 0;
+}
+
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) strong,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) b {
+  font-weight: 700;
+}
+
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) input,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) textarea,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) select {
+  /* host: line-height 32px + "transition: all 0.3s" on every form control;
+     the template's controls use the browser default line-height and no
+     transition (the Agent declares its own where it wants one). */
+  line-height: normal;
+  transition: none;
+}
+
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) textarea:focus,
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) input:focus {
+  border-bottom-width: 0;
+}
+
+:where(.ai-agent-overlay, .ai-agent-dropdown-menu, .ai-agent-fab) a {
+  transition: none;
 }
 
 /* ── Self-contained modal shell ──
@@ -119,19 +193,19 @@
 }
 
 .ai-agent-modal-header h2 {
-  margin: 0 !important;
+  margin: 0;
   color: var(--color-text-primary);
-  font-size: 1.2rem;
+  font-size: 19.2px;
   display: flex;
   align-items: center;
   gap: 8px;
-  line-height: 1.2 !important;
+  line-height: 1.2;
 }
 
 .ai-agent-close-btn {
   background: transparent;
   border: none;
-  font-size: 1.5rem;
+  font-size: 24px;
   cursor: pointer;
   color: var(--color-text-secondary);
   width: 36px;
@@ -194,7 +268,7 @@
 .ai-agent-dropdown-menu .ai-agent-dropdown-item {
   padding: 10px 12px;
   border-radius: 10px;
-  font-size: 0.9rem;
+  font-size: 14.4px;
 }
 
 .ai-agent-dropdown-item {
@@ -208,7 +282,7 @@
   background: var(--color-background-secondary);
   color: var(--color-text-primary);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 15.2px;
   font-weight: 600;
   cursor: pointer;
   direction: ltr;
@@ -251,7 +325,7 @@
 @media (max-width: 768px) {
   .ai-agent-dropdown-menu .ai-agent-dropdown-item {
     padding: 6px 10px;
-    font-size: 0.9rem;
+    font-size: 14.4px;
   }
 }
 
@@ -343,7 +417,7 @@
   max-width: 85%;
   padding: 10px 14px;
   border-radius: 12px;
-  font-size: 0.88rem;
+  font-size: 14.08px;
   line-height: 1.6;
   word-break: break-word;
   position: relative;
@@ -514,7 +588,7 @@
   border-radius: 8px;
   padding: 8px 10px;
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: 14.08px;
   line-height: 1.5;
   background: var(--color-background);
   color: var(--color-text-primary);
@@ -540,7 +614,7 @@
   border-radius: 8px;
   padding: 7px 12px;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 13.12px;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -588,7 +662,7 @@
   background: rgba(255, 255, 255, 0.18);
   color: inherit;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 12.48px;
   font-weight: 600;
   direction: ltr;
   cursor: pointer;
@@ -623,7 +697,7 @@
   background: var(--color-error-light);
   color: var(--color-error);
   border: 1px solid var(--color-error);
-  font-size: 0.82rem;
+  font-size: 13.12px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -640,7 +714,7 @@
    same Arabic error text flooding the chat on every click. */
 .ai-agent-msg-error-count {
   flex-shrink: 0;
-  font-size: 0.72rem;
+  font-size: 11.52px;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 999px;
@@ -666,7 +740,7 @@
   flex-shrink: 0;
   align-self: center;
   color: var(--color-text-tertiary);
-  font-size: 0.85rem;
+  font-size: 13.6px;
   text-align: center;
   padding: 24px 12px;
 }
@@ -747,7 +821,7 @@
 
 /* Step badge for multi-step tools e.g. "خطوة 1 من 2" */
 .ai-agent-typing-step {
-  font-size: 0.68rem;
+  font-size: 10.88px;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 6px;
@@ -762,7 +836,7 @@
 }
 
 .ai-agent-typing-label {
-  font-size: 0.8rem;
+  font-size: 12.8px;
   font-weight: 600;
   color: var(--color-text-primary);
   line-height: 1.3;
@@ -819,7 +893,7 @@
 }
 
 .ai-agent-typing-timer {
-  font-size: 0.72rem;
+  font-size: 11.52px;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -840,7 +914,7 @@
   border: 1px solid color-mix(in srgb, var(--color-error, #ef4444) 35%, transparent);
   background: color-mix(in srgb, var(--color-error, #ef4444) 10%, transparent);
   color: var(--color-error, #ef4444);
-  font-size: 0.74rem;
+  font-size: 11.84px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -886,7 +960,7 @@
   padding: 10px 14px;
   background: var(--color-surface);
   color: var(--color-text-primary);
-  font-size: 0.85rem;
+  font-size: 13.6px;
   font-family: inherit;
   line-height: 1.4;
   cursor: pointer;
@@ -977,7 +1051,7 @@
 
 .ai-agent-attachment-tile-name {
   width: 100%;
-  font-size: 0.62rem;
+  font-size: 9.92px;
   line-height: 1.2;
   text-align: center;
   color: var(--color-text-primary);
@@ -1096,7 +1170,7 @@
   border-radius: 0;
   padding: 8px 10px;
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: 14.08px;
   background: transparent;
   color: var(--color-text-primary);
   min-height: 36px;
@@ -1202,7 +1276,7 @@
   padding: 0 10px;
   border: none;
   border-radius: 10px;
-  font-size: 0.78rem;
+  font-size: 12.48px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -1266,7 +1340,7 @@
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-warning, #d97706) 12%, transparent);
   color: var(--color-warning, #b45309);
-  font-size: 0.76rem;
+  font-size: 12.16px;
   line-height: 1.4;
 }
 
@@ -1288,7 +1362,7 @@
   padding: 24px 12px;
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 0.85rem;
+  font-size: 13.6px;
 }
 
 .ai-agent-history-item {
@@ -1332,7 +1406,7 @@
 }
 
 .ai-agent-history-item-title {
-  font-size: 0.87rem;
+  font-size: 13.92px;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1340,7 +1414,7 @@
 }
 
 .ai-agent-history-item-time {
-  font-size: 0.75rem;
+  font-size: 12px;
   color: var(--color-text-secondary);
   margin-top: 2px;
 }
@@ -1366,7 +1440,7 @@
   border-radius: 6px;
   padding: 2px 6px;
   font-family: inherit;
-  font-size: 0.87rem;
+  font-size: 13.92px;
   font-weight: 600;
   background: var(--color-surface);
   color: var(--color-text-primary);
@@ -1767,7 +1841,7 @@ body.sidebar-expanded .ai-agent-fab {
 }
 
 .ai-agent-sidebar-brand-name {
-  font-size: 0.85rem;
+  font-size: 13.6px;
   font-weight: 700;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -1849,7 +1923,7 @@ body.sidebar-expanded .ai-agent-fab {
   background: transparent;
   color: var(--color-text-primary);
   font-family: inherit;
-  font-size: 0.83rem;
+  font-size: 13.28px;
   font-weight: 700;
   text-align: start;
   cursor: pointer;
@@ -1896,7 +1970,7 @@ body.sidebar-expanded .ai-agent-fab {
   padding: 12px 14px 9px;
   color: var(--color-text-secondary, #64748b);
   border-bottom: 1px solid var(--color-border);
-  font-size: 0.78rem;
+  font-size: 12.48px;
   font-weight: 700;
 }
 
@@ -1925,7 +1999,7 @@ body.sidebar-expanded .ai-agent-fab {
   border-radius: 9px;
   background: var(--color-primary-light);
   color: var(--color-primary);
-  font-size: 0.62rem;
+  font-size: 9.92px;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
@@ -1955,12 +2029,12 @@ body.sidebar-expanded .ai-agent-fab {
 }
 
 .ai-agent-export-menu-copy strong {
-  font-size: 0.8rem;
+  font-size: 12.8px;
 }
 
 .ai-agent-export-menu-copy span {
   color: var(--color-text-secondary, #64748b);
-  font-size: 0.76rem;
+  font-size: 12.16px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2000,7 +2074,7 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-sidebar-label {
   padding: 0 10px;
-  font-size: 0.72rem;
+  font-size: 11.52px;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--color-text-tertiary);
@@ -2024,7 +2098,7 @@ body.sidebar-expanded .ai-agent-fab {
   background: transparent;
   color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 12.8px;
   text-align: start;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2053,7 +2127,7 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-sidebar-recents-empty {
   padding: 8px 10px;
-  font-size: 0.78rem;
+  font-size: 12.48px;
   color: var(--color-text-tertiary);
 }
 
@@ -2235,7 +2309,7 @@ body.sidebar-expanded .ai-agent-fab {
 .ai-agent-mention-section-header {
   padding: 10px 8px 4px;
   margin-top: 4px;
-  font-size: 0.72rem;
+  font-size: 11.52px;
   font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -2327,7 +2401,7 @@ body.sidebar-expanded .ai-agent-fab {
   text-overflow: ellipsis;
   white-space: nowrap;
   unicode-bidi: plaintext;
-  font-size: 0.76rem;
+  font-size: 12.16px;
   font-weight: 400;
   line-height: 1.3;
   color: var(--color-text-secondary);
@@ -2384,10 +2458,31 @@ body.sidebar-expanded .ai-agent-fab {
   flex-shrink: 0;
 }
 
+/* Published-project rows in the @ menu (icon + thumbnail slots added for the
+   portfolio; sized to the same 20px footprint as the template's row icons). */
+.ai-agent-mention-row-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.ai-agent-mention-row-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--color-background);
+}
+
+.ai-agent-mention-project-results {
+  display: flex;
+  flex-direction: column;
+}
+
 .ai-agent-mention-loading,
 .ai-agent-trigger-menu-empty {
   padding: 10px 8px;
-  font-size: 0.85rem;
+  font-size: 13.6px;
   color: var(--color-text-secondary);
   text-align: center;
 }
@@ -2547,7 +2642,7 @@ body.sidebar-expanded .ai-agent-fab {
 }
 
 .ai-agent-attachment-preview-kind {
-  font-size: 0.72rem;
+  font-size: 11.52px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -2557,14 +2652,14 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-attachment-preview-title {
   margin: 0 0 10px;
-  font-size: 1.15rem;
+  font-size: 18.4px;
   line-height: 1.4;
   word-break: break-word;
 }
 
 .ai-agent-attachment-preview-context {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 14.4px;
   line-height: 1.6;
   color: var(--color-text-secondary);
   white-space: pre-wrap;
@@ -2580,7 +2675,7 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-slash-section-header {
   padding: 8px 10px 4px;
-  font-size: 0.72rem;
+  font-size: 11.52px;
   font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -2649,14 +2744,14 @@ body.sidebar-expanded .ai-agent-fab {
 
 .ai-agent-slash-row-title {
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 14.08px;
   color: var(--color-text-primary);
   line-height: 1.35;
 }
 
 .ai-agent-slash-row-cmd {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.74rem;
+  font-size: 11.84px;
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
@@ -2667,7 +2762,7 @@ body.sidebar-expanded .ai-agent-fab {
 }
 
 .ai-agent-slash-row-desc {
-  font-size: 0.76rem;
+  font-size: 12.16px;
   color: var(--color-text-secondary);
   line-height: 1.35;
   white-space: normal;
@@ -2678,7 +2773,7 @@ body.sidebar-expanded .ai-agent-fab {
 .ai-agent-slash-empty {
   padding: 16px 12px;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 13.6px;
   color: var(--color-text-secondary);
 }
 
@@ -2719,7 +2814,7 @@ body.sidebar-expanded .ai-agent-fab {
   color: inherit;
   cursor: pointer;
   opacity: 0.6;
-  font-size: 0.8rem;
+  font-size: 12.8px;
 }
 
 .ai-agent-telegram-banner-dismiss:hover {

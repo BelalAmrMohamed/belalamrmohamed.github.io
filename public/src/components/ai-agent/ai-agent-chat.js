@@ -847,6 +847,7 @@ export function createChatPanel(options = {}) {
     const moreMenuItems = [
       {
         icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>',
+        key: "file",
         label: "Attach file",
         onClick: () => fileInput.click(),
       },
@@ -860,8 +861,9 @@ export function createChatPanel(options = {}) {
         // to the textarea's current caret position (end of the field,
         // since there's no "typed `@`" position to anchor to from a menu
         // click) instead of a freshly-typed trigger character.
-        icon: ATTACHMENT_QUIZ_ICON_SVG,
-        label: "Attach a quiz or folder",
+        icon: typeof options.getProjects === "function" ? ATTACHMENT_PROJECT_ICON_SVG : ATTACHMENT_QUIZ_ICON_SVG,
+        key: "mention",
+        label: typeof options.getProjects === "function" ? "Attach a project" : "Attach a quiz or folder",
         onClick: () => {
           textarea.focus();
           // Inserts a literal `@` at the caret rather than opening the
@@ -884,6 +886,7 @@ export function createChatPanel(options = {}) {
       },
       {
         icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h7"/><path d="m17 16 3 3 3-3"/></svg>',
+        key: "actions",
         label: "Available actions",
         onClick: () => {
           textarea.focus();
@@ -895,8 +898,8 @@ export function createChatPanel(options = {}) {
         },
       },
     ].filter((item) =>
-      (enableMentions || item.label !== "إرفاق امتحان أو مجلد")
-      && (enableActions || item.label !== "الأوامر المتاحة"),
+      (enableMentions || item.key !== "mention")
+      && (enableActions || item.key !== "actions"),
     );
 
     moreBtn.addEventListener("click", (e) => {
@@ -1446,9 +1449,12 @@ export function createChatPanel(options = {}) {
   // CSS) — attachmentTilesRow (built lazily by renderAttachmentChips)
   // inserts itself as inputRow's own first child whenever there's at
   // least one pending attachment; inputControls always holds the
-  // horizontal control line below it. Send is deliberately the LAST
-  // child, at the right end of this LTR row. REDESIGN: the wave sits
-  // right next to
+  // horizontal control line below it. The original template's visual
+  // arrangement is kept physically (not mirrored with the writing
+  // direction): the "+" menu sits at the left end, the textarea fills the
+  // middle, and mic + send are clustered at the right end with send LAST
+  // (far-right). In this LTR row that is simply DOM order: more, textarea,
+  // wave, mic, send. REDESIGN: the wave sits right next to
   // mic/cancel (same fixed-size slot, swapped 1-for-1 via `hidden` — see
   // setDictationUiState) rather than in the textarea's flex slot, so the
   // textarea itself is never hidden or resized during dictation. Only
@@ -1457,12 +1463,12 @@ export function createChatPanel(options = {}) {
   const inputControls = document.createElement("div");
   inputControls.className = "ai-agent-chat-input-controls";
 
-  if (micBtn) inputControls.appendChild(micBtn);
-  inputControls.appendChild(dictationWaveEl);
+  if (moreBtn) inputControls.appendChild(moreBtn);
 
   inputControls.appendChild(textarea);
 
-  if (moreBtn) inputControls.appendChild(moreBtn);
+  inputControls.appendChild(dictationWaveEl);
+  if (micBtn) inputControls.appendChild(micBtn);
   inputControls.appendChild(sendBtn);
 
   if (fileInput) inputControls.appendChild(fileInput);
@@ -2624,7 +2630,6 @@ export function createChatPanel(options = {}) {
       return;
     }
     sendBtn.hidden = textarea.value.trim().length === 0 && !pendingAttachments.length;
-    if (micBtn) micBtn.hidden = isDictating || Boolean(textarea.value.trim() || pendingAttachments.length);
   }
 
   textarea.addEventListener("input", () => {
