@@ -1,11 +1,12 @@
-const CACHE_VERSION = "v4";
+const CACHE_VERSION = "v6";
 const CACHE_NAME = `belal-portfolio-cache-${CACHE_VERSION}`;
-const OFFLINE_URL = "/portfolio/offline.html"; // Optional: create this file
+const OFFLINE_URL = "/offline";
 
 const filesToCache = [
   "./",
-  "index.html",
-  "offline.html",
+  "/",
+  "/offline",
+  "/admin",
   "site.webmanifest",
   "android-chrome-192x192.png",
   "android-chrome-512x512.png",
@@ -18,14 +19,34 @@ const filesToCache = [
   // css
   "css/styles.css",
   "css/vendor.css",
+  "css/admin-dashboard.css",
+  "/src/styles/themes.css",
+  "/src/components/ai-agent/ai-agent.css",
+  "/src/components/notifications/notifications.css",
 
   // js
   "js/main.js",
   "js/plugins.js",
+  "js/site-config.js",
+  "js/portfolio.js",
+  "js/admin-app.js",
+  "js/ai-agent-bootstrap.js",
+  "/src/components/ai-agent/ai-agent.js",
+  "/src/components/ai-agent/ai-agent-chat.js",
+  "/src/components/ai-agent/ai-agent-history.js",
+  "/src/components/ai-agent/ai-agent-history-idb.js",
+  "/src/components/ai-agent/ai-agent-dropdown.js",
+  "/src/components/ai-agent/ai-agent-mention-menu.js",
+  "/src/components/ai-agent/ai-agent-actions.js",
+  "/src/shared/markdown.js",
+  "/src/shared/markdown-css.js",
+  "/src/shared/media-resolve.js",
+  "/src/components/notifications/notifications.js",
 
   //images
   "images/about-photo.png",
   "images/about-photo@2x.png",
+  "/assets/images/el-bash-mebasmag--no-bg.png",
 
   // Icons
   "images/icons/icon-72x72.png",
@@ -42,28 +63,22 @@ const filesToCache = [
   // Portfolio images
   "images/portfolio/ns.jpg",
   "images/portfolio/ns@2x.jpg",
-  "images/portfolio/ceaser.jpg",
-  "images/portfolio/ceaser@2x.jpg",
+  "images/portfolio/encyption.jpg",
+  "images/portfolio/encyption@2x.jpg",
   "images/portfolio/calculator.jpg",
   "images/portfolio/calculator@2x.jpg",
   "images/portfolio/nsweb.jpg",
   "images/portfolio/nsweb@2x.jpg",
-  "images/portfolio/playfair.jpg",
-  "images/portfolio/playfair@2x.jpg",
-  "images/portfolio/row.jpg",
-  "images/portfolio/row@2x.jpg",
-  "images/portfolio/RailFence.jpg",
-  "images/portfolio/RailFence@2x.jpg",
+  "images/portfolio/quiz.jpg",
+  "images/portfolio/quiz@2x.jpg",
 
   //gellary images
-  "images/portfolio/gellary/g-RailFence.jpg",
-  "images/portfolio/gellary/about-photo.png",
+  "images/portfolio/gellary/about-photo.jpg",
   "images/portfolio/gellary/g-calculator.jpg",
-  "images/portfolio/gellary/g-ceaser.jpg",
+  "images/portfolio/gellary/g-encyption.jpg",
   "images/portfolio/gellary/g-numbersystems - web.jpg",
   "images/portfolio/gellary/g-numbersystems.jpg",
-  "images/portfolio/gellary/g-playfair.jpg",
-  "images/portfolio/gellary/g-row.jpg",
+  "images/portfolio/gellary/g-quiz.jpg",
 
   // Avatar
   "images/avatars/user-01.jpg",
@@ -75,7 +90,7 @@ const filesToCache = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(FILES_TO_CACHE);
+      return cache.addAll(filesToCache);
     })
   );
   self.skipWaiting();

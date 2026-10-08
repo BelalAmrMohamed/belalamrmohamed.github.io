@@ -2,443 +2,636 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Belal Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in | Belal Amr</title>
+  <link rel="stylesheet" href="css/admin-dashboard.css">
+
   <style>
+    /* ==========================================================
+       Login 03 — vanilla HTML / CSS / JS port
+       Original: Hirael <https://hirael.com/blocks/auth/login-03>
+       MIT · Mohammad Shehadeh
+       ========================================================== */
+
+    /* ---------- Theme tokens (shadcn "neutral") ---------- */
     :root {
-      --bg: #08131f;
-      --panel: #111d2c;
-      --panel-alt: #16293a;
-      --surface: #1f3550;
-      --surface-strong: #2a4a6e;
-      --text: #eaf2ff;
-      --muted: #99acc9;
-      --primary: #5ab2ff;
-      --primary-strong: #2a8cff;
-      --success: #4ade80;
-      --danger: #f87171;
-      --warning: #fbbf24;
-      --border: rgba(154, 179, 214, 0.2);
-      --shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
+      --background: oklch(1 0 0);
+      --foreground: oklch(0.145 0 0);
+      --card: oklch(1 0 0);
+      --primary: oklch(0.205 0 0);
+      --primary-foreground: oklch(0.985 0 0);
+      --muted-foreground: oklch(0.556 0 0);
+      --border: oklch(0.922 0 0);
+      --accent: oklch(0.97 0 0);
+      --accent-foreground: oklch(0.205 0 0);
+      --ring: oklch(0.708 0 0);
+      --input: oklch(0.922 0 0);
+      --radius: 0.5rem;
+      --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+      --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      font-family: Inter, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, rgba(90,178,255,0.12), transparent 30%), var(--bg);
-      color: var(--text);
+    @media (prefers-color-scheme: dark) {
+      :root:not(.light) {
+        --background: oklch(0.145 0 0);
+        --foreground: oklch(0.985 0 0);
+        --card: oklch(0.205 0 0);
+        --primary: oklch(0.922 0 0);
+        --primary-foreground: oklch(0.205 0 0);
+        --muted-foreground: oklch(0.708 0 0);
+        --border: oklch(1 0 0 / 10%);
+        --accent: oklch(0.269 0 0);
+        --accent-foreground: oklch(0.985 0 0);
+        --ring: oklch(0.556 0 0);
+        --input: oklch(1 0 0 / 15%);
+      }
     }
 
+    /* Manual override: add class="dark" or class="light" on <html> */
+    :root.dark {
+      --background: oklch(0.145 0 0);
+      --foreground: oklch(0.985 0 0);
+      --card: oklch(0.205 0 0);
+      --primary: oklch(0.922 0 0);
+      --primary-foreground: oklch(0.205 0 0);
+      --muted-foreground: oklch(0.708 0 0);
+      --border: oklch(1 0 0 / 10%);
+      --accent: oklch(0.269 0 0);
+      --accent-foreground: oklch(0.985 0 0);
+      --ring: oklch(0.556 0 0);
+      --input: oklch(1 0 0 / 15%);
+    }
+
+    /* ---------- Minimal reset ---------- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
-      display: grid;
-      place-items: center;
-      padding: 32px 16px;
+      font-family: var(--font-sans);
+      background: var(--background);
+      color: var(--foreground);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    svg { display: block; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
     }
 
-    .admin-shell {
-      width: min(1100px, 100%);
-      background: rgba(10, 18, 30, 0.86);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      border-radius: 24px;
+    /* ---------- Entrance animation ----------
+       Add class="enter" and style="--i: N" for a staggered delay. */
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(1rem); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .enter {
+      animation: enter 500ms var(--ease-enter) both;
+      animation-delay: calc(var(--i, 0) * 60ms);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .enter, .spin { animation: none; }
+    }
+
+    /* ---------- Button ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      white-space: nowrap; border-radius: calc(var(--radius) - 2px);
+      font-size: 0.875rem; line-height: 1.25rem; font-weight: 500;
+      height: 2.5rem; padding: 0.5rem 1rem;
+      transition: background-color 150ms, color 150ms;
+    }
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+    }
+    .btn:disabled { pointer-events: none; opacity: 0.5; }
+    .btn-default { background: var(--primary); color: var(--primary-foreground); }
+    .btn-default:hover { background: color-mix(in oklch, var(--primary) 90%, transparent); }
+    .btn-ghost:hover { background: var(--accent); color: var(--accent-foreground); }
+    .btn-lg { height: 2.75rem; padding-inline: 2rem; }
+    .btn-full { width: 100%; }
+    .btn-gap-1 { gap: 0.375rem; }
+    .btn-gap-2 { gap: 0.5rem; }
+
+    .icon { width: 1rem; height: 1rem; flex-shrink: 0; }
+    [dir="rtl"] .rtl-flip { transform: rotate(180deg); }
+
+    /* ---------- Layout ---------- */
+    .login {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100svh;
       overflow: hidden;
-      backdrop-filter: blur(14px);
+      background: var(--background);
     }
 
-    .auth-card,
-    .dashboard {
-      padding: 32px;
+    /* Decorative backdrop.
+       Phones: the animated lines sit behind the whole page.
+       Desktop: they are confined to the left-hand panel. */
+    .login::before {
+      content: "";
+      display: none;
+      position: absolute; z-index: 0;
+      top: 0; bottom: 0; inset-inline-start: 0;
+      width: 50%;
+      background:
+        linear-gradient(to bottom, transparent, transparent, var(--background)),
+        var(--card);
+      border-inline-end: 1px solid var(--border);
+    }
+    .bg-paths {
+      position: absolute; inset: 0; z-index: 0;
+      overflow: hidden; pointer-events: none;
+      opacity: 0.7;
+    }
+    .paths { position: absolute; inset: 0; pointer-events: none; }
+    .paths svg { width: 100%; height: 100%; color: var(--primary); }
+    .paths path { opacity: 0.6; }
+
+    /* Left aside (desktop only) */
+    .login-aside {
+      position: relative; z-index: 1;
+      display: none;
+      height: 100%;
+      flex-direction: column;
+      padding: 2.5rem;
     }
 
-    .auth-card {
-      max-width: 500px;
-      margin: 0 auto;
-      display: grid;
-      gap: 18px;
+    .brand {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .brand-mark { width: 1.5rem; height: 1.5rem; color: var(--foreground); }
+    .brand-name { font-size: 1rem; line-height: 1.5rem; font-weight: 600; letter-spacing: -0.025em; }
+
+    .quote {
+      position: relative; z-index: 10;
+      margin-top: auto;
+      display: flex; flex-direction: column; gap: 0.75rem;
+    }
+    .quote blockquote {
+      font-family: var(--font-serif);
+      font-size: 1.5rem; line-height: 1.25; letter-spacing: -0.025em;
+    }
+    .quote em { font-style: italic; color: var(--foreground); }
+    .quote figcaption {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; line-height: 1rem; text-transform: uppercase;
+      color: var(--muted-foreground);
+    }
+    .quote .sep { color: var(--border); }
+
+    /* Right main column */
+    .login-main {
+      position: relative;
+      display: flex; flex-direction: column; justify-content: center;
+      min-height: 100vh;
+      min-height: 100svh;
+      padding: 5rem 2rem;
+    }
+    .main-glow {
+      position: absolute; inset: 0; z-index: 0;
+      pointer-events: none; opacity: 0.6;
+    }
+    .glow {
+      position: absolute; top: 0; inset-inline-end: 0;
+      border-radius: 9999px;
+    }
+    .glow-1 {
+      height: 80rem; width: 35rem;
+      transform: translateY(-22rem);
+      background: radial-gradient(
+        68.54% 68.72% at 55.02% 31.46%,
+        color-mix(in oklch, var(--foreground) 6%, transparent) 0,
+        color-mix(in oklch, var(--foreground) 2%, transparent) 50%,
+        color-mix(in oklch, var(--foreground) 1%, transparent) 80%
+      );
+    }
+    .glow-2 {
+      height: 80rem; width: 15rem;
+      transform: translate(5%, -50%);
+      background: radial-gradient(
+        50% 50% at 50% 50%,
+        color-mix(in oklch, var(--foreground) 4%, transparent) 0,
+        color-mix(in oklch, var(--foreground) 1%, transparent) 80%,
+        transparent 100%
+      );
     }
 
-    .eyebrow {
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-size: 0.72rem;
-      font-weight: 700;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(2rem, 3vw, 2.6rem);
-      letter-spacing: -0.05em;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    form {
-      display: grid;
-      gap: 14px;
-    }
-
-    .field {
-      display: grid;
-      gap: 8px;
-    }
-
-    label {
-      font-size: 0.82rem;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    input,
-    textarea,
-    select,
-    button {
-      font: inherit;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(19, 31, 46, 0.9);
-      color: var(--text);
-      padding: 12px 14px;
-      width: 100%;
-    }
-
-    input:focus,
-    textarea:focus,
-    select:focus {
-      outline: 2px solid rgba(90, 178, 255, 0.45);
-      border-color: rgba(90, 178, 255, 0.65);
-    }
-
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-    }
-
-    .button-row {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    button {
-      cursor: pointer;
-      transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
-      font-weight: 700;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      opacity: 0.98;
-    }
-
-    .primary-btn {
-      background: linear-gradient(135deg, var(--primary), var(--primary-strong));
-      border: none;
-    }
-
-    .secondary-btn {
-      background: rgba(90, 178, 255, 0.08);
-    }
-
-    .danger-btn {
-      background: rgba(248, 113, 113, 0.12);
-      color: #fecaca;
-      border-color: rgba(248, 113, 113, 0.25);
-    }
-
-    .status {
-      min-height: 24px;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    .status.error { color: #fecaca; }
-    .status.success { color: #bbf7d0; }
-    .status.info { color: #dbeafe; }
-
-    .hidden { display: none !important; }
-
-    .dashboard-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding-bottom: 18px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
-    }
-
-    .dashboard-header h2 {
-      margin: 0;
-      font-size: clamp(1.8rem, 2vw, 2.3rem);
-    }
-
-    .meta-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(90, 178, 255, 0.08);
-      color: var(--muted);
-      border: 1px solid var(--border);
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .stat-card {
-      background: rgba(17, 29, 44, 0.96);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px 20px;
-    }
-
-    .stat-card span {
-      display: block;
-      color: var(--muted);
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
-    }
-
-    .stat-card strong {
-      font-size: clamp(1.6rem, 2vw, 2.3rem);
-      letter-spacing: -0.04em;
-    }
-
-    .content-grid {
-      display: grid;
-      grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-      gap: 20px;
+    .back {
+      position: absolute; z-index: 10;
+      inset-inline-start: 1.25rem; top: 1.75rem;
     }
 
     .panel {
-      background: rgba(17, 29, 44, 0.96);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 20px;
+      position: relative; z-index: 10;
+      width: 100%; margin-inline: auto;
+      display: flex; flex-direction: column; gap: 1.5rem;
+    }
+    .panel-brand { display: flex; align-items: center; gap: 0.5rem; }
+    .panel-header { display: flex; flex-direction: column; gap: 0.5rem; }
+    .panel-header h1 {
+      font-family: var(--font-serif);
+      font-size: 2.25rem; line-height: 2.5rem; font-weight: 500; letter-spacing: -0.025em;
+    }
+    .panel-header p { font-size: 0.875rem; line-height: 1.25rem; color: var(--muted-foreground); }
+
+    .legal { font-size: 0.75rem; line-height: 1rem; color: var(--muted-foreground); }
+    .legal a { color: var(--foreground); text-underline-offset: 4px; }
+    .legal a:hover { text-decoration: underline; }
+
+    /* ---------- Providers, divider, form ---------- */
+    .providers { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .divider {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.75rem; line-height: 1rem; color: var(--muted-foreground);
+    }
+    .divider::before, .divider::after {
+      content: ""; flex: 1; height: 1px; background: var(--border);
     }
 
-    .panel h3 {
-      margin-top: 0;
-      margin-bottom: 18px;
-      font-size: 1.1rem;
+    .form { display: flex; flex-direction: column; gap: 1rem; }
+    .field { display: flex; flex-direction: column; gap: 0.5rem; }
+    .field-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .label { font-size: 0.875rem; line-height: 1; font-weight: 500; }
+    .link { font-size: 0.875rem; line-height: 1.25rem; text-underline-offset: 4px; }
+    .link:hover { text-decoration: underline; }
+    .link:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 2px; }
+
+    .input {
+      display: flex; width: 100%; height: 2.5rem;
+      padding: 0.5rem 0.75rem;
+      font: inherit; font-size: 1rem; line-height: 1.5rem; color: inherit;
+      background: var(--background);
+      border: 1px solid var(--input);
+      border-radius: calc(var(--radius) - 2px);
+      transition: box-shadow 150ms;
     }
-
-    .project-list {
-      display: grid;
-      gap: 12px;
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .input::placeholder { color: var(--muted-foreground); }
+    .input:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
     }
+    .input:disabled { cursor: not-allowed; opacity: 0.5; }
 
-    .project-item {
-      border: 1px solid var(--border);
-      background: rgba(33, 52, 74, 0.8);
-      border-radius: 14px;
-      padding: 14px 16px;
-      display: grid;
-      gap: 8px;
+    .btn-outline { background: var(--background); border: 1px solid var(--input); }
+    .btn-outline:hover { background: var(--accent); color: var(--accent-foreground); }
+    .icon-slot { display: inline-flex; }
+    .icon-slot:empty { display: none; }
+
+    /* ---------- Breakpoints ---------- */
+    @media (min-width: 640px) {
+      .panel { max-width: 24rem; }
+      .panel-header h1 { font-size: 3rem; line-height: 1; }
     }
-
-    .project-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
+    @media (min-width: 768px) {
+      .quote blockquote { font-size: 1.875rem; }
+      .input { font-size: 0.875rem; line-height: 1.25rem; }
     }
-
-    .project-item strong {
-      font-size: 1rem;
-    }
-
-    .tag {
-      display: inline-block;
-      font-size: 0.72rem;
-      padding: 5px 8px;
-      border-radius: 999px;
-      background: rgba(90, 178, 255, 0.12);
-      color: #dbeafe;
-      border: 1px solid rgba(90, 178, 255, 0.24);
-    }
-
-    .project-item p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .project-item-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .mini-btn {
-      padding: 8px 10px;
-      font-size: 0.8rem;
-      border-radius: 10px;
-    }
-
-    .empty-state {
-      color: var(--muted);
-      margin: 0;
-      line-height: 1.6;
-    }
-
-    @media (max-width: 820px) {
-      .stats-grid,
-      .content-grid,
-      .button-row {
-        grid-template-columns: 1fr;
-      }
-
-      .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+    @media (min-width: 1024px) {
+      .login { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .login::before { display: block; }
+      .bg-paths { inset-inline-end: 50%; opacity: 1; }
+      .login-aside { display: flex; }
+      .login-main { min-height: 0; }
+      .panel-brand { display: none; }
     }
   </style>
 </head>
+
 <body>
-  <div class="admin-shell">
-    <div id="authView" class="auth-card">
-      <div class="eyebrow">Portfolio Admin</div>
-      <div>
-        <h1>Access the dashboard</h1>
-      </div>
-      <p class="subtitle">Sign in to manage your projects, portfolio highlights, and site content.</p>
+  <section class="login" data-slot="login">
 
-      <form id="loginForm">
-        <div class="field">
-          <label for="email">Email address</label>
-          <input id="email" type="email" placeholder="admin@example.com" required />
-        </div>
+    <!-- Animated lines: page background on phones, left panel on desktop -->
+    <div class="bg-paths" id="floating-paths" aria-hidden="true"></div>
 
-        <div class="field">
-          <label for="password">Password</label>
-          <input id="password" type="password" placeholder="••••••••" required />
-        </div>
-
-        <div class="button-row">
-          <button class="primary-btn" type="submit">Sign in</button>
-          <button id="demoModeBtn" class="secondary-btn" type="button">Use demo mode</button>
-        </div>
-      </form>
-
-      <div class="button-row">
-        <button id="googleLoginBtn" class="secondary-btn" type="button">Continue with Google</button>
-        <button id="githubLoginBtn" class="secondary-btn" type="button">Continue with GitHub</button>
+    <!-- ============ Left: brand + quote ============ -->
+    <aside class="login-aside" data-slot="login-aside">
+      <div class="brand enter">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M2.3 12h2.4v10.95h6.2V14.6h4.6v8.35h6.2V12h-2.4V1.05h-6.2V9.4H8.5V1.05H2.3Z" />
+        </svg>
+        <span class="brand-name">Belal Amr</span>
       </div>
 
-      <div id="authStatus" class="status info" aria-live="polite"></div>
+      <figure class="quote enter" style="--i: 4">
+        <blockquote>
+          We wired up auth in an afternoon and
+          <em>never looked back</em>.
+          The source lives in our repo, so it bends to us.
+        </blockquote>
+        <figcaption>
+          <span>Platform team</span>
+          <span class="sep" aria-hidden="true">|</span>
+          <span>Northwind</span>
+        </figcaption>
+      </figure>
+    </aside>
+
+    <!-- ============ Right: sign-in ============ -->
+    <div class="login-main" data-slot="login-main">
+      <div class="main-glow" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <a href="/" class="btn btn-ghost btn-gap-1 back enter">
+        <svg class="icon rtl-flip" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+        Home
+      </a>
+
+      <div class="panel" data-slot="login-panel">
+        <div class="panel-brand enter">
+          <svg class="brand-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M2.3 12h2.4v10.95h6.2V14.6h4.6v8.35h6.2V12h-2.4V1.05h-6.2V9.4H8.5V1.05H2.3Z" />
+          </svg>
+          <span class="brand-name">Belal Amr</span>
+        </div>
+
+        <div class="panel-header" data-slot="login-header">
+          <h1 class="enter" style="--i: 1">Welcome back.</h1>
+          <p class="enter" style="--i: 2">
+            Sign in to securely manage your portfolio.
+          </p>
+        </div>
+
+        <div class="providers enter" style="--i: 3">
+          <button type="button" id="google-btn" class="btn btn-outline btn-lg btn-full btn-gap-2">
+            <span class="icon-slot" aria-hidden="true"></span>
+            <span class="btn-label">Continue with Google</span>
+          </button>
+          <button type="button" id="github-btn" class="btn btn-outline btn-lg btn-full btn-gap-2">
+            <span class="icon-slot" aria-hidden="true"></span>
+            <span class="btn-label">Continue with GitHub</span>
+          </button>
+        </div>
+
+        <div class="divider enter" style="--i: 4">or sign in with email</div>
+
+        <form class="form enter" id="email-form" style="--i: 5">
+          <div class="field">
+            <label class="label" for="email">Email</label>
+            <input class="input" id="email" name="email" type="email" required
+                   autocomplete="email" inputmode="email" placeholder="you@example.com" />
+          </div>
+
+          <div class="field">
+            <div class="field-row">
+              <label class="label" for="password">Password</label>
+              <a href="#" class="link" id="reset-password">Forgot password?</a>
+            </div>
+            <input class="input" id="password" name="password" type="password" required
+                   autocomplete="current-password" />
+          </div>
+
+          <button type="submit" id="email-btn" class="btn btn-default btn-lg btn-full btn-gap-2">
+            <span class="icon-slot" aria-hidden="true"></span>
+            <span class="btn-label">Sign in</span>
+          </button>
+        </form>
+
+        <p role="status" id="auth-status" class="auth-status" aria-live="polite"></p>
+
+        <p class="legal enter" style="--i: 6">
+          Portfolio administration is restricted to the authorized account.
+        </p>
+      </div>
     </div>
+  </section>
 
-    <div id="dashboardView" class="dashboard hidden">
-      <div class="dashboard-header">
-        <div>
-          <div class="eyebrow">Admin dashboard</div>
-          <h2>Portfolio control center</h2>
+  <main id="dashboardView" class="dashboard-page hidden" aria-label="Portfolio dashboard">
+    <div class="dashboard-container">
+      <header class="dashboard-topbar">
+        <a class="dashboard-brand" href="/">Belal<span>.</span></a>
+        <div class="dashboard-account">
+          <span id="userEmail"></span>
+          <button id="signOutBtn" class="btn btn-outline" type="button">Sign out</button>
         </div>
-        <div class="meta-badge">Logged in as <strong id="userEmail">admin</strong></div>
-      </div>
+      </header>
 
-      <div class="stats-grid">
-        <div class="stat-card">
+      <section class="dashboard-heading">
+        <div>
+          <p class="dashboard-eyebrow">Portfolio administration</p>
+          <h1>Dashboard</h1>
+          <p>Manage the projects and public details shown on your portfolio.</p>
+        </div>
+        <a class="btn btn-default" href="/" target="_blank" rel="noopener noreferrer">View portfolio</a>
+      </section>
+
+      <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
+
+      <section class="dashboard-stats" aria-label="Portfolio summary">
+        <article class="dashboard-card dashboard-stat">
           <span>Total projects</span>
           <strong id="totalProjects">0</strong>
-        </div>
-        <div class="stat-card">
-          <span>Featured</span>
+        </article>
+        <article class="dashboard-card dashboard-stat">
+          <span>Featured projects</span>
           <strong id="featuredProjects">0</strong>
-        </div>
-        <div class="stat-card">
-          <span>Storage</span>
-          <strong>Supabase</strong>
-        </div>
-      </div>
+        </article>
+        <article class="dashboard-card dashboard-stat">
+          <span>Published projects</span>
+          <strong id="publishedProjects">0</strong>
+        </article>
+      </section>
 
-      <div class="content-grid">
-        <aside class="panel">
-          <h3 id="formTitle">Add project</h3>
-          <form id="projectForm">
-            <input id="projectId" type="hidden" />
-
-            <div class="field">
-              <label for="projectTitle">Project title</label>
-              <input id="projectTitle" type="text" required />
+      <section class="dashboard-grid">
+        <article class="dashboard-card dashboard-editor">
+          <div class="dashboard-card-heading">
+            <div>
+              <p class="dashboard-eyebrow">Project editor</p>
+              <h2 id="formTitle">Add project</h2>
             </div>
+          </div>
 
-            <div class="field">
-              <label for="projectCategory">Category</label>
-              <input id="projectCategory" type="text" value="Web Development" required />
+          <form id="projectForm" class="dashboard-form">
+            <input id="projectId" type="hidden">
+            <div class="dashboard-form-row">
+              <div class="field">
+                <label class="label" for="projectTitle">Project title</label>
+                <input class="input" id="projectTitle" type="text" maxlength="120" required>
+              </div>
+              <div class="field">
+                <label class="label" for="projectCategory">Category</label>
+                <input class="input" id="projectCategory" type="text" maxlength="80" required>
+              </div>
             </div>
-
             <div class="field">
-              <label for="projectUrl">Project URL</label>
-              <input id="projectUrl" type="url" placeholder="https://example.com" />
+              <label class="label" for="projectSummary">Description</label>
+              <textarea class="input dashboard-textarea" id="projectSummary" maxlength="1200"></textarea>
             </div>
-
             <div class="field">
-              <label for="projectGithub">GitHub URL</label>
-              <input id="projectGithub" type="url" placeholder="https://github.com/owner/repo" />
+              <label class="label" for="projectImage">Image URL or site-relative path</label>
+              <input class="input" id="projectImage" type="text" maxlength="500" placeholder="images/portfolio/project.jpg">
             </div>
-
-            <div class="field">
-              <label for="projectImage">Image URL</label>
-              <input id="projectImage" type="url" placeholder="https://images.example.com/project.jpg" />
+            <div class="dashboard-form-row">
+              <div class="field">
+                <label class="label" for="projectUrl">Project URL</label>
+                <input class="input" id="projectUrl" type="url" maxlength="500" placeholder="https://example.com">
+              </div>
+              <div class="field">
+                <label class="label" for="projectGithub">GitHub URL</label>
+                <input class="input" id="projectGithub" type="url" maxlength="500" placeholder="https://github.com/owner/repo">
+              </div>
             </div>
-
-            <div class="field">
-              <label for="projectStatus">Status</label>
-              <select id="projectStatus">
-                <option value="featured">Featured</option>
-                <option value="active">Active</option>
-                <option value="archived">Archived</option>
-              </select>
+            <div class="dashboard-form-row dashboard-options">
+              <div class="field">
+                <label class="label" for="projectStatus">Status</label>
+                <select class="input" id="projectStatus">
+                  <option value="featured">Featured</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <label class="dashboard-checkbox">
+                <input id="projectPublished" type="checkbox" checked>
+                <span>Published on the public portfolio</span>
+              </label>
             </div>
-
-            <div class="field">
-              <label for="projectSummary">Summary</label>
-              <textarea id="projectSummary" placeholder="What this project does and why it matters..."></textarea>
-            </div>
-
-            <div class="button-row">
-              <button class="primary-btn" type="submit">Save project</button>
-              <button id="resetProjectForm" class="secondary-btn" type="button">Reset</button>
+            <div class="dashboard-actions">
+              <button id="saveProjectBtn" class="btn btn-default" type="submit">Save project</button>
+              <button id="resetProjectForm" class="btn btn-outline" type="button">Clear form</button>
             </div>
           </form>
-        </aside>
+        </article>
 
-        <section class="panel">
-          <h3>Projects</h3>
+        <article class="dashboard-card dashboard-projects">
+          <div class="dashboard-card-heading">
+            <div>
+              <p class="dashboard-eyebrow">Your work</p>
+              <h2>Projects</h2>
+            </div>
+            <button id="refreshProjectsBtn" class="btn btn-outline" type="button">Refresh</button>
+          </div>
           <ul id="projectList" class="project-list"></ul>
-        </section>
-      </div>
+        </article>
 
-      <div class="button-row" style="margin-top: 18px; max-width: 180px;">
-        <button id="signOutBtn" class="danger-btn" type="button">Sign out</button>
-      </div>
+        <article class="dashboard-card dashboard-settings">
+          <div class="dashboard-card-heading">
+            <div>
+              <p class="dashboard-eyebrow">Public details</p>
+              <h2>Site settings</h2>
+            </div>
+          </div>
+          <form id="settingsForm" class="dashboard-form">
+            <div class="field">
+              <label class="label" for="siteTitle">Site title</label>
+              <input class="input" id="siteTitle" type="text" maxlength="120" required>
+            </div>
+            <div class="field">
+              <label class="label" for="siteTagline">Tagline</label>
+              <input class="input" id="siteTagline" type="text" maxlength="240" required>
+            </div>
+            <button class="btn btn-default" type="submit">Save public details</button>
+          </form>
+        </article>
+      </section>
     </div>
-  </div>
+  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.53.0/dist/umd/supabase.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var SVG_NS = "http://www.w3.org/2000/svg";
+      var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      /* ---------- Floating background paths ---------- */
+
+      // Deterministic pseudo-random value in [0, 1) so every load looks the same.
+      function jitter(i) {
+        var value = Math.sin(i + 1) * 10000;
+        return value - Math.floor(value);
+      }
+
+      function createFloatingPaths(position) {
+        var wrap = document.createElement("div");
+        wrap.className = "paths";
+
+        var svg = document.createElementNS(SVG_NS, "svg");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("viewBox", "0 0 696 316");
+
+        for (var i = 0; i < 36; i++) {
+          var d =
+            "M-" + (380 - i * 5 * position) + " -" + (189 + i * 6) +
+            "C-" + (380 - i * 5 * position) + " -" + (189 + i * 6) +
+            " -" + (312 - i * 5 * position) + " " + (216 - i * 6) +
+            " " + (152 - i * 5 * position) + " " + (343 - i * 6) +
+            "C" + (616 - i * 5 * position) + " " + (470 - i * 6) +
+            " " + (684 - i * 5 * position) + " " + (875 - i * 6) +
+            " " + (684 - i * 5 * position) + " " + (875 - i * 6);
+
+          var path = document.createElementNS(SVG_NS, "path");
+          path.setAttribute("d", d);
+          path.setAttribute("stroke", "currentColor");
+          path.setAttribute("stroke-opacity", (0.1 + i * 0.03).toFixed(2));
+          path.setAttribute("stroke-width", (0.5 + i * 0.03).toFixed(2));
+          // Normalise the path length to 1 so dash values are fractions of the line.
+          path.setAttribute("pathLength", "1");
+          path.style.strokeDasharray = "0.3 1";
+          svg.appendChild(path);
+
+          if (!reduceMotion && path.animate) {
+            var duration = (20 + jitter(i) * 10) * 1000;
+            var timing = { duration: duration, iterations: Infinity, easing: "linear" };
+
+            // Line grows from 30% to 100% of its length...
+            path.animate(
+              [{ strokeDasharray: "0.3 1" }, { strokeDasharray: "1 1" }],
+              timing
+            );
+            // ...while sliding along itself and back again.
+            path.animate(
+              [
+                { strokeDashoffset: "0" },
+                { strokeDashoffset: "-1" },
+                { strokeDashoffset: "0" }
+              ],
+              timing
+            );
+          }
+        }
+
+        wrap.appendChild(svg);
+        return wrap;
+      }
+
+      var pathsHost = document.getElementById("floating-paths");
+      if (pathsHost) {
+        pathsHost.appendChild(createFloatingPaths(1));
+        pathsHost.appendChild(createFloatingPaths(-1));
+
+        // Phones: "slice" so the lines fill the whole tall screen.
+        // Desktop: "meet" so they sit inside the left panel as designed.
+        var wide = window.matchMedia("(min-width: 1024px)");
+        var applyAspect = function () {
+          var mode = wide.matches ? "xMidYMid meet" : "xMidYMid slice";
+          pathsHost.querySelectorAll("svg").forEach(function (el) {
+            el.setAttribute("preserveAspectRatio", mode);
+          });
+        };
+        applyAspect();
+        wide.addEventListener("change", applyAspect);
+      }
+
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="js/site-config.js"></script>
-  <script src="js/admin.js"></script>
+  <script src="js/admin-app.js" type="module"></script>
 </body>
 </html>

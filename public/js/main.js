@@ -83,6 +83,14 @@
             });
 
             tl.play();
+            // Keep a stalled intro animation from blocking the page.
+            window.setTimeout(function() {
+                if (preloader.style.display !== 'none') {
+                    preloader.style.opacity = '0';
+                    preloader.style.visibility = 'hidden';
+                    preloader.style.display = 'none';
+                }
+            }, 2500);
         });
 
         // force page scroll position to top at page refresh
