@@ -275,7 +275,7 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
   const sidebarBrand = document.createElement("div");
   sidebarBrand.className = "ai-agent-sidebar-brand";
   sidebarBrand.innerHTML =
-    '<span class="ai-agent-sidebar-brand-name">Belal&#39;s Assistant</span><img src="/assets/images/el-bash-mebasmag--no-bg.png" alt="" class="ai-agent-sidebar-brand-img">';
+    '<img src="/assets/images/el-bash-mebasmag--no-bg.png" alt="" class="ai-agent-sidebar-brand-img"><span class="ai-agent-sidebar-brand-name">Belal&#39;s Assistant</span>';
 
   // Collapse button: two icon siblings (default "panel-left" / hover
   // "panel-left-open" — same lucide icons and same crossfade mechanism

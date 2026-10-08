@@ -2608,7 +2608,7 @@ export function createChatPanel(options = {}) {
   /** Keep Send visible and use its disabled state to show when a message is ready. */
   function updateSendBtnVisibility() {
     const hasDraft = Boolean(textarea.value.trim() || pendingAttachments.length);
-    sendBtn.hidden = !hasDraft && !isDictating;
+    sendBtn.hidden = false;
     sendBtn.disabled = textarea.disabled
       || isGenerating
       || (!hasDraft && !isDictating);
