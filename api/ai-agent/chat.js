@@ -29,6 +29,8 @@
 //   AI_AGENT_MODEL     (optional) a model id from ALLOWED_MODELS in
 //       _providerClients.js. When unset (or not on that allowlist), the
 //       provider's own lightest default is used.
+//   SUPABASE_URL and SUPABASE_SERVICE_KEY are required for identity/quota
+//       checks and loading the published portfolio context.
 //
 // ATTACHMENTS: max 1 per message, 4MB decoded (see MAX_ATTACHMENT_BYTES —
 // Vercel's own request body cap is the real binding constraint here, not
@@ -37,7 +39,7 @@
 // processAttachments() and folded into `content` — this is also what makes
 // attachments work at all with DeepSeek, which has no file input in its API.
 // Success 200: { text: string, toolCalls?: Array<{ name: string, input: object }> }
-// Failure 400/401/403/429/500/503: { error: string }
+// Failure 400/401/403/429/500/503: { error: string, code?: string }
 //
 // AUTHORIZATION:
 // The platform's rotated free-tier keys (getNextKey in _keyPool.js) are
@@ -401,12 +403,21 @@ export default async function handler(req, res) {
   }
 
   const provider = resolvePlatformProvider();
-  if (!provider) {
-    return res.status(503).json({ error: "خدمة المساعد الذكي غير متاحة حاليًا" });
-  }
-  const keys = getKeySequence(provider);
-  if (!keys.length) {
-    return res.status(503).json({ error: "خدمة المساعد الذكي غير متاحة حاليًا" });
+  const keys = provider ? getKeySequence(provider) : [];
+  if (
+    !provider
+    || !keys.length
+    || !process.env.SUPABASE_URL
+    || !process.env.SUPABASE_SERVICE_KEY
+  ) {
+    console.error("[ai-agent/chat] server configuration is incomplete", {
+      providerConfigured: Boolean(provider && keys.length),
+      supabaseConfigured: Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY),
+    });
+    return res.status(503).json({
+      code: "AI_SERVICE_NOT_CONFIGURED",
+      error: "The AI service is not configured on the server. Configure an AI_AGENT_* provider key, SUPABASE_URL, and SUPABASE_SERVICE_KEY in the deployment environment.",
+    });
   }
 
   const rawIpAddress = req.headers["x-real-ip"] || req.socket?.remoteAddress || "unknown";

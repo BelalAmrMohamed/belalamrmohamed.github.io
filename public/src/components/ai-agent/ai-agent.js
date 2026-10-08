@@ -36,8 +36,8 @@
 // sidebar (previously a desktop-only extra alongside the tabs) is now the
 // single navigation surface everywhere:
 //   - Desktop (>=901px, DESKTOP_BREAKPOINT_QUERY below): a permanent
-//     left-hand column (RTL: sidebar visually on the left, chat on the
-//     right) showing New Chat / export / the full, scrollable
+//     left-hand column (sidebar on the left, chat on the right) showing
+//     New Chat / export / the full, scrollable
 //     conversation history (createHistoryPanel, reused directly — see its
 //     own header comment) — not a short 5-item "recents" list anymore.
 //   - Mobile (<901px): the sidebar is an off-canvas side drawer opened by
@@ -261,8 +261,8 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
   const sidebarFaviconBtn = document.createElement("button");
   sidebarFaviconBtn.type = "button";
   sidebarFaviconBtn.className = "ai-agent-sidebar-favicon";
-  sidebarFaviconBtn.setAttribute("aria-label", "توسيع الشريط الجانبي");
-  sidebarFaviconBtn.title = "توسيع الشريط الجانبي";
+  sidebarFaviconBtn.setAttribute("aria-label", "Expand sidebar");
+  sidebarFaviconBtn.title = "Expand sidebar";
   sidebarFaviconBtn.innerHTML =
     '<img src="/assets/images/el-bash-mebasmag--no-bg.png" alt="Belal portfolio assistant" class="ai-agent-sidebar-favicon-img">' +
     SIDEBAR_EXPAND_HOVER_ICON_SVG;
@@ -285,8 +285,8 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
   const sidebarCollapseBtn = document.createElement("button");
   sidebarCollapseBtn.type = "button";
   sidebarCollapseBtn.className = "ai-agent-sidebar-collapse-btn";
-  sidebarCollapseBtn.setAttribute("aria-label", "طي الشريط الجانبي");
-  sidebarCollapseBtn.title = "طي الشريط الجانبي";
+  sidebarCollapseBtn.setAttribute("aria-label", "Collapse sidebar");
+  sidebarCollapseBtn.title = "Collapse sidebar";
   sidebarCollapseBtn.innerHTML = SIDEBAR_COLLAPSE_DEFAULT_ICON_SVG + SIDEBAR_COLLAPSE_HOVER_ICON_SVG;
 
   sidebarHeader.append(sidebarCollapseBtn, sidebarBrand, sidebarFaviconBtn);
@@ -294,8 +294,8 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
   function applySidebarCollapsedState(collapsed) {
     sidebarCollapsed = collapsed;
     sidebar.classList.toggle("ai-agent-sidebar--collapsed", collapsed);
-    sidebarCollapseBtn.setAttribute("aria-label", collapsed ? "توسيع الشريط الجانبي" : "طي الشريط الجانبي");
-    sidebarCollapseBtn.title = collapsed ? "توسيع الشريط الجانبي" : "طي الشريط الجانبي";
+    sidebarCollapseBtn.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    sidebarCollapseBtn.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
     try {
       localStorage.setItem(AI_AGENT_SIDEBAR_STORAGE_KEY, String(!collapsed));
     } catch {
@@ -320,7 +320,7 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
   const sidebarNewChatBtn = document.createElement("button");
   sidebarNewChatBtn.type = "button";
   sidebarNewChatBtn.className = "ai-agent-sidebar-btn";
-  sidebarNewChatBtn.innerHTML = `${NEW_CHAT_ICON_SVG}<span>محادثة جديدة</span>`;
+  sidebarNewChatBtn.innerHTML = `${NEW_CHAT_ICON_SVG}<span>New chat</span>`;
   sidebarNewChatBtn.addEventListener("click", () => {
     if (sidebarNewChatBtn.disabled) return;
     chatPanelSlot.current.startNewConversation();
@@ -332,7 +332,7 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
   const sidebarCopyBtn = document.createElement("button");
   sidebarCopyBtn.type = "button";
   sidebarCopyBtn.className = "ai-agent-sidebar-btn";
-  sidebarCopyBtn.innerHTML = `${COPY_CONVO_ICON_SVG}<span>تصدير المحادثة</span>`;
+  sidebarCopyBtn.innerHTML = `${COPY_CONVO_ICON_SVG}<span>Export conversation</span>`;
   sidebarCopyBtn.setAttribute("aria-haspopup", "menu");
   sidebarCopyBtn.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -341,13 +341,13 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
       menu.classList.add("ai-agent-export-menu");
       const title = document.createElement("div");
       title.className = "ai-agent-export-menu-title";
-      title.textContent = "تصدير المحادثة";
+      title.textContent = "Export conversation";
       menu.appendChild(title);
       [
-        ["md", "MD", "Markdown منسّق", "copy"],
-        ["html", "HTML", "عرض غني مع التنسيق", "copy-html"],
-        ["json", "JSON", "نسخة بيانات منظمة", "copy-json"],
-        ["pdf", "PDF", "مستند جاهز للطباعة", null],
+        ["md", "MD", "Formatted Markdown", "copy"],
+        ["html", "HTML", "Rich formatted view", "copy-html"],
+        ["json", "JSON", "Structured data", "copy-json"],
+        ["pdf", "PDF", "Print-ready document", null],
       ].forEach(([format, label, description, copyFormat]) => {
         const row = document.createElement("div");
         row.className = "ai-agent-export-menu-item";
@@ -363,8 +363,8 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
         const download = document.createElement("button");
         download.type = "button";
         download.className = "ai-agent-export-action";
-        download.title = `تنزيل ${label}`;
-        download.setAttribute("aria-label", `تنزيل بصيغة ${label}`);
+        download.title = `Download ${label}`;
+        download.setAttribute("aria-label", `Download as ${label}`);
         download.innerHTML = DOWNLOAD_ICON_SVG;
         download.addEventListener("click", async (optionEvent) => {
           optionEvent.stopPropagation();
@@ -376,8 +376,8 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
           const copyButton = document.createElement("button");
           copyButton.type = "button";
           copyButton.className = "ai-agent-export-action";
-          copyButton.title = `نسخ ${label}`;
-          copyButton.setAttribute("aria-label", `نسخ بصيغة ${label}`);
+          copyButton.title = `Copy ${label}`;
+          copyButton.setAttribute("aria-label", `Copy as ${label}`);
           copyButton.innerHTML = COPY_ICON_SVG;
           copyButton.addEventListener("click", async (optionEvent) => {
             optionEvent.stopPropagation();
@@ -591,9 +591,9 @@ export function openAIAgentModal(options, fab) {
   const header = document.createElement("div");
   header.className = "ai-agent-modal-header";
   header.innerHTML = `
-    <button type="button" class="ai-agent-sidebar-collapse-btn ai-agent-mobile-sidebar-toggle" aria-label="فتح القائمة" aria-expanded="false" title="فتح القائمة">${SIDEBAR_EXPAND_DEFAULT_ICON_SVG_TOGGLE}${SIDEBAR_EXPAND_HOVER_ICON_SVG_TOGGLE}</button>
+    <button type="button" class="ai-agent-sidebar-collapse-btn ai-agent-mobile-sidebar-toggle" aria-label="Open sidebar" aria-expanded="false" title="Open sidebar">${SIDEBAR_EXPAND_DEFAULT_ICON_SVG_TOGGLE}${SIDEBAR_EXPAND_HOVER_ICON_SVG_TOGGLE}</button>
     <h2 id="aiAgentModalTitle"><img src="/assets/images/el-bash-mebasmag--no-bg.png" alt="" class="ai-agent-logo" aria-hidden="true"> Belal Amr's Assistant</h2>
-    <button type="button" class="ai-agent-close-btn ai-agent-modal-close" aria-label="إغلاق">${CLOSE_ICON_SVG}</button>
+    <button type="button" class="ai-agent-close-btn ai-agent-modal-close" aria-label="Close assistant">${CLOSE_ICON_SVG}</button>
   `;
 
   // See getOrCreateChatPanel's own doc comment: this ref (one per
@@ -622,9 +622,11 @@ export function openAIAgentModal(options, fab) {
       if (window.matchMedia?.(DESKTOP_BREAKPOINT_QUERY).matches) return;
       event.stopPropagation();
       const mobileSheetOpen = !mobileSidebar?.classList.contains("ai-agent-sidebar--mobile-open");
-      sidebarCollapseBtns.forEach((button) =>
-        button.setAttribute("aria-expanded", String(mobileSheetOpen)),
-      );
+      sidebarCollapseBtns.forEach((button) => {
+        button.setAttribute("aria-expanded", String(mobileSheetOpen));
+        button.setAttribute("aria-label", mobileSheetOpen ? "Close sidebar" : "Open sidebar");
+        button.title = mobileSheetOpen ? "Close sidebar" : "Open sidebar";
+      });
       if (mobileSheetOpen) {
         widgetEl.openMobileSidebarSheet?.();
       } else {
@@ -640,7 +642,11 @@ export function openAIAgentModal(options, fab) {
   // resets it too.
   const originalCloseMobileSheet = widgetEl.closeMobileSidebarSheet;
   widgetEl.closeMobileSidebarSheet = function patchedCloseMobileSidebarSheet() {
-    sidebarCollapseBtns.forEach((button) => button.setAttribute("aria-expanded", "false"));
+    sidebarCollapseBtns.forEach((button) => {
+      button.setAttribute("aria-expanded", "false");
+      button.setAttribute("aria-label", "Open sidebar");
+      button.title = "Open sidebar";
+    });
     return originalCloseMobileSheet?.();
   };
 

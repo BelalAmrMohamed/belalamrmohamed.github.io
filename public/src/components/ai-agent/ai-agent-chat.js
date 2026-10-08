@@ -158,7 +158,7 @@ function base64ByteLength(base64) {
 export function createChatPanel(options = {}) {
   const {
     contextPrompt = "",
-    placeholder = "اسأل أي سؤال عن الامتحان...",
+    placeholder = "Ask anything about Belal's work...",
     pageKey = "default",
     defaultSystemPrompt = "",
     enableTools = false,
@@ -544,7 +544,7 @@ export function createChatPanel(options = {}) {
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
     closeBtn.className = "ai-agent-attachment-preview-close";
-    closeBtn.setAttribute("aria-label", "إغلاق");
+    closeBtn.setAttribute("aria-label", "Close attachment preview");
     closeBtn.innerHTML = ATTACHMENT_REMOVE_ICON_SVG;
     card.appendChild(closeBtn);
 
@@ -671,7 +671,7 @@ export function createChatPanel(options = {}) {
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "ai-agent-attachment-tile-remove";
-    removeBtn.setAttribute("aria-label", "إزالة المرفق");
+    removeBtn.setAttribute("aria-label", "Remove attachment");
     removeBtn.innerHTML = ATTACHMENT_REMOVE_ICON_SVG;
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -803,15 +803,15 @@ export function createChatPanel(options = {}) {
     moreBtn = document.createElement("button");
     moreBtn.type = "button";
     moreBtn.className = "ai-agent-more-btn";
-    moreBtn.setAttribute("aria-label", "المزيد من الخيارات");
-    moreBtn.title = "المزيد";
+    moreBtn.setAttribute("aria-label", "More options");
+    moreBtn.title = "More options";
     moreBtn.innerHTML =
       '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>';
 
     const moreMenuItems = [
       {
         icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>',
-        label: "إرفاق ملف",
+        label: "Attach file",
         onClick: () => fileInput.click(),
       },
       {
@@ -825,7 +825,7 @@ export function createChatPanel(options = {}) {
         // since there's no "typed `@`" position to anchor to from a menu
         // click) instead of a freshly-typed trigger character.
         icon: ATTACHMENT_QUIZ_ICON_SVG,
-        label: "إرفاق امتحان أو مجلد",
+        label: "Attach a quiz or folder",
         onClick: () => {
           textarea.focus();
           // Inserts a literal `@` at the caret rather than opening the
@@ -848,7 +848,7 @@ export function createChatPanel(options = {}) {
       },
       {
         icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h7"/><path d="m17 16 3 3 3-3"/></svg>',
-        label: "الأوامر المتاحة",
+        label: "Available actions",
         onClick: () => {
           textarea.focus();
           if (!textarea.value.startsWith("/")) textarea.value = `/${textarea.value}`;
@@ -1037,8 +1037,8 @@ export function createChatPanel(options = {}) {
   // setDictationUiState below) — otherwise this would sit visible in the
   // input row on every page load.
   dictationWaveEl.hidden = true;
-  dictationWaveEl.setAttribute("aria-label", "جارِ الاستماع — اضغط للإلغاء");
-  dictationWaveEl.title = "جارِ الاستماع — اضغط للإلغاء";
+  dictationWaveEl.setAttribute("aria-label", "Listening — click to cancel");
+  dictationWaveEl.title = "Listening — click to cancel";
   dictationWaveEl.innerHTML = `
     <span class="ai-agent-dictation-wave-bars" aria-hidden="true">
       <span></span><span></span><span></span><span></span><span></span>
@@ -1217,8 +1217,8 @@ export function createChatPanel(options = {}) {
     isDictating = dictating;
     if (micBtn) {
       micBtn.innerHTML = dictating ? CANCEL_ICON_SVG : MIC_ICON_SVG;
-      micBtn.setAttribute("aria-label", dictating ? "إلغاء الإملاء الصوتي" : "بدء الإملاء الصوتي");
-      micBtn.title = dictating ? "إلغاء الإملاء" : "إملاء صوتي";
+      micBtn.setAttribute("aria-label", dictating ? "Cancel voice dictation" : "Start voice dictation");
+      micBtn.title = dictating ? "Cancel dictation" : "Voice dictation";
       micBtn.classList.toggle("ai-agent-mic-btn--active", dictating);
     }
     if (moreBtn) moreBtn.hidden = dictating;
@@ -1317,11 +1317,11 @@ export function createChatPanel(options = {}) {
         }
         return;
       }
-      let message = "تعذر استخدام الإملاء الصوتي. حاول مرة أخرى.";
+      let message = "Voice dictation could not be used. Try again.";
       if (event.error === "network") {
         message = isBraveBrowser
-          ? "تعذّر الاتصال بخدمة التعرف الصوتي بعد إعادة المحاولة. تحقق من اتصالك وإعدادات Shields في Brave، ثم حاول مجدداً."
-          : "تعذر الوصول إلى خدمة التعرف الصوتي (قد يكون بسبب مانع إعلانات أو مشكلة في الاتصال). حاول مرة أخرى أو اكتب رسالتك.";
+          ? "Could not connect to voice recognition after retrying. Check your connection and Brave Shields settings, then try again."
+          : "Could not reach voice recognition. Check your connection or type your message instead.";
       }
       appendError(message);
       stopMicMetering();
@@ -1347,7 +1347,7 @@ export function createChatPanel(options = {}) {
       startMicMetering();
     } catch (err) {
       console.error("[ai-agent-chat] SpeechRecognition start failed:", err);
-      appendError("تعذر بدء الإملاء الصوتي.");
+      appendError("Could not start voice dictation.");
     }
   }
 
@@ -1372,8 +1372,8 @@ export function createChatPanel(options = {}) {
     micBtn = document.createElement("button");
     micBtn.type = "button";
     micBtn.className = "ai-agent-mic-btn";
-    micBtn.setAttribute("aria-label", "بدء الإملاء الصوتي");
-    micBtn.title = "إملاء صوتي";
+    micBtn.setAttribute("aria-label", "Start voice dictation");
+    micBtn.title = "Voice dictation";
     micBtn.innerHTML = MIC_ICON_SVG;
     micBtn.addEventListener("click", onMicBtnClick);
   }
@@ -1392,14 +1392,14 @@ export function createChatPanel(options = {}) {
     firefoxWarningEl = document.createElement("div");
     firefoxWarningEl.className = "ai-agent-firefox-warning";
     firefoxWarningEl.textContent =
-      "⚠️ الإملاء الصوتي قد يكون غير دقيق على متصفح Firefox — يُفضّل استخدام متصفح آخر (مثل Chrome) لنتائج أفضل.";
+      "Voice dictation may be less accurate in Firefox. Try another browser, such as Chrome, for better results.";
   }
 
   const sendBtn = document.createElement("button");
   sendBtn.type = "button";
   sendBtn.className = "ai-agent-send-btn";
-  sendBtn.setAttribute("aria-label", "إرسال");
-  sendBtn.title = "إرسال";
+  sendBtn.setAttribute("aria-label", "Send message");
+  sendBtn.title = "Send message";
   sendBtn.innerHTML =
     '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 3 9-3 9 19-9Z"/><path d="M6 12h16"/></svg>';
 
@@ -1410,13 +1410,9 @@ export function createChatPanel(options = {}) {
   // CSS) — attachmentTilesRow (built lazily by renderAttachmentChips)
   // inserts itself as inputRow's own first child whenever there's at
   // least one pending attachment; inputControls always holds the
-  // horizontal control line below it. DOM order within inputControls:
-  // more, mic/cancel, wave, textarea, send — send is deliberately the
-  // LAST child so it's the far-right control in this RTL row (first
-  // child sits visually on the right in RTL flex; see
-  // .ai-agent-chat-input-row's own comment in the CSS), matching "Send
-  // Button Position: move the remaining send-btn to the far-right end"
-  // from the original request. REDESIGN: the wave sits right next to
+  // horizontal control line below it. Send is deliberately the LAST
+  // child, at the right end of this LTR row. REDESIGN: the wave sits
+  // right next to
   // mic/cancel (same fixed-size slot, swapped 1-for-1 via `hidden` — see
   // setDictationUiState) rather than in the textarea's flex slot, so the
   // textarea itself is never hidden or resized during dictation. Only
@@ -1425,13 +1421,13 @@ export function createChatPanel(options = {}) {
   const inputControls = document.createElement("div");
   inputControls.className = "ai-agent-chat-input-controls";
 
-  inputControls.appendChild(sendBtn);
   if (micBtn) inputControls.appendChild(micBtn);
   inputControls.appendChild(dictationWaveEl);
 
   inputControls.appendChild(textarea);
 
   if (moreBtn) inputControls.appendChild(moreBtn);
+  inputControls.appendChild(sendBtn);
 
   if (fileInput) inputControls.appendChild(fileInput);
   inputRow.appendChild(inputControls);
@@ -1506,8 +1502,8 @@ export function createChatPanel(options = {}) {
     if (activeSpeakBtn) {
       activeSpeakBtn.innerHTML = SPEAK_ICON_SVG;
       activeSpeakBtn.classList.remove("ai-agent-msg-speak-btn--speaking");
-      activeSpeakBtn.setAttribute("aria-label", "قراءة الرسالة صوتياً");
-      activeSpeakBtn.title = "قراءة صوتية";
+      activeSpeakBtn.setAttribute("aria-label", "Read message aloud");
+      activeSpeakBtn.title = "Read aloud";
       activeSpeakBtn = null;
     }
   }
@@ -1537,8 +1533,8 @@ export function createChatPanel(options = {}) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ai-agent-msg-speak-btn";
-    btn.setAttribute("aria-label", "قراءة الرسالة صوتياً");
-    btn.title = "قراءة صوتية";
+    btn.setAttribute("aria-label", "Read message aloud");
+    btn.title = "Read aloud";
     btn.innerHTML = SPEAK_ICON_SVG;
 
     btn.addEventListener("click", (e) => {
@@ -1573,8 +1569,8 @@ export function createChatPanel(options = {}) {
         activeSpeakBtn = btn;
         btn.innerHTML = SPEAK_STOP_ICON_SVG;
         btn.classList.add("ai-agent-msg-speak-btn--speaking");
-        btn.setAttribute("aria-label", "إيقاف القراءة الصوتية");
-        btn.title = "إيقاف القراءة";
+        btn.setAttribute("aria-label", "Stop reading aloud");
+        btn.title = "Stop reading";
       };
 
       utterance.onend = () => {
@@ -1613,8 +1609,8 @@ export function createChatPanel(options = {}) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ai-agent-msg-copy-btn";
-    btn.setAttribute("aria-label", "نسخ الرسالة");
-    btn.title = "نسخ";
+    btn.setAttribute("aria-label", "Copy message");
+    btn.title = "Copy";
     btn.innerHTML = COPY_ICON_SVG;
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -1665,8 +1661,8 @@ export function createChatPanel(options = {}) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ai-agent-msg-edit-btn";
-    btn.setAttribute("aria-label", "تعديل الرسالة");
-    btn.title = "تعديل";
+    btn.setAttribute("aria-label", "Edit message");
+    btn.title = "Edit";
     btn.innerHTML = EDIT_ICON_SVG;
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -1715,18 +1711,16 @@ export function createChatPanel(options = {}) {
     const cancelBtn = document.createElement("button");
     cancelBtn.type = "button";
     cancelBtn.className = "ai-agent-msg-edit-cancel";
-    cancelBtn.textContent = "إلغاء";
+    cancelBtn.textContent = "Cancel";
 
     const submitBtn = document.createElement("button");
     submitBtn.type = "button";
     submitBtn.className = "ai-agent-msg-edit-submit";
-    submitBtn.textContent = "إرسال";
+    submitBtn.textContent = "Send";
     submitBtn.disabled = true; // enabled only once the text is actually changed
 
-    // DOM order (not CSS) decides visual left/right here, same rationale
-    // as sendBtn/textarea in the main input row further down — RTL flex
-    // puts the first child on the visual right, so إرسال appears first/
-    // on the right (primary action) and إلغاء second/on the left.
+    // Keep Send before Cancel so the primary action appears on the right
+    // in the LTR layout.
     actions.appendChild(submitBtn);
     actions.appendChild(cancelBtn);
     el.appendChild(actions);
@@ -2538,25 +2532,12 @@ export function createChatPanel(options = {}) {
     }
   });
 
-  /**
-   * Hides the Send button whenever the input is empty (nothing to send)
-   * and shows it again the moment there's text — except while dictating,
-   * where it must stay visible/available even before any speech has
-   * produced text yet (see setDictationUiState's own comment: Send is
-   * still how a dictated message gets submitted, so hiding it the
-   * instant the mic opens on an empty field would remove the only way to
-   * send once something IS dictated). Also skipped while the whole input
-   * is disabled (see updateAvailabilityGate) — that state already
-   * communicates "can't send" on its own; layering a hidden Send button
-   * on top of a disabled textarea would just look broken rather than
-   * intentional.
-   */
+  /** Keep Send visible and use its disabled state to show when a message is ready. */
   function updateSendBtnVisibility() {
-    if (isDictating || textarea.disabled) {
-      sendBtn.hidden = false;
-      return;
-    }
-    sendBtn.hidden = textarea.value.trim().length === 0 && !pendingAttachments.length;
+    sendBtn.hidden = false;
+    sendBtn.disabled = textarea.disabled
+      || isGenerating
+      || (!textarea.value.trim() && !pendingAttachments.length);
   }
 
   textarea.addEventListener("input", () => {

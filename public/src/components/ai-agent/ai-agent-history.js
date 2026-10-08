@@ -35,13 +35,13 @@ const UNPIN_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="15" heigh
 function formatRelativeTime(timestamp) {
   const diffMs = Date.now() - timestamp;
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "الآن";
-  if (diffMin < 60) return `منذ ${diffMin} دقيقة`;
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin} min ago`;
   const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `منذ ${diffHr} ساعة`;
+  if (diffHr < 24) return `${diffHr} hr ago`;
   const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 7) return `منذ ${diffDay} يوم`;
-  return new Date(timestamp).toLocaleDateString("ar-EG");
+  if (diffDay < 7) return `${diffDay} days ago`;
+  return new Date(timestamp).toLocaleDateString("en");
 }
 
 /**
@@ -140,8 +140,8 @@ export function createHistoryPanel(options = {}) {
       pinOpt.type = "button";
       pinOpt.className = "ai-agent-dropdown-item";
       pinOpt.innerHTML = conv.pinned
-        ? `${UNPIN_ICON_SVG}<span>إلغاء التثبيت</span>`
-        : `${PIN_ICON_SVG}<span>تثبيت</span>`;
+        ? `${UNPIN_ICON_SVG}<span>Unpin</span>`
+        : `${PIN_ICON_SVG}<span>Pin</span>`;
       pinOpt.onclick = async (e) => {
         e.stopPropagation();
         closeMenu();
@@ -157,7 +157,7 @@ export function createHistoryPanel(options = {}) {
       const renameOpt = document.createElement("button");
       renameOpt.type = "button";
       renameOpt.className = "ai-agent-dropdown-item";
-      renameOpt.innerHTML = `${RENAME_ICON_SVG}<span>إعادة تسمية</span>`;
+      renameOpt.innerHTML = `${RENAME_ICON_SVG}<span>Rename</span>`;
       renameOpt.onclick = (e) => {
         e.stopPropagation();
         closeMenu();
@@ -168,10 +168,10 @@ export function createHistoryPanel(options = {}) {
       const deleteOpt = document.createElement("button");
       deleteOpt.type = "button";
       deleteOpt.className = "ai-agent-dropdown-item ai-agent-dropdown-item--danger";
-      deleteOpt.innerHTML = `${TRASH_ICON_SVG}<span>حذف المحادثة</span>`;
+      deleteOpt.innerHTML = `${TRASH_ICON_SVG}<span>Delete conversation</span>`;
       deleteOpt.onclick = async (e) => {
         e.stopPropagation();
-        if (!(await _confirm("هل أنت متأكد من حذف هذه المحادثة؟"))) return;
+        if (!(await _confirm("Are you sure you want to delete this conversation?"))) return;
         closeMenu();
         try {
           await deleteConversation(conv.id);
@@ -185,18 +185,18 @@ export function createHistoryPanel(options = {}) {
   }
 
   async function refresh() {
-    list.innerHTML = `<div class="ai-agent-history-loading">جارِ التحميل...</div>`;
+    list.innerHTML = `<div class="ai-agent-history-loading">Loading conversations...</div>`;
     let conversations = [];
     try {
       conversations = await listConversations(pageKey);
     } catch (err) {
       console.error("[ai-agent-history] failed to load conversations:", err);
-      list.innerHTML = `<div class="ai-agent-history-empty">تعذر تحميل المحادثات السابقة.</div>`;
+      list.innerHTML = `<div class="ai-agent-history-empty">Could not load previous conversations.</div>`;
       return;
     }
 
     if (!conversations.length) {
-      list.innerHTML = `<div class="ai-agent-history-empty">لا توجد محادثات سابقة بعد.</div>`;
+      list.innerHTML = `<div class="ai-agent-history-empty">No previous conversations yet.</div>`;
       return;
     }
 
@@ -245,7 +245,7 @@ export function createHistoryPanel(options = {}) {
       const moreBtn = document.createElement("button");
       moreBtn.type = "button";
       moreBtn.className = "ai-agent-history-item-more";
-      moreBtn.setAttribute("aria-label", conv.pinned ? "خيارات المحادثة (مثبتة)" : "خيارات المحادثة");
+      moreBtn.setAttribute("aria-label", conv.pinned ? "Conversation options (pinned)" : "Conversation options");
       if (conv.pinned) {
         moreBtn.classList.add("ai-agent-history-item-more--pinned");
       }
