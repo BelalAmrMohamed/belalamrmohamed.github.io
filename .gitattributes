@@ -1,6 +1,5 @@
 # Run `npm run zip` to export.
 .github/ export-ignore
-.git
 
 # Large Files, excluded to make the `belal-amr-mohamed.zip` smaller. They exist in the actual project.
-public/images
+public/images export-ignore

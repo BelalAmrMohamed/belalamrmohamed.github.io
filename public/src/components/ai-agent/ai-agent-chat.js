@@ -2605,14 +2605,26 @@ export function createChatPanel(options = {}) {
     }
   });
 
-  /** Keep Send visible and use its disabled state to show when a message is ready. */
+  /**
+   * Hides the Send button whenever the input is empty (nothing to send)
+   * and shows it again the moment there's text — except while dictating,
+   * where it must stay visible/available even before any speech has
+   * produced text yet (see setDictationUiState's own comment: Send is
+   * still how a dictated message gets submitted, so hiding it the
+   * instant the mic opens on an empty field would remove the only way to
+   * send once something IS dictated). Also skipped while the whole input
+   * is disabled (see updateAvailabilityGate) — that state already
+   * communicates "can't send" on its own; layering a hidden Send button
+   * on top of a disabled textarea would just look broken rather than
+   * intentional.
+   */
   function updateSendBtnVisibility() {
-    const hasDraft = Boolean(textarea.value.trim() || pendingAttachments.length);
-    sendBtn.hidden = false;
-    sendBtn.disabled = textarea.disabled
-      || isGenerating
-      || (!hasDraft && !isDictating);
-    if (micBtn) micBtn.hidden = isDictating || hasDraft;
+    if (isDictating || textarea.disabled) {
+      sendBtn.hidden = false;
+      return;
+    }
+    sendBtn.hidden = textarea.value.trim().length === 0 && !pendingAttachments.length;
+    if (micBtn) micBtn.hidden = isDictating || Boolean(textarea.value.trim() || pendingAttachments.length);
   }
 
   textarea.addEventListener("input", () => {
