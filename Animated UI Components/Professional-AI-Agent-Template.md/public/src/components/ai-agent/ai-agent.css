@@ -1,0 +1,2680 @@
+/* =============================================================================
+   public/src/components/ai-agent/ai-agent.css
+   Scoped styles for the modular AI Helper widget. Fully self-contained: the
+   only things this file still reaches outside the ai-agent/ component are
+   the app's global design tokens (--color-*, --gradient-accent, --shadow-*,
+   --z-*, etc. — see src/styles/themes.css), which every host page already
+   loads for theming and which no widget in a themed app should re-invent.
+   No shared COMPONENT — no other stylesheet's classes — is depended on
+   anymore: every class used by ai-agent.js/*.js is defined in this file.
+
+   This used to reuse features/home/index.css's .modal-overlay/.modal-card/
+   .modal-header/.close-btn base rules, and a SEPARATE stylesheet,
+   features/home/exam-dropdown-menu.css, for the small anchored popovers
+   (.exam-dropdown-menu/.exam-action-btn). Both were real bugs waiting to
+   happen: a page only gets correctly styled agent modals/dropdowns if it
+   happens to also link those other stylesheets. index.html, create-quiz.html
+   and result.html do; lesson.html and create-lesson.html do NOT load
+   exam-dropdown-menu.css, so every agent dropdown opened on those two pages
+   rendered unstyled. The ".ai-agent-overlay/.ai-agent-modal-shell/
+   .ai-agent-modal-header/.ai-agent-close-btn" and ".ai-agent-dropdown-menu/
+   .ai-agent-dropdown-item" rules below are this file's own copies of that
+   chrome (values matched 1:1 against the originals so nothing visually
+   changes), so the agent now renders identically on ANY page that links
+   only this one stylesheet — no prerequisite imports.
+   ============================================================================= */
+
+/* ── Self-contained modal shell ──
+   Direct copies of index.css's .modal-overlay/.modal-card/.modal-header/
+   .close-btn base rules, renamed so this file never depends on that other
+   stylesheet being loaded. ai-agent.js/ai-agent-chat.js build every modal
+   (main widget, attachment preview) from these classes now,
+   layered with the same widget-specific sizing overrides that already
+   existed further down this file (.ai-agent-modal-card etc. — those blocks
+   are unchanged, only what they extend was renamed). */
+.ai-agent-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal, 6000);
+}
+
+/* Same phone bottom-nav reservation as .modal-overlay's own rule — see that
+   rule's original comment: reserves the fixed bottom-nav bar's height (plus
+   the home-indicator safe area) as bottom padding so a vertically-centered
+   card lands centered in the space ABOVE the nav, not the full viewport. */
+@media (max-width: 640px) {
+  .ai-agent-overlay {
+    padding-bottom: calc(var(--bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px));
+    align-items: center;
+    box-sizing: border-box;
+  }
+}
+
+.ai-agent-modal-shell {
+  padding: 32px;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.ai-agent-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 2px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.ai-agent-modal-header h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.ai-agent-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.ai-agent-close-btn:hover {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* ── Self-contained anchored-dropdown chrome ──
+   Direct copies of features/home/exam-dropdown-menu.css's .exam-dropdown-
+   menu/.exam-action-btn rules, renamed for ai-agent-dropdown.js's own
+   openAgentDropdown() (which builds ".ai-agent-dropdown-menu" elements —
+   see that module's header comment for the full rationale). Used by the
+   input's "more" popover, the history item's ⋮ menu, the sidebar's export
+   menu, and the `@` mention menu (ai-agent-mention-menu.js). */
+.ai-agent-dropdown-menu {
+  position: fixed;
+  z-index: var(--z-toast);
+  width: 240px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  direction: rtl;
+  animation: aiAgentDropdownIn 0.15s ease;
+}
+
+@keyframes aiAgentDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-agent-dropdown-menu .ai-agent-dropdown-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.ai-agent-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  direction: rtl;
+}
+
+.ai-agent-dropdown-item:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.ai-agent-dropdown-item svg {
+  flex-shrink: 0;
+}
+
+.ai-agent-dropdown-item--primary {
+  background: var(--gradient-accent);
+  color: white;
+  border: none;
+  box-shadow:
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-agent-dropdown-item--primary:hover {
+  background: var(--gradient-accent);
+  color: white;
+  border: none;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.ai-agent-dropdown-item.is-copying {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .ai-agent-dropdown-menu .ai-agent-dropdown-item {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Danger variant — used by the history item menu's "حذف المحادثة". Same
+   shape/layout as a regular .ai-agent-dropdown-item, just colored to
+   signal a destructive action. */
+.ai-agent-dropdown-item--danger {
+  background: var(--color-error-light);
+  border-color: transparent;
+  color: var(--color-error);
+}
+
+.ai-agent-dropdown-item--danger:hover {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: white;
+}
+
+.ai-agent-widget {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  font-family: inherit;
+  max-width: 100%;
+}
+
+/* Wraps the sidebar (desktop only) + the three panels (chat/history/
+   chat) below the tab strip. On mobile this is just a plain block —
+   the sidebar is display:none there (see .ai-agent-sidebar below) so
+   .ai-agent-body ends up being nothing more than a passthrough container
+   around the same tabbed panels that existed before this wrapper. */
+.ai-agent-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.ai-agent-row {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+/* ── Panels ── Defensive: both the base rule (hide) and the .active rule (show) are
+   scoped to the exact same specificity everywhere this class is used
+   (including nested under .ai-agent-modal-card below), so an inactive
+   panel can never be visible regardless of which container it renders
+   inside. If you still see both tabs' content stacked, you are looking
+   at a stale cached build of this file — hard-reload / bump cache. */
+.ai-agent-panel {
+  display: none !important;
+  flex-direction: column;
+  min-height: 320px;
+  max-height: 480px;
+}
+
+.ai-agent-panel.active {
+  display: flex !important;
+}
+
+/* ── Chat tab ── */
+.ai-agent-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Drag-and-drop a file anywhere onto the chat panel (see
+   ai-agent-chat.js — mirrors the .user-quizzes-drag-over pattern from
+   quiz-file-import.js). Shown on .ai-agent-chat-panel specifically (not
+   the whole widget) since drop is only wired when enableFileUpload is on,
+   scoped to whichever panel instance owns the listener. */
+.ai-agent-chat-panel.ai-agent-drag-over {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -2px;
+  background: var(--color-primary-light);
+}
+
+.ai-agent-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  word-break: break-word;
+  position: relative;
+}
+
+.ai-agent-msg .md-list {
+  box-sizing: border-box;
+  margin-inline: 0;
+  padding-inline-start: 1.5em;
+  padding-inline-end: 0;
+  list-style-position: inside;
+  text-align: start;
+}
+
+.ai-agent-msg .md-list>li {
+  text-align: start;
+}
+
+.ai-agent-msg .md-list .md-list {
+  margin-inline-start: 1.25em;
+}
+
+/* Wraps a bubble + its controls row (copy/edit) as one column, so the
+   controls sit BELOW the bubble as a normal sibling instead of layered
+   inside/on top of the message text. Shares the bubble's own alignment
+   (flex-start/right for user, flex-end/left for assistant) so the
+   controls land under the correct edge — see .ai-agent-msg--user/
+   --assistant below for the actual align-self values these mirror. */
+.ai-agent-msg-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+}
+
+.ai-agent-msg-wrap--user {
+  align-self: flex-start;
+  align-items: flex-end;
+}
+
+.ai-agent-msg-wrap--assistant {
+  align-self: flex-end;
+  align-items: flex-start;
+}
+
+/* The wrapped bubble itself no longer needs its own max-width/alignment —
+   .ai-agent-msg-wrap now owns both — but keeps them as a safe fallback
+   for the two message types that render straight into .ai-agent-chat-messages
+   without a wrapper (tool-result, error; see appendToolResultMessage/
+   appendError in ai-agent-chat.js). */
+.ai-agent-msg-wrap .ai-agent-msg {
+  max-width: 100%;
+}
+
+/* Controls row (copy, + edit for user messages) — a small row of icon
+   buttons below the bubble, right-aligned under a user bubble (right
+   side) and left-aligned under an assistant bubble (left side), matching
+   the request to mirror each bubble's own edge rather than centering or
+   always sticking to one side. Hidden until hover/focus on desktop so it
+   doesn't compete with the message list at rest; always shown on touch
+   devices (no hover state to reveal it there) via the (hover: none)
+   fallback below. */
+.ai-agent-msg-controls {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ai-agent-msg-wrap:hover .ai-agent-msg-controls,
+.ai-agent-msg-controls:focus-within {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .ai-agent-msg-controls {
+    opacity: 1;
+  }
+}
+
+/* DOM order is copy-then-edit (see appendMessage/addCopyButton/
+   addEditButton in ai-agent-chat.js), but a user bubble's controls read
+   right-to-left visually (row-reverse) so Edit ends up closer to the
+   bubble's own right edge and Copy further out — same left/right
+   grouping the assistant side gets for free from normal (non-reversed)
+   flex order on its own left-aligned edge. */
+.ai-agent-msg-controls--user {
+  flex-direction: row-reverse;
+}
+
+.ai-agent-msg-copy-btn,
+.ai-agent-msg-edit-btn,
+.ai-agent-msg-speak-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.15));
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.ai-agent-msg-copy-btn:hover,
+.ai-agent-msg-edit-btn:hover,
+.ai-agent-msg-speak-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.ai-agent-msg-copy-btn--copied,
+.ai-agent-msg-copy-btn--copied:hover {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.ai-agent-msg-speak-btn--speaking {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.1);
+  animation: ai-agent-pulse-speak 1.5s infinite ease-in-out;
+}
+
+@keyframes ai-agent-pulse-speak {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0);
+  }
+}
+
+/* ── Edit-in-place mode (Claude-style "edit and resubmit") */
+.ai-agent-msg-wrap:has(.ai-agent-msg--editing),
+.ai-agent-msg-wrap--editing {
+  max-width: 100%;
+  align-items: stretch;
+}
+
+.ai-agent-msg--editing {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1.5px solid var(--color-primary);
+  padding: 10px;
+  max-width: 92%;
+  width: 92%;
+  align-self: flex-end;
+}
+
+.ai-agent-msg-edit-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  unicode-bidi: plaintext;
+}
+
+.ai-agent-msg-edit-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.ai-agent-msg-edit-actions {
+  display: flex;
+  direction: rtl;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ai-agent-msg-edit-submit,
+.ai-agent-msg-edit-cancel {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.ai-agent-msg-edit-submit {
+  background: var(--gradient-accent);
+  color: #fff;
+}
+
+.ai-agent-msg-edit-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-agent-msg-edit-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ai-agent-msg-edit-cancel {
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary);
+  border: 1.5px solid var(--color-border);
+}
+
+.ai-agent-msg-edit-cancel:hover {
+  border-color: var(--color-text-secondary);
+}
+
+.ai-agent-msg--user {
+  align-self: flex-start;
+  background: var(--gradient-accent);
+  color: #fff;
+}
+
+.ai-agent-msg-attachment {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  direction: rtl;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ai-agent-msg-attachment:hover,
+.ai-agent-msg-attachment:focus-visible {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.ai-agent-msg-attachment svg {
+  flex-shrink: 0;
+}
+
+.ai-agent-msg-attachment-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-agent-msg--assistant {
+  align-self: flex-end;
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.ai-agent-msg--error {
+  align-self: center;
+  background: var(--color-error-light);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-agent-msg-error-text {
+  flex: 1;
+}
+
+/* Repeat-count badge appended to an error bubble instead of stacking a
+   duplicate bubble for the same error message (see appendError's dedup
+   in ai-agent-chat.js) — e.g. mashing the dictation button on a browser
+   that blocks it shows one bubble with a growing "×N" rather than the
+   same Arabic error text flooding the chat on every click. */
+.ai-agent-msg-error-count {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--color-error);
+  color: var(--color-surface, #fff);
+}
+
+.ai-agent-msg--tool-result {
+  align-self: center;
+  background: var(--color-success-light, rgba(34, 197, 94, 0.12));
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* When the empty hint is the only child, never show a scrollbar for it */
+.ai-agent-chat-messages:has(> .ai-agent-msg--empty:only-child) {
+  overflow-y: hidden;
+}
+
+.ai-agent-msg--empty {
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--color-text-tertiary);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 24px 12px;
+}
+
+.ai-agent-typing {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 88%;
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, var(--color-border));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  direction: rtl;
+}
+
+/* Tool execution state: distinct indigo-accented tint and glowing border */
+.ai-agent-typing--tool {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface, #ffffff));
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.ai-agent-typing-icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-background-secondary));
+  color: var(--color-primary);
+  animation: aiAgentTypingIconPulse 1.8s infinite ease-in-out;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ai-agent-typing-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.ai-agent-typing--tool .ai-agent-typing-icon {
+  background: color-mix(in srgb, var(--color-primary) 20%, var(--color-background-secondary));
+  color: var(--color-primary);
+}
+
+@keyframes aiAgentTypingIconPulse {
+
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.94);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+.ai-agent-typing-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ai-agent-typing-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Step badge for multi-step tools e.g. "خطوة 1 من 2" */
+.ai-agent-typing-step {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: var(--color-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ai-agent-typing-step:empty {
+  display: none;
+}
+
+.ai-agent-typing-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-agent-typing-label:empty {
+  display: none;
+}
+
+.ai-agent-typing-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-agent-typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-agent-typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary, #6366f1);
+  animation: aiAgentTypingBounce 1s infinite ease-in-out;
+}
+
+.ai-agent-typing-dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.ai-agent-typing-dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes aiAgentTypingBounce {
+
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.ai-agent-typing-timer {
+  font-size: 0.72rem;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.ai-agent-typing-timer:empty {
+  display: none;
+}
+
+/* Interactive Stop button inside the typing pill */
+.ai-agent-typing-stop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  margin-inline-start: 4px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-error, #ef4444) 35%, transparent);
+  background: color-mix(in srgb, var(--color-error, #ef4444) 10%, transparent);
+  color: var(--color-error, #ef4444);
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.ai-agent-typing-stop-btn:hover {
+  background: color-mix(in srgb, var(--color-error, #ef4444) 20%, transparent);
+  border-color: var(--color-error, #ef4444);
+  transform: scale(1.04);
+}
+
+.ai-agent-typing-stop-btn:active {
+  transform: scale(0.97);
+}
+
+.ai-agent-typing-stop-btn svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+/* ── Suggested prompt chips ──
+   Shown above the input row only before the first message is sent (see
+   ai-agent-chat.js). Vertical stacked list (each chip full-width, its own
+   row) rather than a horizontal scroller — reads much better for Arabic
+   prompt text of varying length, matches the pattern YouTube's "Ask" panel
+   uses for its own suggested questions. */
+.ai-agent-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  direction: rtl;
+}
+
+.ai-agent-suggestion-chip {
+  width: fit-content;
+  text-align: start;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 0.85rem;
+  font-family: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.ai-agent-suggestion-chip:hover {
+  border-color: var(--color-primary);
+  background: var(--color-background-secondary);
+}
+
+/* ── Attachment tiles (Phase 3b) ──
+   Square/card-style tiles living INSIDE the bordered input row (see
+   ai-agent-chat.js's renderAttachmentChips — inserted as inputRow's own
+   first child, not a sibling above it). Replaces the old horizontal
+   list-item pill (.ai-agent-attachment-chip, since removed) — one tile per
+   pending attachment, file or platform-item (quiz/course/folder), in a
+   horizontally-scrollable row above the textarea line. */
+.ai-agent-attachment-tiles-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 10px 0;
+  overflow-x: auto;
+  direction: rtl;
+}
+
+.ai-agent-attachment-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  width: 68px;
+  height: 68px;
+  padding: 6px 4px 5px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.ai-agent-attachment-tile:hover,
+.ai-agent-attachment-tile:focus-visible {
+  border-color: var(--color-primary, #2563eb);
+  transform: translateY(-1px);
+}
+
+/* Distinct tint per attachment kind so a file vs. a quiz/course/folder
+   reference reads apart from each other at a glance, matching the tinted
+   type badges already used elsewhere for question types (see
+   .user-quiz-types-row's colorMap in user-quiz-card.js) rather than
+   inventing an unrelated color language just for this tile. */
+.ai-agent-attachment-tile--quiz {
+  border-color: var(--color-primary-light, var(--color-border));
+}
+
+.ai-agent-attachment-tile--lesson {
+  border-color: var(--color-primary-light, var(--color-border));
+}
+
+.ai-agent-attachment-tile--course {
+  border-color: var(--color-success-light, var(--color-border));
+}
+
+.ai-agent-attachment-tile--folder {
+  border-color: var(--color-warning-light, var(--color-border));
+}
+
+.ai-agent-attachment-tile-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--color-text-secondary, currentColor);
+  flex-shrink: 0;
+}
+
+.ai-agent-attachment-tile-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.ai-agent-attachment-tile-name {
+  width: 100%;
+  font-size: 0.62rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+.ai-agent-attachment-tile-remove {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary, currentColor);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ai-agent-attachment-tile-remove:hover {
+  background: var(--color-danger, #dc2626);
+  color: #fff;
+}
+
+/* ── "More" popover button (Phase 3c) — replaces the standalone paperclip
+   .ai-agent-attach-btn (removed). Same footprint/shape as the old attach
+   button so the input row's layout doesn't shift, but now opens a small
+   anchored menu (see openAgentDropdown in ai-agent-chat.js) instead of
+   directly triggering the file picker.
+
+   REDESIGN (Gemini-style input): every control used to be its own little
+   bordered/background box sitting NEXT TO the textarea's own separately
+   bordered box — five distinct outlines in a row. Gemini's composer reads
+   as ONE pill (see .ai-agent-chat-input-controls below, which now owns the
+   border/background/radius/focus-ring that used to live on the textarea
+   alone) with plain, borderless icon buttons floating inside it. So each
+   icon button below drops its own border/background and just gets a
+   circular hover/focus tint — the pill itself is the only outline. */
+.ai-agent-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary, var(--color-text-primary));
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ai-agent-more-btn:hover:not(:disabled) {
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+}
+
+.ai-agent-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-agent-chat-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  align-items: center;
+}
+
+/* The row's own direct children below (textarea/wave/mic/send/more) still
+   need to sit in a horizontal line — only attachmentTilesRow (inserted as
+   inputRow's own first child) sits above them as its own row. Wrapping
+   those direct-line controls in .ai-agent-chat-input-controls keeps
+   inputRow itself a simple flex-column of [tiles?, controls] without
+   touching every one of ai-agent-chat.js's individual appendChild calls.
+
+   REDESIGN: this wrapper is now the single pill container (Gemini-style)
+   — it owns the border/background/radius/focus-ring that the textarea
+   used to carry on its own. Every child inside (more/textarea/wave/mic/
+   send) is borderless and background-less, so the whole row reads as one
+   continuous rounded field with icon buttons floating inside it rather
+   than several separate boxes side by side. */
+.ai-agent-chat-input-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 4px 4px 4px 6px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 26px;
+  background: var(--color-background-secondary);
+  width: 100%;
+  max-width: 600px;
+  min-height: 44px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ai-agent-chat-input-controls:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.ai-agent-chat-input {
+  flex: 1;
+  resize: none;
+  border: none;
+  border-radius: 0;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  background: transparent;
+  color: var(--color-text-primary);
+  min-height: 36px;
+  max-height: 120px;
+  overflow-y: hidden;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+/* The pill wrapper (.ai-agent-chat-input-controls above) owns the focus
+   ring now — the textarea itself stays borderless even when focused, so
+   there's still only ever one outline visible around the whole control. */
+.ai-agent-chat-input:focus {
+  outline: none;
+}
+
+.ai-agent-chat-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-agent-chat-input:placeholder-shown {
+  text-align: right;
+}
+
+.ai-agent-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+/* The .ai-agent-send-btn `display: inline-flex` above wins over the
+   browser's default `[hidden] { display: none }` UA rule (same
+   specificity, later in the cascade) — without this override, setting
+   sendBtn.hidden = true from updateSendBtnVisibility() (ai-agent-chat.js)
+   would have no visible effect at all. */
+.ai-agent-send-btn[hidden] {
+  display: none;
+}
+
+.ai-agent-send-btn:hover:not(:disabled) {
+  /* transform: scale(1.05); */
+  box-shadow: var(--shadow-md);
+}
+
+.ai-agent-send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Voice dictation (Task 5) ── */
+.ai-agent-mic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ai-agent-mic-btn:hover {
+  background: var(--color-background-secondary);
+  color: var(--color-primary);
+}
+
+.ai-agent-mic-btn[hidden] {
+  display: none;
+}
+
+/* Shown together, replacing the mic button, while dictation is active
+   (see setDictationUiState() in ai-agent-chat.js). Flex so both buttons
+   share the space the single mic button normally occupies without
+   widening the input row. */
+.ai-agent-dictation-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ai-agent-dictation-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ai-agent-dictation-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* "Submit" mirrors the send button's own accent styling — it performs
+   the same action (send), just from the dictation state. */
+.ai-agent-dictation-btn--submit {
+  background: var(--gradient-accent);
+  color: #fff;
+}
+
+/* "Stop Dictation" is a neutral action (no send), so it gets a quieter
+   outline treatment instead of the accent fill. */
+.ai-agent-dictation-btn--stop {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1.5px solid var(--color-border);
+}
+
+/* A subtle live-recording cue on the input field itself while dictating,
+   distinct from the mic button (which is hidden during dictation — see
+   setDictationUiState()) so there's still a visible "you're being heard"
+   signal near the text being filled in live. REDESIGN: the pill wrapper
+   (.ai-agent-chat-input-controls) now owns the focus ring, so this cue
+   is the same treatment applied to the pill itself while dictating,
+   rather than to the (now borderless) textarea. */
+.ai-agent-chat-input-controls:has(.ai-agent-chat-input--dictating) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+/* REDESIGN (v2): .ai-agent-dictation-wave is no longer a full-width
+   textarea replacement — it's a small fixed-size (36×36, matching
+   .ai-agent-mic-btn exactly) "listening" indicator that swaps into the
+   mic button's own slot while dictating (see setDictationUiState in
+   ai-agent-chat.js). Because it matches the mic button's footprint
+   exactly, swapping the two via `hidden` can never change
+   .ai-agent-chat-input-controls's height/width — the textarea stays
+   visible and unaffected the whole time. All of .ai-agent-dictation-wave's
+   actual sizing/animation rules live together in one place further down
+   this file (search "Voice dictation wave (v2)"); this comment marks
+   where the old full-row version used to be defined.
+
+   NOTE ON HISTORY: this file used to carry a full-row .ai-agent-dictation-
+   wave — a bordered pill that replaced the textarea's entire flex slot —
+   plus a stray duplicate rule-set both named .ai-agent-dictation-wave-bars.
+   Both were removed together with the redesign so there's now exactly one
+   definition of the wave and its bars, with no dead or shadowed CSS left
+   behind. */
+
+.ai-agent-firefox-warning {
+  margin: 0 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-warning, #d97706) 12%, transparent);
+  color: var(--color-warning, #b45309);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+/* ── History tab ── */
+.ai-agent-history-panel {
+  padding: 8px;
+  overflow-y: auto;
+  direction: rtl;
+}
+
+.ai-agent-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-agent-history-loading,
+.ai-agent-history-empty {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.ai-agent-history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ai-agent-history-item:hover {
+  border-color: var(--color-primary);
+  background: var(--color-background-secondary);
+}
+
+/* Marks the entry matching the Chat tab's currently-open conversation
+   (see ai-agent-history.js's getActiveConversationId / ai-agent.js's
+   refreshHistoryHighlights). A solid border (not just the hover tint,
+   which would be ambiguous with actual :hover) so it reads at a glance
+   even without the pointer over it. */
+.ai-agent-history-item--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.ai-agent-history-item--active:hover {
+  background: var(--color-primary-light);
+}
+
+.ai-agent-history-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-agent-history-item-title {
+  font-size: 0.87rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-agent-history-item-time {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* PHASE 5: pinned conversations sort first (see listConversations in
+   ai-agent-history-idb.js). The filled-pin icon the more-button shows
+   while pinned (see PINNED_ICON_SVG in ai-agent-history.js) is the visual
+   cue for that ordering — the old 📌 emoji badge is gone per the plan's
+   "icons, not emojis" request. A primary-color title tint keeps a pinned
+   item readable at a glance, and stays clearly distinct from the --active
+   highlight (a pinned item and the currently-open item are independent
+   states and can coexist). */
+.ai-agent-history-item--pinned .ai-agent-history-item-title {
+  color: var(--color-primary);
+}
+
+/* PHASE 5: inline rename — replaces .ai-agent-history-item-title in place
+   (see enterRenameMode in ai-agent-history.js), so it inherits the same
+   flex slot/width without a separate layout pass. */
+.ai-agent-history-item-rename-input {
+  width: 100%;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: 0.87rem;
+  font-weight: 600;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  unicode-bidi: plaintext;
+}
+
+.ai-agent-history-item-rename-input:focus {
+  outline: none;
+}
+
+/* PHASE 5: renamed from -delete to -more — this button now opens the
+   حذف/إعادة تسمية/تثبيت menu (openItemMenu in ai-agent-history.js) rather
+   than deleting directly. Same shape/hover treatment as the old delete
+   button, just without the danger-red hover tint (deletion is now one
+   menu row among three, not this button's own single action). */
+.ai-agent-history-item-more {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ai-agent-history-item-more:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* While the conversation is pinned, the ⋮ button itself becomes the
+   filled-pin icon (see PINNED_ICON_SVG in ai-agent-history.js) tinted
+   primary — a premium cue that this thread is pinned, per the plan's
+   "icons instead of emojis" request. */
+.ai-agent-history-item-more--pinned {
+  color: var(--color-primary);
+}
+
+/* ── Floating action button ──
+   Bottom-right, fixed. Sits above the bottom mobile nav bar (see
+   --bottom-nav-height, same token .ai-agent-overlay uses above) and
+   above any content on desktop. Opens the modal below on click. */
+.ai-agent-fab {
+  position: fixed;
+  right: calc(20px + var(--sidebar-collapsed-width, 0px));
+  bottom: 20px;
+  z-index: var(--z-tooltip, 6000);
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ai-agent-fab:hover {
+  transform: translateY(-2px) scale(1.05) rotate(5deg);
+}
+
+.ai-agent-fab:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.ai-agent-fab-logo {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Sidebar expanded (240px instead of 64px) — same body.sidebar-expanded
+   hook side-menu.css already uses for the page's own content padding, so
+   this stays in sync with it automatically. */
+body.sidebar-expanded .ai-agent-fab {
+  right: calc(20px + var(--sidebar-expanded-width, 0px));
+}
+
+/* Below 768px the sidebar goes off-canvas (slides in over content instead
+   of reserving space — see side-menu.css's own header comment), so there
+   is no permanent width to dodge and the FAB goes back to a plain offset. */
+@media (max-width: 768px) {
+
+  .ai-agent-fab,
+  body.sidebar-expanded .ai-agent-fab {
+    right: 20px;
+    bottom: calc(20px + var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .ai-agent-fab {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ── Modal ──
+   .ai-agent-modal-overlay / .ai-agent-modal-card are layered on top of this
+   file's own .ai-agent-overlay / .ai-agent-modal-shell base (see the
+   "Self-contained modal shell" block near the top of this file) — this is
+   just the widget-specific sizing on top of that base, same as before this
+   file stopped depending on index.css's .modal-overlay/.modal-card. */
+
+/* Keep this component-specific overlay aligned with the shared modal tier so
+   it covers the persistent side menu whenever it is active. */
+.ai-agent-modal-overlay {
+  z-index: var(--z-modal, 6000);
+}
+
+.ai-agent-modal-card {
+  width: 90%;
+  max-width: none;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: min(640px, 88vh);
+  box-sizing: border-box;
+}
+
+.ai-agent-modal-card .ai-agent-modal-header {
+  padding: 18px 20px 14px;
+  flex-shrink: 0;
+}
+
+.ai-agent-modal-card #aiAgentModalTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.ai-agent-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.ai-agent-modal-card .ai-agent-widget {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.ai-agent-modal-card .ai-agent-panel {
+  min-height: 0;
+  max-height: none;
+}
+
+@media (max-width: 768px) {
+  .ai-agent-modal-card {
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+/* ── Full-screen on phones ──
+   On a phone, a centered card with dimmed backdrop margins around it
+   reads as "a popup sitting on top of the app" — for something as
+   central as the AI Agent, that's less screen real estate than the
+   conversation deserves, and the backdrop margins are just dead space
+   framing a shrunk-down chat. Below the same 640px tier the rest of this
+   file already treats as "phone" (see the block directly above), the
+   overlay drops its dimming/blur/padding and the card itself expands to
+   fill the entire viewport edge-to-edge — no radius, no shadow, no
+   border — so it reads as its own full screen rather than a modal.
+   Nothing here changes the >640px (tablet/desktop) experience, which
+   keeps the centered card + backdrop treatment as-is. */
+@media (max-width: 640px) {
+  .ai-agent-modal-overlay {
+    padding-bottom: 0;
+    background: var(--color-surface);
+    backdrop-filter: none;
+  }
+
+  .ai-agent-modal-card .ai-agent-modal-header {
+    padding-top: calc(18px + env(safe-area-inset-top, 0px));
+  }
+}
+
+/* ── Desktop sidebar (Task 4) ──
+   Built unconditionally in ai-agent.js (not behind a JS viewport check),
+   hidden by default here and only shown once .ai-agent-desktop-layout is
+   toggled onto the modal card (see openAIAgentModal's matchMedia listener
+   in ai-agent.js) — this keeps a live-resize across the breakpoint a pure
+   CSS reflow instead of needing the widget rebuilt. */
+.ai-agent-sidebar {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 10px;
+  border-inline-start: 1.5px solid var(--color-border);
+  background: var(--color-background-secondary);
+  overflow-y: auto;
+  overflow-x: hidden;
+  direction: rtl;
+  transition: width 250ms cubic-bezier(0.4, 0, 0.2, 1), padding 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Mobile off-canvas sidebar drawer ── */
+@media (max-width: 900px) {
+  .ai-agent-sidebar {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    right: auto;
+    z-index: 5;
+    /* width: min(76vw, 300px) !important; */
+    width: 100%;
+    height: 100%;
+    border-inline-start: none;
+    border-inline-start: 1px solid var(--color-border);
+    border-radius: 0;
+    box-shadow: var(--shadow-xl, 8px 0 24px rgba(0, 0, 0, 0.18));
+    transform: translateX(-100%);
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ai-agent-sidebar--mobile-open {
+    display: flex !important;
+    transform: translateX(0);
+  }
+
+  .ai-agent-sidebar--mobile-open.ai-agent-sidebar--collapsed {
+    width: min(76vw, 300px) !important;
+    height: 100%;
+    padding: 14px 10px;
+    align-items: stretch;
+  }
+
+  .ai-agent-sidebar--mobile-open.ai-agent-sidebar--collapsed .ai-agent-sidebar-btn span,
+  .ai-agent-sidebar--mobile-open.ai-agent-sidebar--collapsed .ai-agent-sidebar-label,
+  .ai-agent-sidebar--mobile-open.ai-agent-sidebar--collapsed .ai-agent-sidebar-recents {
+    display: revert;
+  }
+
+  .ai-agent-sidebar--mobile-open.ai-agent-sidebar--collapsed .ai-agent-sidebar-btn {
+    justify-content: flex-start;
+    width: 100%;
+    padding: 8px 10px;
+  }
+
+  .ai-agent-sidebar--mobile-open.ai-agent-sidebar--collapsed .ai-agent-sidebar-brand {
+    display: flex;
+  }
+}
+
+.ai-agent-mobile-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease;
+}
+
+.ai-agent-mobile-backdrop--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Collapsed rail — same visual idea as the main Side-Menu's collapsed
+   64px icon rail: icons only, labels hidden, tooltip on hover. Width
+   values differ from the main side-menu's own since this panel's content
+   differs, but the mechanism (persisted class + width swap + icon-only
+   collapsed rail) is deliberately identical. */
+.ai-agent-sidebar--collapsed {
+  width: 56px !important;
+  padding: 14px 6px;
+  align-items: center;
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-btn span,
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-label,
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-recents {
+  display: none;
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-btn {
+  justify-content: center;
+  width: 36px;
+  padding: 8px;
+}
+
+/* ── Sidebar header ── */
+.ai-agent-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-header {
+  justify-content: center;
+}
+
+.ai-agent-sidebar-favicon {
+  display: none;
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-favicon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-favicon:hover,
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-favicon:focus-visible {
+  background: var(--color-primary-light, rgba(255, 255, 255, 0.08));
+  outline: none;
+}
+
+.ai-agent-sidebar-favicon .ai-agent-sidebar-favicon-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: contain;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ai-agent-sidebar-favicon .ai-agent-sidebar-expand-icon {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  color: var(--color-primary, #6366f1);
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+.ai-agent-sidebar-favicon:hover .ai-agent-sidebar-favicon-img,
+.ai-agent-sidebar-favicon:focus-visible .ai-agent-sidebar-favicon-img {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.ai-agent-sidebar-favicon:hover .ai-agent-sidebar-expand-icon,
+.ai-agent-sidebar-favicon:focus-visible .ai-agent-sidebar-expand-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ai-agent-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  pointer-events: none;
+  padding-left: 3px;
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-brand {
+  display: none;
+}
+
+.ai-agent-sidebar-brand-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.ai-agent-sidebar-brand-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-agent-sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-collapse-btn {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .ai-agent-sidebar--collapsed .ai-agent-sidebar-collapse-btn {
+    display: flex;
+  }
+}
+
+.ai-agent-sidebar-collapse-btn:hover,
+.ai-agent-sidebar-collapse-btn:focus-visible {
+  background: var(--color-primary-light, rgba(255, 255, 255, 0.08));
+  color: var(--color-primary, #6366f1);
+  outline: none;
+}
+
+.ai-agent-sidebar-collapse-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-agent-sidebar-collapse-btn .icon-default {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ai-agent-sidebar-collapse-btn .icon-hover {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.85);
+  pointer-events: none;
+}
+
+.ai-agent-sidebar-collapse-btn:hover .icon-default,
+.ai-agent-sidebar-collapse-btn:focus-visible .icon-default {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+.ai-agent-sidebar-collapse-btn:hover .icon-hover,
+.ai-agent-sidebar-collapse-btn:focus-visible .icon-hover {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ai-agent-sidebar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ai-agent-sidebar-btn svg {
+  flex-shrink: 0;
+}
+
+.ai-agent-sidebar-btn:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.ai-agent-sidebar-btn--copied,
+.ai-agent-sidebar-btn--copied:hover {
+  color: var(--color-success);
+  border-color: var(--color-success);
+  background: var(--color-success-light, rgba(34, 197, 94, 0.12));
+}
+
+/* New/empty chat has nothing to copy yet — see refreshCopyButtonState()
+   in ai-agent.js, which toggles both this class and the native `disabled`
+   attribute together (the attribute stops the click, the class carries
+   the dimmed look since the button's own base styles set a full-opacity
+   color/border on hover that a bare :disabled selector would still need
+   to fight with !important otherwise). */
+.ai-agent-sidebar-btn:disabled,
+.ai-agent-sidebar-btn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ai-agent-sidebar-btn:disabled:hover,
+.ai-agent-sidebar-btn--disabled:hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-primary);
+}
+
+.ai-agent-export-menu-title {
+  padding: 12px 14px 9px;
+  color: var(--color-text-secondary, #64748b);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ai-agent-export-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  color: var(--color-text-primary);
+}
+
+.ai-agent-export-menu-item:last-child {
+  border-bottom: 0;
+}
+
+.ai-agent-export-format-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.ai-agent-export-format-icon--pdf {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.ai-agent-export-format-icon--json {
+  background: rgba(16, 185, 129, 0.13);
+  color: #059669;
+}
+
+.ai-agent-export-format-icon--html {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+.ai-agent-export-menu-copy {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  text-align: start;
+}
+
+.ai-agent-export-menu-copy strong {
+  font-size: 0.8rem;
+}
+
+.ai-agent-export-menu-copy span {
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.76rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-agent-export-menu-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 3px;
+}
+
+.ai-agent-export-action {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary, #64748b);
+  cursor: pointer;
+}
+
+.ai-agent-export-action:hover,
+.ai-agent-export-action:focus-visible {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  outline: none;
+}
+
+.ai-agent-export-action.is-copied {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.ai-agent-sidebar-label {
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+}
+
+.ai-agent-sidebar-recents {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.ai-agent-sidebar-recent-item {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ai-agent-sidebar-recent-item:hover {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+/* Same active-conversation marker as .ai-agent-history-item--active,
+   scaled down for this compact sidebar list. */
+.ai-agent-sidebar-recent-item--active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.ai-agent-sidebar-recent-item--active:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.ai-agent-sidebar-recents-empty {
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  color: var(--color-text-tertiary);
+}
+
+/* ── Voice dictation wave (v2) ──
+   Hidden by default via the HTML `hidden` attribute; shown only while the
+   mic is active, swapped 1-for-1 into micBtn's own slot (toggled together
+   in setDictationUiState in ai-agent-chat.js) — never into the textarea's
+   flex slot, and the textarea itself is never hidden, so the transcribed
+   text stays visible and readable as it's typed live. */
+.ai-agent-dictation-wave[hidden] {
+  display: none;
+}
+
+/* Fixed 36×36 footprint — deliberately identical to .ai-agent-mic-btn's
+   own box (width/height/border-radius) so this can only ever replace the
+   mic button visually, never add to or shrink
+   .ai-agent-chat-input-controls's height. flex-shrink: 0 keeps it that
+   size even if the textarea's content tries to squeeze the row. */
+.ai-agent-dictation-wave:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-primary-light, color-mix(in srgb, var(--color-primary) 14%, transparent));
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.ai-agent-dictation-wave:not([hidden]):hover {
+  opacity: 0.8;
+}
+
+/* Wave bars container — sized to sit comfortably inside the 36×36 circle
+   with room to spare, Claude-style: a compact cluster of slim bars rather
+   than a wide waveform strip. */
+.ai-agent-dictation-wave-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5px;
+  height: 16px;
+}
+
+/* Individual bars — CSS fallback animation plays when no live mic data
+   (getUserMedia denied/unavailable); live metering overrides transform
+   via JS once the AudioContext stream is running (see startMicMetering
+   in ai-agent-chat.js). */
+.ai-agent-dictation-wave-bars span {
+  display: block;
+  width: 2.5px;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: center;
+  animation: ai-agent-wave-bounce 1.1s ease-in-out infinite;
+}
+
+.ai-agent-dictation-wave-bars span:nth-child(1) {
+  height: 6px;
+  animation-delay: 0s;
+}
+
+.ai-agent-dictation-wave-bars span:nth-child(2) {
+  height: 11px;
+  animation-delay: 0.15s;
+}
+
+.ai-agent-dictation-wave-bars span:nth-child(3) {
+  height: 16px;
+  animation-delay: 0.3s;
+}
+
+.ai-agent-dictation-wave-bars span:nth-child(4) {
+  height: 11px;
+  animation-delay: 0.45s;
+}
+
+.ai-agent-dictation-wave-bars span:nth-child(5) {
+  height: 6px;
+  animation-delay: 0.6s;
+}
+
+/* When live mic data is streaming, JS drives scaleY — remove the CSS
+   animation so the two sources don't fight each other. */
+.ai-agent-dictation-wave--live .ai-agent-dictation-wave-bars span {
+  animation: none;
+}
+
+@keyframes ai-agent-wave-bounce {
+
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+[data-animations="disabled"] .ai-agent-dictation-wave-bars span {
+  animation: none;
+  transform: scaleY(0.7);
+}
+
+/* ── Desktop layout ── Wider modal + the sidebar shown alongside the active panel */
+@media (min-width: 901px) {
+  .ai-agent-modal-card.ai-agent-desktop-layout {
+    max-width: none;
+    width: 92vw;
+    height: 90vh;
+  }
+
+  .ai-agent-desktop-layout .ai-agent-row {
+    flex-direction: row-reverse;
+    min-height: 0;
+    flex: 1;
+  }
+
+  .ai-agent-desktop-layout .ai-agent-body {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .ai-agent-desktop-layout .ai-agent-sidebar {
+    display: flex;
+    width: 220px;
+    flex-shrink: 0;
+  }
+
+  .ai-agent-desktop-layout .ai-agent-panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
+/* ── `@` mention menu (ai-agent-mention-menu.js) ──
+   Base chrome (fixed position, z-index, surface/border/radius/shadow,
+   RTL, padding, the .ai-agent-dropdown-item row shape, and — importantly —
+   display:flex/flex-direction:column/gap:6px) is inherited from
+   .ai-agent-dropdown-menu / .ai-agent-dropdown-menu .ai-agent-dropdown-item
+   (this file's own "Self-contained anchored-dropdown chrome" block near the
+   top) via the shared classes createMentionMenu's open() sets on the
+   element itself and buildRow() sets on every row. Everything below only
+   adds what's specific to this menu's content, PLUS explicit flex-sizing
+   rules the earlier pass of this file was missing (see the
+   .ai-agent-mention-row and .ai-agent-mention-section-header comments
+   below for why those caused real, screenshot-visible clipping/bleed
+   rather than being theoretical).
+
+   Structural note the fixes below depend on: .ai-agent-mention-menu's
+   DIRECT children are the Quick-Access section header, each Quick-Access
+   row, the "مكتبتك" section header, a plain results-host <div>, the
+   "الصفحة الرئيسية" section header, and its own results-host <div> — see
+   ai-agent-mention-menu.js's render(). Only those are real flex items of
+   this flex column; database-item rows rendered INSIDE a results-host div
+   are ordinary block children of that div, not flex items themselves. The
+   two categories need different treatment below.
+
+   Every var(--color-...) used below was checked against a real search of
+   themes.css (all three themes: light, dark, dark-slate) — none are
+   invented. --color-selected-bg / --color-hover-overlay / --color-focus-ring
+   are the theme's own "interactive state" tokens, used for the persistent
+   attached / hover / keyboard-focus states respectively so they read as
+   three distinct, real states rather than one recolored blob. */
+.ai-agent-mention-menu {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.ai-agent-mention-section-header {
+  padding: 10px 8px 4px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.ai-agent-mention-section-header:first-child {
+  margin-top: 0;
+  padding-top: 6px;
+  border-top: none;
+}
+
+/* Quick-Access rows are direct flex-item children of .ai-agent-mention-menu
+   (see this block's own header comment) — THE rows that were visibly
+   squished/truncated in testing. Root cause: a flex item's automatic
+   minimum size resolves against its own content only while its overflow
+   is `visible`; this row sets `overflow: hidden` (needed for the
+   ellipsis rules below), which makes its automatic minimum drop to 0 —
+   so the flex column was free to compress these rows far below their
+   actual content height whenever the menu's own max-height / gap made
+   space tight, squashing the two-line title+description into a sliver.
+   flex-shrink:0 + min-height opt these rows out of that shrinking
+   entirely: they always render at (at least) their natural height, and
+   the MENU scrolls for anything that doesn't fit, rather than the ROWS
+   silently compressing. */
+.ai-agent-mention-row {
+  overflow: hidden;
+  width: 100%;
+  text-align: start;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  min-height: 40px;
+  align-items: flex-start;
+  padding: 10px 12px;
+}
+
+/* Database-item rows (inside a results-host <div> — see this block's own
+   header comment) are block children, never flex items, so they can't
+   suffer the same automatic-minimum-size collapse Quick-Access rows can.
+   Still given the same floor/box-sizing explicitly rather than relying on
+   that difference silently continuing to save them — a future change to
+   how results-hosts render shouldn't quietly reintroduce this bug. */
+.ai-agent-mention-row {
+  min-height: 40px;
+}
+
+/* Deliberate override, not inheritance, for hover: .ai-agent-dropdown-item:
+   hover (this file's own dropdown-chrome block above) sets background/
+   border-color/color all to the primary accent — correct for a short list
+   of a handful of distinct actions (like the "more" menu), but wrong here:
+   with 3 sections and up to ~20 rows, recoloring the row's TEXT on hover as
+   well as its background reads as much noisier, and it previously fully
+   overrode this menu's own title/description colors (see the
+   .ai-agent-mention-row-title/-desc rules below) since :hover's (0,2,0)
+   specificity beat this menu's original single-class rules. Hovering here
+   only tints the background
+   (via --color-hover-overlay, the theme's own token for exactly this) and
+   leaves text color alone — title/description keep their own colors in
+   every state, defined once below rather than fought over per-state. */
+.ai-agent-mention-row:hover {
+  background: var(--color-hover-overlay);
+  border-color: var(--color-border);
+  color: inherit;
+}
+
+.ai-agent-mention-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+}
+
+.ai-agent-mention-row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  unicode-bidi: plaintext;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.ai-agent-mention-row-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  unicode-bidi: plaintext;
+  font-size: 0.76rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+}
+
+/* Disabled — either an empty Quick-Access item (no quiz taken yet) or an
+   item already in pendingAttachments (see buildRow's checked||disabled
+   wiring, the fix for duplicate attachments: an already-attached item is
+   both visually checked AND unclickable, so it can't be picked twice).
+   Fully inert — no hover tint, no pointer — with just enough opacity drop
+   to read as unavailable without losing legibility of the description
+   text (which, for the empty-Quick-Access case, explains WHY). */
+.ai-agent-mention-row[disabled] {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Attached (already in pendingAttachments) — see buildRow: this class is
+   set at row-build time from `checked`, together with `disabled` above,
+   so an attached row reads as both permanently checked and inert.
+   --color-selected-bg is every theme's own token for exactly a persistent
+   selected/checked state (distinct from --color-hover-overlay's transient
+   hover tint above), confirmed present in light/dark/dark-slate. */
+.ai-agent-mention-row.is-attached {
+  background: var(--color-selected-bg);
+}
+
+/* Keyboard-active (arrow-key highlighted) row — a visible outline rather
+   than another background color, so it stays distinguishable from
+   .is-attached even in the moment before a picked/disabled row has
+   scrolled out of the keyboard-nav set. --color-focus-ring is this app's
+   own token for exactly a keyboard-focus ring elsewhere; reused here
+   instead of inventing a new one. */
+.ai-agent-mention-row.is-active {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.ai-agent-mention-row-check {
+  color: var(--color-primary);
+  font-weight: 700;
+  flex-shrink: 0;
+  visibility: hidden;
+  margin-top: 2px;
+}
+
+.ai-agent-mention-row.is-attached .ai-agent-mention-row-check {
+  visibility: visible;
+}
+
+.ai-agent-mention-row svg {
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.ai-agent-mention-loading,
+.ai-agent-trigger-menu-empty {
+  padding: 10px 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+
+  /* Narrow widths: the menu already goes full-clamped-width via
+     .ai-agent-dropdown-menu's max-width: calc(100vw - 16px), so there's no
+     extra horizontal-narrowing rule needed here. What DOES need help at
+     this width is vertical space — the on-screen keyboard eats a large
+     chunk of the viewport, so rows stay compact (never below the same
+     40px floor — see .ai-agent-mention-row above, which this doesn't
+     lower any further, since going below it is exactly what caused the
+     clipping bug) while the sticky headers still separate the sections. */
+  .ai-agent-mention-menu {
+    max-height: min(320px, 55vh);
+  }
+
+  .ai-agent-mention-row {
+    padding: 8px 12px;
+  }
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-history-panel,
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-history-panel * {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .ai-agent-sidebar-collapse-btn {
+    display: flex;
+  }
+}
+
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-history-panel,
+.ai-agent-sidebar--collapsed .ai-agent-sidebar-history-panel * {
+  display: none !important;
+}
+
+.ai-agent-mobile-sidebar-toggle {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .ai-agent-mobile-sidebar-toggle {
+    display: flex;
+    order: 3;
+  }
+
+  .ai-agent-modal-card .ai-agent-close-btn {
+    order: 1;
+  }
+
+  .ai-agent-modal-card #aiAgentModalTitle {
+    order: 2;
+  }
+}
+
+@media (max-width: 900px) {
+
+  .ai-agent-modal-card .ai-agent-body,
+  .ai-agent-modal-card .ai-agent-row,
+  .ai-agent-modal-card .ai-agent-chat-panel {
+    min-height: 0;
+  }
+
+  .ai-agent-modal-card .ai-agent-chat-panel {
+    flex: 1;
+  }
+
+  .ai-agent-modal-card .ai-agent-chat-messages {
+    min-height: 0;
+  }
+
+  .ai-agent-modal-card .ai-agent-chat-input-row {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    flex-shrink: 0;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.ai-agent-dropdown-menu.ai-agent-export-menu {
+  width: min(320px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* ── Attachment preview modal (openAttachmentPreviewModal, ai-agent-chat.js) ──
+   Opened by clicking either a pending .ai-agent-attachment-tile or a sent
+   .ai-agent-msg-attachment chip — shows the full title (untruncated,
+   unlike the tile's ellipsized name) plus whatever context is available
+   (summary for platform items, mime/size for plain files). Layers on top
+   of this file's own .ai-agent-overlay/.ai-agent-modal-shell (see the
+   "Self-contained modal shell" block near the top) for the same overlay/
+   card chrome every other modal in this widget uses; these rules only add
+   what's specific to this modal's own content. */
+.ai-agent-attachment-preview-overlay {
+  z-index: var(--z-modal-top, 11000);
+}
+
+.ai-agent-attachment-preview-card {
+  position: relative;
+  max-width: 380px;
+}
+
+.ai-agent-attachment-preview-close {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary, currentColor);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ai-agent-attachment-preview-close:hover {
+  background: var(--color-danger, #dc2626);
+  color: #fff;
+}
+
+.ai-agent-attachment-preview-image {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  background: var(--color-background-secondary);
+}
+
+.ai-agent-attachment-preview-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  border-radius: 14px;
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary, currentColor);
+}
+
+.ai-agent-attachment-preview-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.ai-agent-attachment-preview-kind {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-tertiary);
+  margin-bottom: 6px;
+}
+
+.ai-agent-attachment-preview-title {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.ai-agent-attachment-preview-context {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Modular Actions (Slash Commands) Menu ───────────────────────────────── */
+.ai-agent-slash-menu {
+  max-height: 320px;
+  overflow-y: auto;
+  width: min(400px, calc(100vw - 32px));
+}
+
+.ai-agent-slash-section-header {
+  padding: 8px 10px 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ai-agent-slash-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  min-height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: start;
+  width: 100%;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ai-agent-slash-row:hover {
+  background: var(--color-hover-overlay);
+  border-color: var(--color-border);
+}
+
+.ai-agent-slash-row.is-active {
+  background: var(--color-hover-overlay);
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.ai-agent-slash-row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--color-hover-overlay);
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ai-agent-slash-row-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ai-agent-slash-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+}
+
+.ai-agent-slash-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-agent-slash-row-title {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+}
+
+.ai-agent-slash-row-cmd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-hover-overlay);
+  color: var(--color-primary);
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.ai-agent-slash-row-desc {
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-agent-slash-empty {
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* Telegram bot sidebar button */
+.ai-agent-sidebar-btn--telegram {
+  color: #24A1DE;
+}
+
+.ai-agent-sidebar-btn--telegram:hover {
+  background: rgba(36, 161, 222, 0.12);
+  border-color: rgba(36, 161, 222, 0.4);
+}
+
+.ai-agent-sidebar-btn--telegram:focus-visible {
+  outline: 2px solid #24A1DE;
+  outline-offset: 2px;
+}
+
+/* Telegram invite banner (empty chat) */
+.ai-agent-telegram-banner {
+  margin: 0 12px 8px;
+  position: relative;
+}
+
+.ai-agent-telegram-banner-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 6px;
+  inset-inline-start: 6px;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 0.8rem;
+}
+
+.ai-agent-telegram-banner-dismiss:hover {
+  opacity: 1;
+}

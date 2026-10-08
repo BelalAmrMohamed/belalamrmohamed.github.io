@@ -1,0 +1,655 @@
+// public/src/shared/quizManifest.js
+// =============================================================================
+// Loads the quiz manifest — DB-only. Supabase is the sole source of truth.
+// Queries Supabase for `quizzes`, `lessons`, `courses`, and `folders` directly,
+// then reconstructs each content item's subject/subfolder placement by walking
+// course_id → course row and folder_id → parent_folder_id chain. Apart from
+// the last-good LOCALSTORAGE snapshot described below (a per-browser cache
+// of the last successful live fetch, not an independent data source), nothing
+// here reads a static file or bundled manifest.
+//
+// Manifest shape
+// ──────────────
+// { subjects: [ { id, name, education_type, faculty?, year?, term?, quizzes: [...] } ] }
+//
+// For backward compatibility, getManifest() also returns a `categoryTree`
+// object (keyed by subject/subfolder name) that index.js uses for
+// navigation, and an `examList` flat array.
+//
+// Caching
+// ───────
+// Cached in memory for the lifetime of the page.
+// Call invalidateManifestCache() after an admin upload or delete.
+// =============================================================================
+
+import { generateQuizId } from "./quizId.js";
+import { ensureSharedSupabaseClient } from "./supabaseClientRegistry.js";
+import { SUPABASE_URL } from "./public-config.js";
+
+let cached = null;
+
+// Upper bound for how long the home page will wait for Supabase before giving
+// up and showing the retry/error state. Supabase outages in front of
+// CloudFlare can manifest as requests that simply HANG (never resolve, never
+// reject) — without this bound the skeleton loader would spin forever.
+const MANIFEST_FETCH_TIMEOUT_MS = 15000;
+
+// ── Local last-good snapshot (resilience fallback) ───────────────────────────
+// When the live manifest fetch fails — Supabase outage, dropped gateway, slow
+// network — the home page falls back to this localStorage snapshot of the
+// last successful load so returning users still see the course catalog
+// instead of an error/skeleton. Only the lightweight metadata needed to
+// render the catalog is stored (never the full quiz `data` blob, which can
+// be megabytes); quiz content itself still requires a live fetch.
+const MANIFEST_CACHE_KEY = "bq_manifest_cache_v1";
+// Hard upper bound for the serialized snapshot — comfortably below
+// localStorage's ~5 MB per-origin quota so it can never evict other app
+// keys when saving.
+const MANIFEST_CACHE_MAX_BYTES = 2_500_000;
+// When a usable snapshot already exists we don't need to wait the full
+// 15 s for a dead Supabase: give the live fetch a short grace period, then
+// fall back to the snapshot immediately.
+const CACHE_FALLBACK_FAST_TIMEOUT_MS = 5000;
+
+// Races a promise against a hard deadline so a hung network request (e.g.
+// Cloudflare 522 / connection timeout against Supabase) can never wedge the
+// home page on the skeleton indefinitely.
+function withTimeout(promise, ms, label) {
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(
+          new Error(
+            `[${label || "request"}] Timed out after ${ms}ms`,
+          ),
+        ),
+      ms,
+    );
+  });
+  return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
+}
+
+// ── Local snapshot persistence ────────────────────────────────────────────────
+
+/** Stores the last-good catalog (slimmed: quiz metadata only, no quiz bodies). */
+function saveManifestCache({ quizzes, lessons, courses, folders }) {
+  try {
+    if (typeof localStorage === "undefined") return;
+    const slimQuizzes = (quizzes || []).map((q) => ({
+      id: q.id,
+      course_id: q.course_id,
+      folder_id: q.folder_id,
+      title: q.title,
+      password: q.password,
+      meta: q.data?.meta,
+      stats: q.data?.stats,
+    }));
+    const payload = JSON.stringify({
+      // Lessons were added to the catalog in v2. An older snapshot cannot
+      // provide an honest course-level lesson-progress total, so let it miss
+      // the cache and fetch a current catalog instead.
+      v: 2,
+      project: SUPABASE_URL,
+      savedAt: new Date().toISOString(),
+      quizzes: slimQuizzes,
+      lessons,
+      courses,
+      folders,
+    });
+    if (payload.length > MANIFEST_CACHE_MAX_BYTES) {
+      console.warn("[quizManifest] Manifest snapshot too large to cache — skipping.");
+      return;
+    }
+    localStorage.setItem(MANIFEST_CACHE_KEY, payload);
+  } catch (err) {
+    console.warn("[quizManifest] Could not save manifest snapshot:", err);
+  }
+}
+
+/**
+ * Loads the last-good catalog snapshot, or null if absent/invalid/stale.
+ * The snapshot stores raw rows under a "slim" shape (meta/stats hoisted to
+ * the row top level instead of nested inside `data`), which buildSubjects()
+ * handles transparently via its `row.data ?? row` normalization.
+ */
+function tryRestoreManifestCache() {
+  try {
+    if (typeof localStorage === "undefined") return null;
+    const raw = localStorage.getItem(MANIFEST_CACHE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || data.v !== 2 || data.project !== SUPABASE_URL) return null;
+    if (
+      !Array.isArray(data.courses) ||
+      !Array.isArray(data.folders) ||
+      !Array.isArray(data.quizzes) ||
+      !Array.isArray(data.lessons)
+    ) {
+      return null;
+    }
+    return data;
+  } catch (err) {
+    // Corrupt snapshot — discard it so it can't wedge future loads.
+    try { localStorage.removeItem(MANIFEST_CACHE_KEY); } catch (_) { }
+    return null;
+  }
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/**
+ * Returns the merged manifest.  Result is cached after the first call.
+ *
+ * @returns {Promise<{ subjects: Subject[], categoryTree: CategoryTree, examList: Exam[] }>}
+ */
+export async function getManifest() {
+  if (cached) return cached;
+
+  // If a usable snapshot already exists, fail fast on the live fetch so an
+  // outage is served from cache in ~5 s instead of after the full 15 s.
+  const snapshot = tryRestoreManifestCache();
+  const liveTimeout = snapshot
+    ? CACHE_FALLBACK_FAST_TIMEOUT_MS
+    : MANIFEST_FETCH_TIMEOUT_MS;
+
+  let fromCache = false;
+  let subjects;
+  // Raw folder rows threaded through to buildCompatStructures() so the
+  // category-tree folder nodes can carry their DB id/creator metadata (see
+  // buildFolderInfoByPath's doc comment). Kept outside the try so both the
+  // live and the snapshot fallback paths can feed it.
+  let foldersRaw;
+  try {
+    const { quizzes, lessons, courses, folders } = await fetchDbManifest(liveTimeout);
+    saveManifestCache({ quizzes, lessons, courses, folders });
+    // buildSubjects() returns { subjects: [...] } (see its docstring/return
+    // statement below) — unwrap here so `subjects` is the plain array
+    // buildCompatStructures() expects (@param {Subject[]} subjects).
+    // Passing the wrapper object through unwrapped previously caused
+    // "TypeError: subjects is not iterable" — but only once a live/snapshot
+    // fetch actually succeeded and reached buildCompatStructures(), so it
+    // never surfaced during the Supabase outage itself (the throw/timeout
+    // path was hit first every time).
+    foldersRaw = folders;
+    ({ subjects } = await buildSubjects(quizzes, lessons, courses, folders));
+  } catch (err) {
+    if (!snapshot) throw err;
+    console.warn(
+      "[quizManifest] Live manifest failed — serving last-good snapshot:",
+      err,
+    );
+    foldersRaw = snapshot.folders;
+    ({ subjects } = await buildSubjects(
+      snapshot.quizzes,
+      snapshot.lessons,
+      snapshot.courses,
+      snapshot.folders,
+    ));
+    fromCache = true;
+  }
+
+  const { categoryTree, examList } = buildCompatStructures(subjects, foldersRaw);
+  cached = { subjects, categoryTree, examList, fromCache };
+  return cached;
+}
+
+/**
+ * Clears the in-memory cache so the next getManifest() re-fetches both sources.
+ */
+export function invalidateManifestCache() {
+  cached = null;
+}
+
+// ── Internal helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Queries Supabase directly for the raw `quizzes`, `lessons`, `courses`, and
+ * `folders`
+ * rows (public SELECT is allowed by each table's RLS policy) and returns
+ * them unshaped — buildSubjects() turns them into the compatibility
+ * manifest. Kept in this module (rather than a shared helper) since it's
+ * the only caller. See CHANGELOG for why this moved off a serverless
+ * function (Vercel Hobby's 12-function cap).
+ *
+ * @param {number} [timeoutMs] - upper bound for the whole fetch (defaults
+ *   to MANIFEST_FETCH_TIMEOUT_MS); callers with a snapshot fallback pass a
+ *   shorter budget so an outage is served from cache fast.
+ */
+async function fetchDbManifest(timeoutMs = MANIFEST_FETCH_TIMEOUT_MS) {
+  const supabase = await ensureSharedSupabaseClient();
+  if (!supabase) throw new Error("Supabase client unavailable");
+
+  const [{ data: quizzes, error: quizzesError }, { data: lessons, error: lessonsError }, { data: courses, error: coursesError }, { data: folders, error: foldersError }] = await withTimeout(
+    Promise.all([
+      supabase
+        .from("quizzes")
+        .select("id, course_id, folder_id, title, data, password")
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("lesson_public")
+        .select("id, course_id, folder_id, title, slug, section_ids, section_count, description, source, password_protected, created_at, updated_at")
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("courses")
+        .select("id, name, education_type, college, year, term, created_by, created_at, icon")
+        .order("name", { ascending: true }),
+      supabase
+        .from("folders")
+        .select("id, course_id, name, parent_folder_id, created_by, created_at, icon")
+        .order("name", { ascending: true }),
+    ]),
+    timeoutMs,
+    "quiz manifest",
+  );
+
+  if (quizzesError) throw quizzesError;
+  if (lessonsError) throw lessonsError;
+  if (coursesError) throw coursesError;
+  if (foldersError) throw foldersError;
+
+  return { quizzes, lessons, courses, folders };
+}
+
+/**
+ * Shapes raw quiz/course/folder rows into the { subjects: [...] } manifest.
+ * Works for BOTH live Supabase rows (quiz `data` JSON with meta/stats keys)
+ * and slimmed snapshot rows from saveManifestCache() (meta/stats hoisted to
+ * the row top level) — see the `row.data ?? row` normalization below.
+ */
+async function buildSubjects(quizzes, lessons, courses, folders) {
+  const courseById = new Map((courses || []).map((course) => [course.id, course]));
+  const folderById = new Map((folders || []).map((folder) => [folder.id, folder]));
+
+  function getFolderSegments(folderId, courseId) {
+    const segments = [];
+    const visited = new Set();
+    let currentId = folderId;
+
+    while (currentId) {
+      if (visited.has(currentId)) {
+        throw new Error(`Folder cycle detected at ${currentId}`);
+      }
+      visited.add(currentId);
+
+      const folder = folderById.get(currentId);
+      if (!folder || folder.course_id !== courseId) {
+        throw new Error(`Folder ${currentId} does not belong to course ${courseId}`);
+      }
+      segments.unshift(folder.name);
+      currentId = folder.parent_folder_id;
+    }
+
+    return segments;
+  }
+
+  const subjectsMap = new Map();
+
+  function ensureSubject(course) {
+    if (subjectsMap.has(course.id)) return subjectsMap.get(course.id);
+    const subject = {
+      id: course.id,
+      name: course.name,
+      education_type: course.education_type,
+      created_by: course.created_by || null,
+      created_at: course.created_at || null,
+      quizzes: [],
+      lessons: [],
+      folderPaths: [],
+    };
+    if (course.education_type === "University" && course.college) subject.faculty = course.college;
+    if (course.year != null) subject.year = course.year;
+    if (course.term != null) subject.term = course.term;
+    if (course.icon) subject.icon = course.icon;
+    subjectsMap.set(course.id, subject);
+    return subject;
+  }
+
+  for (const row of quizzes || []) {
+    const course = courseById.get(row.course_id);
+    if (!course) {
+      console.warn(`[quizManifest] Quiz ${row.id} has no valid course_id`);
+      continue;
+    }
+
+    let folderSegments;
+    try {
+      folderSegments = getFolderSegments(row.folder_id, row.course_id);
+    } catch (error) {
+      console.warn(`[quizManifest] ${error.message}`);
+      continue;
+    }
+
+    const subjectEntry = ensureSubject(course);
+    // Live rows nest meta/stats inside the `data` JSON column; slimmed
+    // snapshot rows hoist them to the row top level — support both.
+    const quizMeta = row.data?.meta || row.meta || {};
+    const quizStats = row.data?.stats || row.stats || {};
+
+    const quizEntry = {
+      id: quizMeta.id || (await generateQuizId(String(row.id))),
+      dbId: row.id,
+      title: quizMeta.title || row.title,
+      folderSegments,
+      questionCount: quizStats.questionCount ?? 0,
+      questionTypes: quizStats.questionTypes ?? [],
+      education_type: course.education_type,
+      courseId: row.course_id || null,
+      folderId: row.folder_id || null,
+    };
+
+    if (quizMeta.description) quizEntry.description = quizMeta.description;
+    if (quizMeta.author_id) quizEntry.author_id = quizMeta.author_id;
+    if (quizMeta.author) quizEntry.author = quizMeta.author;
+    // Used by the admin "creator/uploader match" tier of canManageItem()
+    // (see delete-quiz.js / admin-item-actions.js) — lets the quiz's own
+    // author see manage actions even when the platform owner is elsewhere.
+    if (quizMeta.author_email) quizEntry.author_email = quizMeta.author_email;
+    if (row.password) quizEntry.password = row.password;
+    if (quizMeta.source) quizEntry.source = quizMeta.source;
+    if (quizMeta.createdAt) quizEntry.createdAt = quizMeta.createdAt;
+
+    subjectEntry.quizzes.push(quizEntry);
+  }
+
+  for (const row of lessons || []) {
+    const course = courseById.get(row.course_id);
+    if (!course) {
+      console.warn(`[quizManifest] Lesson ${row.id} has no valid course_id`);
+      continue;
+    }
+    let folderSegments;
+    try {
+      folderSegments = getFolderSegments(row.folder_id, row.course_id);
+    } catch (error) {
+      console.warn(`[quizManifest] ${error.message}`);
+      continue;
+    }
+    const sectionIds = Array.isArray(row.section_ids) ? row.section_ids.map(String).filter(Boolean) : [];
+    const sections = sectionIds.length ? sectionIds.map((id) => ({ id })) : Array.from({ length: Number(row.section_count) || 0 }, (_, i) => ({ id: `s${i + 1}` }));
+    ensureSubject(course).lessons.push({
+      id: row.id,
+      slug: row.slug || null,
+      title: row.title || "",
+      folderSegments,
+      sectionIds: sections.map((section, index) => String(section?.id || `s${index + 1}`)),
+      // Completion is measured against the sections every reader is guaranteed
+      // to see. `defaultHidden` sections are adaptive remediation that only
+      // appear after a specific answer, so requiring them would make a lesson
+      // permanently un-completable for anyone who answers correctly.
+      // Must stay in sync with getRequiredSectionIds() in
+      // public/src/features/lesson/lesson-schema.js.
+      requiredSectionIds: sections
+        .map((section, index) => ({ id: String(section?.id || `s${index + 1}`), hidden: Boolean(section?.defaultHidden) }))
+        .filter((section) => !section.hidden)
+        .map((section) => section.id),
+      createdAt: row.created_at || null,
+      updatedAt: row.updated_at || null,
+      description: row.description || "",
+      source: row.source || "",
+      passwordProtected: Boolean(row.password_protected),
+      courseId: row.course_id || null,
+      folderId: row.folder_id || null,
+    });
+  }
+
+  // Preserve folders that have no quizzes or lessons so admin placement
+  // pickers can still target them. Courses with folders must also be present
+  // in the subject list even when those folders are currently empty.
+  for (const folder of folders || []) {
+    const course = courseById.get(folder.course_id);
+    if (!course) continue;
+    const subject = ensureSubject(course);
+    try {
+      const segments = getFolderSegments(folder.id, folder.course_id);
+      if (segments.length && !subject.folderPaths.some((path) =>
+        path.length === segments.length && path.every((segment, index) => segment === segments[index]))) {
+        subject.folderPaths.push(segments);
+      }
+    } catch (error) {
+      console.warn(`[quizManifest] ${error.message}`);
+    }
+  }
+
+  return { subjects: Array.from(subjectsMap.values()) };
+}
+
+/**
+ * Builds a path → folder-row map for the folders that actually appear in the
+ * tree. Keys match the categoryTree subcategory keys exactly (course path
+ * first, then each folder's ancestor chain, joined with "/"), so
+ * buildCompatStructures can attach a folder's DB id/created_by/icon to the
+ * subcategory node it created from the quiz-driven folderSegments walk.
+ *
+ * Only folders belonging to a course that is present in the manifest get an
+ * entry — folders under a course with zero quizzes never appear in the tree,
+ * so there is no node to attach them to.
+ * @param {object[]|undefined} folders
+ * @param {Map<string, { name: string }>} courseNameById
+ * @returns {Map<string, object>} path key → folder row
+ */
+function buildFolderInfoByPath(folders, courseNameById) {
+  const infoByPath = new Map();
+  if (!Array.isArray(folders) || folders.length === 0) return infoByPath;
+
+  const folderById = new Map(folders.map((f) => [f.id, f]));
+  for (const folder of folders) {
+    const segments = [];
+    let cur = folder;
+    const visited = new Set();
+    while (cur && !visited.has(cur.id)) {
+      visited.add(cur.id);
+      segments.unshift(cur.name);
+      if (!cur.parent_folder_id) {
+        const courseName = courseNameById.get(cur.course_id);
+        if (courseName) segments.unshift(courseName);
+        break;
+      }
+      cur = folderById.get(cur.parent_folder_id) || null;
+    }
+    if (segments.length) infoByPath.set(segments.join("/"), folder);
+  }
+  return infoByPath;
+}
+
+/**
+ * Builds backward-compatible `categoryTree` and `examList` from subjects.
+ *
+ * categoryTree shape expected by index.js:
+ *   { [subjectName]: { id, name, faculty, year, term, path, parent, subcategories, exams } }
+ *
+ * Each quiz's `folderSegments` (walked from folder_id's parent chain in
+ * buildSubjects()) is used to reconstruct nested subfolder nodes.
+ *
+ * `folders` (raw folder rows) is passed so subcategory nodes can carry their
+ * live DB id + creator metadata — required by the admin move/rename/delete
+ * dropdown actions (see admin-item-actions.js).
+ *
+ * @param {Subject[]} subjects
+ * @param {object[]|undefined} [folders]
+ * @returns {{ categoryTree: object, examList: object[] }}
+ */
+function buildCompatStructures(subjects, folders) {
+  const categoryTree = {};
+  const examList = [];
+
+  const folderById = new Map((folders || []).map((folder) => [folder.id, folder]));
+  const courseNameById = new Map(
+    subjects.map((s) => [s.id, { name: s.name }]),
+  );
+  const folderInfoByPath = buildFolderInfoByPath(folders, courseNameById);
+
+  for (const subject of subjects) {
+    const key = subject.name;
+
+    if (!categoryTree[key]) {
+      categoryTree[key] = {
+        key: key,
+        id: subject.id,
+        name: subject.name,
+        faculty: subject.faculty,
+        education_type: subject.education_type,
+        ...(subject.year != null && { year: String(subject.year) }),
+        ...(subject.term != null && { term: String(subject.term) }),
+        path: [subject.name],
+        parent: null,
+        subcategories: [],
+        exams: [],
+        lessons: [],
+        source: subject.source,
+        ...(subject.created_by && { created_by: subject.created_by }),
+        ...(subject.created_at && { created_at: subject.created_at }),
+        ...(subject.icon && { icon: subject.icon }),
+      };
+    }
+
+    for (const quiz of subject.quizzes ?? []) {
+      let folderSegments = Array.isArray(quiz.folderSegments)
+        ? quiz.folderSegments
+        : [];
+      let examCategoryKey = key;
+
+      if (folderSegments.length > 0) {
+        let currentParentKey = key;
+        let currentPathArr = [...categoryTree[key].path];
+
+        for (const segment of folderSegments) {
+          const subKey = `${currentParentKey}/${segment}`;
+          currentPathArr.push(segment);
+
+          if (!categoryTree[subKey]) {
+            const folderInfo = folderInfoByPath.get(subKey);
+            categoryTree[subKey] = {
+              key: subKey,
+              name: segment,
+              path: [...currentPathArr],
+              parent: currentParentKey,
+              subcategories: [],
+              exams: [],
+              lessons: [],
+              education_type: subject.education_type,
+              ...(folderInfo && { id: folderInfo.id }),
+              ...(folderInfo?.course_id && { course_id: folderInfo.course_id }),
+              ...(folderInfo?.parent_folder_id && { parent_folder_id: folderInfo.parent_folder_id }),
+              ...(folderInfo?.created_by && { created_by: folderInfo.created_by }),
+              ...(folderInfo?.created_at && { created_at: folderInfo.created_at }),
+              ...(folderInfo?.icon && { icon: folderInfo.icon }),
+            };
+            if (!categoryTree[currentParentKey].subcategories.includes(subKey)) {
+              categoryTree[currentParentKey].subcategories.push(subKey);
+            }
+          }
+          currentParentKey = subKey;
+        }
+        examCategoryKey = currentParentKey;
+      }
+
+      const examEntry = {
+        id: quiz.id,
+        dbId: quiz.dbId,
+        title: quiz.title,
+        education_type: quiz.education_type || subject.education_type,
+        createdAt: quiz.createdAt,
+        category: examCategoryKey,
+        questionCount: quiz.questionCount,
+        questionTypes: quiz.questionTypes,
+        courseId: quiz.courseId || null,
+        folderId: quiz.folderId || null,
+        ...(quiz.description && { description: quiz.description }),
+        ...(quiz.author && { author: quiz.author }),
+        ...(quiz.author_email && { author_email: quiz.author_email }),
+        ...(quiz.author_id && { author_id: quiz.author_id }),
+        ...(quiz.source && { source: quiz.source }),
+        ...(quiz.password && { password: quiz.password }),
+      };
+
+      categoryTree[examCategoryKey].exams.push(examEntry);
+      examList.push(examEntry);
+    }
+
+    for (const lesson of subject.lessons ?? []) {
+      const folderSegments = Array.isArray(lesson.folderSegments) ? lesson.folderSegments : [];
+      let lessonCategoryKey = key;
+      if (folderSegments.length > 0) {
+        let currentParentKey = key;
+        let currentPathArr = [...categoryTree[key].path];
+        for (const segment of folderSegments) {
+          const subKey = `${currentParentKey}/${segment}`;
+          currentPathArr.push(segment);
+          if (!categoryTree[subKey]) {
+            const folderInfo = folderInfoByPath.get(subKey);
+            categoryTree[subKey] = {
+              key: subKey, name: segment, path: [...currentPathArr], parent: currentParentKey,
+              subcategories: [], exams: [], lessons: [], education_type: subject.education_type,
+              ...(folderInfo && { id: folderInfo.id }),
+              ...(folderInfo?.course_id && { course_id: folderInfo.course_id }),
+              ...(folderInfo?.parent_folder_id && { parent_folder_id: folderInfo.parent_folder_id }),
+              ...(folderInfo?.created_by && { created_by: folderInfo.created_by }),
+              ...(folderInfo?.created_at && { created_at: folderInfo.created_at }),
+              ...(folderInfo?.icon && { icon: folderInfo.icon }),
+            };
+            if (!categoryTree[currentParentKey].subcategories.includes(subKey)) {
+              categoryTree[currentParentKey].subcategories.push(subKey);
+            }
+          }
+          currentParentKey = subKey;
+        }
+        lessonCategoryKey = currentParentKey;
+      }
+      categoryTree[lessonCategoryKey].lessons.push({ ...lesson, category: lessonCategoryKey });
+    }
+  }
+
+  // Build folder nodes from the folder table as well as from quiz/lesson
+  // paths. This keeps empty folders navigable and gives every folder card the
+  // database identity required by admin manage actions.
+  for (const folder of folders || []) {
+    const courseName = courseNameById.get(folder.course_id)?.name;
+    if (!courseName || !categoryTree[courseName]) continue;
+
+    const chain = [];
+    const visited = new Set();
+    let current = folder;
+    while (current && !visited.has(current.id)) {
+      visited.add(current.id);
+      chain.unshift(current);
+      current = current.parent_folder_id
+        ? folderById.get(current.parent_folder_id)
+        : null;
+    }
+
+    let parentKey = courseName;
+    let parentPath = [...categoryTree[courseName].path];
+    for (const folderRow of chain) {
+      const subKey = `${parentKey}/${folderRow.name}`;
+      parentPath = [...parentPath, folderRow.name];
+      if (!categoryTree[subKey]) {
+        categoryTree[subKey] = {
+          key: subKey,
+          name: folderRow.name,
+          path: parentPath,
+          parent: parentKey,
+          subcategories: [],
+          exams: [],
+          lessons: [],
+          education_type: categoryTree[courseName].education_type,
+        };
+        categoryTree[parentKey].subcategories.push(subKey);
+      }
+
+      Object.assign(categoryTree[subKey], {
+        id: folderRow.id,
+        course_id: folderRow.course_id,
+        parent_folder_id: folderRow.parent_folder_id,
+        ...(folderRow.created_by && { created_by: folderRow.created_by }),
+        ...(folderRow.created_at && { created_at: folderRow.created_at }),
+        ...(folderRow.icon && { icon: folderRow.icon }),
+      });
+      parentKey = subKey;
+    }
+  }
+
+  examList.sort((a, b) => (a.category + a.id).localeCompare(b.category + b.id));
+
+  return { categoryTree, examList };
+}

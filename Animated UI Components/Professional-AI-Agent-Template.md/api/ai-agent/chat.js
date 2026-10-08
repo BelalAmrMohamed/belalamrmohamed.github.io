@@ -1,0 +1,473 @@
+// =============================================================================
+// api/ai-agent/chat.js
+// POST /api/ai-agent/chat
+// Body: {
+//   messages: [{
+//     role: "user"|"assistant",
+//     content: string,
+//     attachments?: [{ mimeType: string, base64: string, name?: string }],
+//   }, ...],
+//   systemPrompt?: string,     // optional system-role instructions
+//   enableTools?: boolean,     // if true, offers page-selected tools (see _tools.js)
+//   toolNames?: string[],      // which tools to offer when enableTools is true —
+//                              // names must exist in TOOLS_BY_NAME below.
+//                              // Defaults to create_quiz/edit_quiz/delete_quiz
+//                              // when omitted. Unknown names are dropped.
+// }
+//
+// The client NEVER chooses the AI provider, the model, or supplies an API
+// key — the platform decides all three (see resolvePlatformProvider() and
+// resolvePlatformModel() below). Any `provider` / `model` / `useOwnKey` /
+// `ownKey` fields a client may still send are ignored.
+//
+// PLATFORM CONFIGURATION (environment variables):
+//   AI_AGENT_GOOGLE_KEYS / AI_AGENT_DEEPSEEK_KEYS / AI_AGENT_CLAUDE_KEYS
+//       comma-separated key pools (see _keyPool.js)
+//   AI_AGENT_PROVIDER  (optional) "google" | "deepseek" | "claude". When
+//       unset, the first provider that has keys configured is used, in that
+//       order.
+//   AI_AGENT_MODEL     (optional) a model id from ALLOWED_MODELS in
+//       _providerClients.js. When unset (or not on that allowlist), the
+//       provider's own lightest default is used.
+//
+// ATTACHMENTS: max 1 per message, 4MB decoded (see MAX_ATTACHMENT_BYTES —
+// Vercel's own request body cap is the real binding constraint here, not
+// any provider's own limit). Images/PDF are sent natively to Google/Claude;
+// everything else (currently just .docx) is text-extracted server-side via
+// processAttachments() and folded into `content` — this is also what makes
+// attachments work at all with DeepSeek, which has no file input in its API.
+// Success 200: { text: string, toolCalls?: Array<{ name: string, input: object }> }
+// Failure 400/401/403/429/500/503: { error: string }
+//
+// AUTHORIZATION:
+// The platform's rotated free-tier keys (getNextKey in _keyPool.js) are
+// available to EVERYONE now, including anonymous/never-logged-in users —
+// there is no more level gate. What's required instead:
+//   - a valid admin JWT (see _middleware.js::requireAdmin) — "Verified
+//     Admin" — uncapped, OR
+//   - a valid regular-user JWT (see api/user-profile.js's action=identify,
+//     minted for every user including anonymous ones via a client-side
+//     device_id — see public/src/shared/userLevel.js) — capped at
+//     AI_AGENT_DAILY_LIMIT platform-key requests per UTC day, tracked in
+//     user_profiles.ai_agent_usage_count/_date and enforced atomically via
+//     the increment_ai_agent_usage() Postgres function (see the migration
+//     that added it) so concurrent requests can't race past the cap — see
+//     checkAndIncrementDailyUsage() below.
+// Both JWTs are minted server-side with a server-computed claim (admin
+// role / user profileId), so neither the identity nor the resulting quota
+// row is spoofable by a client.
+//
+// =============================================================================
+
+import { applyCors, requireAdmin, handleAuthError } from "../_middleware.js";
+import { getNextKey, hasPlatformKeys } from "./_keyPool.js";
+import { callProvider, isSupportedProvider } from "./_providerClients.js";
+import { CREATE_QUIZ_TOOL, ADD_LESSON_QUESTION_TOOL, CREATE_LESSON_TOOL, ADD_LESSON_SECTION_TOOL, EDIT_QUIZ_TOOL, EDIT_CURRENT_QUIZ_TOOL, DELETE_QUIZ_TOOL, RESET_QUIZ_PAGE_TOOL, CREATE_FOLDER_TOOL, CREATE_COURSE_TOOL, MOVE_ITEM_TOOL, FETCH_ATTACHED_QUIZ_TOOL, FETCH_ATTACHED_LESSON_TOOL, SEARCH_LIBRARY_TOOL, PARSE_ITEM_INFO_TOOL, GET_USER_ACTIVITY_TOOL } from "./_tools.js";
+import jwt from "jsonwebtoken";
+import mammoth from "mammoth";
+import { createClient } from "@supabase/supabase-js";
+
+// ── File attachments (Task 3) ──────────────────────────────────────────────
+// Deliberately handled inside this single endpoint rather than a new
+// serverless function — the project is close to Vercel Hobby's 12-function
+// cap (see public-config.js's comment re: the removed /api/env route), so
+// every new capability here needs to fold into an existing route.
+//
+// Vercel's default request body limit (4.5MB on Hobby) is well below
+// Gemini's own ~20MB inline-file limit, so *that* is the real binding
+// constraint — enforce a conservative cap here so oversized uploads fail
+// with a clear message instead of an opaque 413 from the platform.
+//
+// MAX_ATTACHMENT_BYTES is a per-file ceiling (still needed so one runaway
+// file can't dominate the budget on its own), but the real gate for
+// "how many files can ride in one message" is MAX_TOTAL_ATTACHMENT_BYTES,
+// checked against the SUM of every attachment's decoded size — files don't
+// each get an equal slice of the budget, one attachment can be 4MB and
+// another can be 50KB, as long as the total fits. Budget math: base64
+// inflates decoded bytes by ~4/3 on the wire, and the JSON envelope
+// (message text, conversation history, system prompt) needs its own room
+// under the 4.5MB body cap, so the total decoded-attachment budget is set
+// well below what 4.5MB / (4/3) alone would suggest.
+const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024; // per-file ceiling, base64-decoded size
+const MAX_TOTAL_ATTACHMENT_BYTES = 3 * 1024 * 1024; // combined ceiling across all attachments on one message, base64-decoded
+const MAX_ATTACHMENTS_PER_MESSAGE = 10; // v2: multiple files, gated by MAX_TOTAL_ATTACHMENT_BYTES above, not an equal per-file split
+
+// Gemini and Claude both take these natively (see _providerClients.js);
+// anything else goes through extractAttachmentText() below instead.
+const NATIVELY_SUPPORTED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+]);
+
+const DOCX_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+function base64ByteLength(base64) {
+  // Cheap approximation good enough for a size guard: 4 base64 chars encode
+  // 3 raw bytes, minus up to 2 bytes for padding.
+  const padding = (base64.match(/=+$/) || [""])[0].length;
+  return Math.floor((base64.length * 3) / 4) - padding;
+}
+
+/**
+ * DeepSeek has no file/image input in its API at all (text-only), and
+ * neither Gemini nor Claude take .docx/.pptx natively. For any mime type
+ * outside NATIVELY_SUPPORTED_MIME_TYPES, extract plain text server-side and
+ * fold it into the message's `content` instead of sending it as a binary
+ * attachment — this is also what makes DeepSeek usable when a file is
+ * attached (see _providerClients.js's top comment).
+ *
+ * v1 supports .docx via mammoth. .pptx extraction is a larger lift (no
+ * lightweight library on hand) and is intentionally out of scope for now —
+ * unsupported types get a clear error back to the user rather than silently
+ * doing nothing.
+ * @param {{mimeType: string, base64: string, name?: string}} attachment
+ * @returns {Promise<string>} extracted plain text
+ */
+async function extractAttachmentText(attachment) {
+  if (attachment.mimeType === DOCX_MIME_TYPE) {
+    const buffer = Buffer.from(attachment.base64, "base64");
+    const { value } = await mammoth.extractRawText({ buffer });
+    return value || "";
+  }
+  const err = new Error(`Unsupported attachment type for extraction: ${attachment.mimeType}`);
+  err.userFacing = true;
+  throw err;
+}
+
+/**
+ * Validates and, where needed, converts each message's attachments in
+ * place — extracting text for non-natively-supported file types (folded
+ * into that message's `content`) and leaving natively-supported types
+ * (images/PDF) untouched for the provider adapter to send as binary parts.
+ * Mutates and returns the same messages array.
+ * @param {Array<object>} messages
+ * @returns {Promise<Array<object>>}
+ */
+async function processAttachments(messages) {
+  for (const message of messages) {
+    if (!Array.isArray(message.attachments) || !message.attachments.length) continue;
+
+    if (message.attachments.length > MAX_ATTACHMENTS_PER_MESSAGE) {
+      const err = new Error("Too many attachments on one message");
+      err.userFacing = true;
+      err.userMessage = `يمكن إرفاق ${MAX_ATTACHMENTS_PER_MESSAGE} ملفات كحد أقصى في كل رسالة.`;
+      throw err;
+    }
+
+    // Sum first, across every attachment on this message, before doing any
+    // per-file work below — a message that's already over budget should
+    // fail with one clear "too much total" error rather than an unrelated
+    // "this specific file is too big" error for whichever file happens to
+    // be last in the array.
+    let totalBytes = 0;
+    for (const att of message.attachments) {
+      if (!att?.base64) continue;
+      totalBytes += base64ByteLength(att.base64);
+    }
+    if (totalBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
+      const err = new Error(`Total attachment size too large: ${totalBytes} bytes`);
+      err.userFacing = true;
+      err.userMessage = `الحجم الإجمالي للملفات المرفقة كبير جدًا (الحد الأقصى ${(MAX_TOTAL_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(1)} ميجابايت لكل الملفات معًا).`;
+      throw err;
+    }
+
+    const remainingAttachments = [];
+    for (const att of message.attachments) {
+      if (!att?.base64 || !att?.mimeType) continue;
+
+      const byteLength = base64ByteLength(att.base64);
+      if (byteLength > MAX_ATTACHMENT_BYTES) {
+        const err = new Error(`Attachment too large: ${byteLength} bytes`);
+        err.userFacing = true;
+        err.userMessage = "حجم أحد الملفات كبير جدًا (الحد الأقصى 4 ميجابايت لكل ملف).";
+        throw err;
+      }
+
+      if (NATIVELY_SUPPORTED_MIME_TYPES.has(att.mimeType)) {
+        remainingAttachments.push(att);
+        continue;
+      }
+
+      try {
+        const extractedText = await extractAttachmentText(att);
+        const label = att.name ? `\n\n[محتوى الملف المرفق: ${att.name}]\n` : "\n\n[محتوى الملف المرفق]\n";
+        message.content = `${message.content || ""}${label}${extractedText}`;
+      } catch (extractErr) {
+        if (extractErr.userFacing) throw extractErr;
+        const err = new Error(`Attachment extraction failed: ${extractErr.message}`);
+        err.userFacing = true;
+        err.userMessage = "لا يمكن معالجة نوع هذا الملف حاليًا. الأنواع المدعومة: صور، PDF، Word (.docx).";
+        throw err;
+      }
+    }
+    message.attachments = remainingAttachments;
+  }
+  return messages;
+}
+
+// Upstream 429 ("too many requests") / 503 ("model overloaded") are
+// transient provider-side conditions, not something wrong with the key or
+// our code — surface them as a distinct, friendlier message + a real HTTP
+// status the frontend can use to suggest "try again" rather than reading
+// as a generic broken-integration error.
+function isTransientUpstreamStatus(status) {
+  return status === 429 || status === 503;
+}
+
+function transientMessageFor(status) {
+  return status === 429
+    ? "تم الوصول للحد الأقصى من الطلبات لدى مزوّد الذكاء الاصطناعي حاليًا. حاول مرة أخرى خلال قليل."
+    : "خوادم مزوّد الذكاء الاصطناعي مشغولة حاليًا (overloaded). حاول مرة أخرى خلال لحظات.";
+}
+
+// A bare "fetch failed" (no err.upstreamStatus at all) means the runtime's
+// fetch() never got an HTTP response to inspect in the first place — DNS
+// resolution failed, the connection was refused, or there's no outbound
+// network path to the provider host at all (common on a dev machine behind
+// a restrictive proxy/firewall, or with no internet access). This is
+// distinct from every case above, where the provider *did* respond and we
+// have a real status code — so give it its own message instead of the
+// same generic "فشل الاتصال" a reader can't act on, and log the specific
+// cause code (ENOTFOUND/ECONNREFUSED/etc, available on err.cause on
+// undici's fetch) to make this diagnosable from server logs alone.
+function isNetworkLevelFailure(err) {
+  return !err?.upstreamStatus && (err?.cause?.code || /fetch failed/i.test(err?.message || ""));
+}
+
+function networkFailureMessage() {
+  return "تعذّر الوصول إلى خادم مزوّد الذكاء الاصطناعي عبر الشبكة. تحقق من اتصال الخادم بالإنترنت (DNS/جدار الحماية) وحاول مرة أخرى.";
+}
+
+// Daily cap on AI requests for regular (non-admin) users. Resets
+// at UTC midnight — see increment_ai_agent_usage() in the migration that
+// added user_profiles.ai_agent_usage_count/_date. Chosen as a plain
+// constant rather than a per-level scale: the old Level 10+ gate already
+// went away, so there's no remaining "tier" to scale a limit by, just a
+// single flat allowance shared by every non-admin user, logged in or not.
+const AI_AGENT_DAILY_LIMIT = 15;
+
+let cachedSupabaseClient = null;
+function getSupabaseClient() {
+  if (!cachedSupabaseClient) {
+    cachedSupabaseClient = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY,
+    );
+  }
+  return cachedSupabaseClient;
+}
+
+// Verifies a regular-user JWT minted by /api/user-profile.js (action=
+// identify or action=sync-progress) and returns its profileId, or null if
+// the token is missing/invalid. profileId is server-assigned at mint time
+// — never something the client set directly — so it's a safe row key for
+// the quota check below (same guarantee as the admin JWT path via
+// requireAdmin).
+function getRegularUserProfileId(req) {
+  const authHeader = req.headers["authorization"] || "";
+  if (!authHeader.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7).trim();
+  if (!token) return null;
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
+    return payload.role === "user" && payload.profileId ? payload.profileId : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Atomically checks-and-increments today's platform-key usage counter for
+ * a regular user's profile, via the increment_ai_agent_usage() Postgres
+ * function (a single UPDATE...RETURNING, so concurrent requests from the
+ * same profile can't both read "under the limit" and both proceed — see
+ * that function's own comment in the migration).
+ * @param {string} profileId
+ * @returns {Promise<{allowed: boolean, usageCount: number}>} fails CLOSED
+ *   (allowed: false) on any unexpected DB error, rather than letting an
+ *   outage silently uncap usage.
+ */
+async function checkAndIncrementDailyUsage(profileId) {
+  try {
+    const { data, error } = await getSupabaseClient().rpc("increment_ai_agent_usage", {
+      p_profile_id: profileId,
+      p_daily_limit: AI_AGENT_DAILY_LIMIT,
+    });
+    if (error || !Array.isArray(data) || !data.length) {
+      console.error("[ai-agent/chat] increment_ai_agent_usage error:", error);
+      return { allowed: false, usageCount: 0 };
+    }
+    return { allowed: !!data[0].allowed, usageCount: Number(data[0].usage_count) || 0 };
+  } catch (err) {
+    console.error("[ai-agent/chat] increment_ai_agent_usage unexpected error:", err);
+    return { allowed: false, usageCount: 0 };
+  }
+}
+
+// All tools ever offered, keyed by a REQUEST-level name — callers select a
+// subset via `toolNames` (see below) rather than this endpoint hardcoding
+// one fixed set. Add a new tool here once, then any page can opt in by
+// name without touching this file again.
+//
+// NOTE: "edit_quiz" and "edit_current_quiz" both produce a tool whose own
+// `.name` field is "edit_quiz" (that's what the model's function-call
+// response and the frontend's onToolCall dispatch both key on) — they're
+// two different SCHEMAS for the same underlying action, picked per-page.
+// EDIT_QUIZ_TOOL requires a `currentTitle` to disambiguate one quiz among
+// many (home page's quiz list); EDIT_CURRENT_QUIZ_TOOL drops that field
+// entirely for pages with exactly one quiz in scope (create-quiz editor) —
+// its schema-level presence, even as merely optional, invited the model to
+// fill in a currentTitle that page's tool handler would ignore anyway. Only
+// one of the two should ever appear in a single request's `toolNames`.
+const TOOLS_BY_NAME = {
+  create_quiz: CREATE_QUIZ_TOOL,
+  add_lesson_question: ADD_LESSON_QUESTION_TOOL,
+  create_lesson: CREATE_LESSON_TOOL,
+  add_lesson_section: ADD_LESSON_SECTION_TOOL,
+  edit_quiz: EDIT_QUIZ_TOOL,
+  edit_current_quiz: EDIT_CURRENT_QUIZ_TOOL,
+  delete_quiz: DELETE_QUIZ_TOOL,
+  reset_quiz_page: RESET_QUIZ_PAGE_TOOL,
+  create_folder: CREATE_FOLDER_TOOL,
+  create_course: CREATE_COURSE_TOOL,
+  move_item: MOVE_ITEM_TOOL,
+  fetch_attached_quiz: FETCH_ATTACHED_QUIZ_TOOL,
+  fetch_attached_lesson: FETCH_ATTACHED_LESSON_TOOL,
+  // Read-only discovery tools — schemas only. Always resolved client-side
+  // (see _tools.js's own comment on these three) — this map exists only so
+  // a page can opt in by name; chat.js itself never branches on these
+  // names for server-side execution the way it might for a future
+  // server-resolved tool.
+  search_library: SEARCH_LIBRARY_TOOL,
+  parse_item_info: PARSE_ITEM_INFO_TOOL,
+  get_user_activity: GET_USER_ACTIVITY_TOOL,
+};
+
+// Historical default — the home page's original three tools — kept so
+// existing callers that pass `enableTools: true` without `toolNames` (i.e.
+// every caller before this field existed) keep working unchanged.
+const DEFAULT_TOOL_NAMES = ["create_quiz", "edit_quiz", "delete_quiz"];
+
+// The platform — not the client — decides which provider answers.
+// AI_AGENT_PROVIDER wins when set to a supported provider; otherwise the
+// first provider with at least one configured key is used.
+const PROVIDER_PREFERENCE_ORDER = ["google", "deepseek", "claude"];
+
+function resolvePlatformProvider() {
+  const forced = (process.env.AI_AGENT_PROVIDER || "").trim().toLowerCase();
+  if (forced && isSupportedProvider(forced)) return forced;
+  return PROVIDER_PREFERENCE_ORDER.find((p) => hasPlatformKeys(p)) || null;
+}
+
+// Optional platform-level model pin. callProvider() validates it against the
+// provider's allowlist and silently falls back to the provider's default if
+// it isn't on it, so a typo here can never produce an arbitrary model string.
+function resolvePlatformModel() {
+  return (process.env.AI_AGENT_MODEL || "").trim() || undefined;
+}
+
+export default async function handler(req, res) {
+  applyCors(req, res);
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  // NOTE: provider / model / useOwnKey / ownKey are deliberately NOT read
+  // from the body — see this file's header comment.
+  const { messages, systemPrompt, enableTools, toolNames } = req.body || {};
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "الرسائل مطلوبة" });
+  }
+
+  // `toolNames` lets each page offer only the tools that make sense for it
+  // (e.g. the create-quiz editor offers edit/reset but not create/delete —
+  // there's no "other quiz" to create or delete from inside the editor of
+  // one). Unknown names are silently dropped rather than erroring, so a
+  // typo degrades to "fewer tools" instead of a hard failure.
+  const requestedNames = Array.isArray(toolNames) && toolNames.length
+    ? toolNames
+    : DEFAULT_TOOL_NAMES;
+  const tools = enableTools
+    ? requestedNames.map((name) => TOOLS_BY_NAME[name]).filter(Boolean)
+    : undefined;
+
+  try {
+    await processAttachments(messages);
+  } catch (err) {
+    console.error("[ai-agent/chat] attachment processing error:", err);
+    return res.status(400).json({ error: err.userMessage || "تعذر معالجة الملف المرفق" });
+  }
+
+  // ── Quota: open to everyone, capped by a daily limit ───────────────────
+  // Verified admins bypass the quota entirely. Everyone else — logged in or
+  // fully anonymous — is identified via their user_profiles JWT (minted at
+  // /api/user-profile identify/sync-progress; see getRegularUserProfileId)
+  // and checked/incremented atomically against AI_AGENT_DAILY_LIMIT.
+  try {
+    requireAdmin(req);
+  } catch (err) {
+    // Only defer to the shared admin-token-expired message when that's
+    // literally what happened (a stale admin token) — any other admin-auth
+    // failure (no token, malformed token, or simply "not an admin at all")
+    // just means this request should be evaluated as a regular user below.
+    if (err.message === "TOKEN_EXPIRED") {
+      handleAuthError(err, res);
+      return;
+    }
+
+    const profileId = getRegularUserProfileId(req);
+    if (!profileId) {
+      return res.status(403).json({
+        error:
+          "تعذّر التحقق من هويتك لاستخدام المساعد الذكي. حاول تحديث الصفحة ثم أعد المحاولة.",
+      });
+    }
+
+    const { allowed, usageCount } = await checkAndIncrementDailyUsage(profileId);
+    if (!allowed) {
+      return res.status(429).json({
+        error: `لقد استخدمت الحد اليومي للمساعد الذكي (${AI_AGENT_DAILY_LIMIT} طلبات). حاول مرة أخرى غدًا.`,
+        dailyLimit: AI_AGENT_DAILY_LIMIT,
+        usageCount,
+      });
+    }
+  }
+
+  const provider = resolvePlatformProvider();
+  if (!provider) {
+    return res.status(503).json({ error: "خدمة المساعد الذكي غير متاحة حاليًا" });
+  }
+
+  const picked = getNextKey(provider);
+  if (!picked) {
+    return res.status(503).json({ error: "خدمة المساعد الذكي غير متاحة حاليًا" });
+  }
+
+  // The platform picks the model too (AI_AGENT_MODEL, or the provider's
+  // lightest default) — never the client.
+  try {
+    const result = await callProvider(provider, picked.key, messages, systemPrompt, tools, resolvePlatformModel());
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error(
+      "[ai-agent/chat] provider error:",
+      err,
+      err?.cause ? `(cause: ${err.cause.code || err.cause})` : "",
+    );
+    if (isTransientUpstreamStatus(err.upstreamStatus)) {
+      return res.status(err.upstreamStatus).json({
+        error: transientMessageFor(err.upstreamStatus),
+        transient: true,
+      });
+    }
+    if (isNetworkLevelFailure(err)) {
+      return res.status(502).json({ error: networkFailureMessage(), networkLevel: true });
+    }
+    return res.status(502).json({ error: "فشل الاتصال بمزوّد الذكاء الاصطناعي" });
+  }
+}
