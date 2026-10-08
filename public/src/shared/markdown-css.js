@@ -25,7 +25,7 @@ export const MARKDOWN_CSS = `
 /* ══════════════════════════════════════════════════════════════════════════════
    src/styles/markdown.css
    Shared Markdown + KaTeX visual styles.
-   CSS variables at themes.css
+   CSS variables supplied by the host component
    ══════════════════════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════════════════════════

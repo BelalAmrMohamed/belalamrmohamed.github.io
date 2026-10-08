@@ -1,10 +1,9 @@
 /* =============================================================================
    public/src/components/ai-agent/ai-agent.css
-   Scoped styles for the modular AI Helper widget. Fully self-contained: the
-   only things this file still reaches outside the ai-agent/ component are
-   the app's global design tokens (--color-*, --gradient-accent, --shadow-*,
-   --z-*, etc. — see src/styles/themes.css), which every host page already
-   loads for theming and which no widget in a themed app should re-invent.
+   Scoped styles for the modular AI Helper widget. Its palette maps the
+   portfolio's dark charcoal, white, and
+   warm-gold colors into component-scoped tokens below. No global theme
+   stylesheet or page-wide color override is required.
    No shared COMPONENT — no other stylesheet's classes — is depended on
    anymore: every class used by ai-agent.js/*.js is defined in this file.
 
@@ -23,6 +22,40 @@
    changes), so the agent now renders identically on ANY page that links
    only this one stylesheet — no prerequisite imports.
    ============================================================================= */
+
+/* Map component tokens to this portfolio's palette without changing page
+   colors or adding theme state to the host document. */
+.ai-agent-overlay,
+.ai-agent-dropdown-menu,
+.ai-agent-fab {
+  --color-background: var(--color-gray-10, #141516);
+  --color-background-secondary: #202122;
+  --color-surface: #1b1c1d;
+  --color-text-primary: var(--color-white, #fff);
+  --color-text-secondary: var(--color-gray-3, #b9b9b9);
+  --color-text-tertiary: var(--color-gray-4, #a1a1a2);
+  --color-primary: var(--color-1, #eabe7c);
+  --color-primary-light: rgba(234, 190, 124, 0.14);
+  --color-error: #f87171;
+  --color-error-light: rgba(248, 113, 113, 0.14);
+  --color-success: #a3d977;
+  --color-success-light: rgba(163, 217, 119, 0.14);
+  --color-warning: #f5c66a;
+  --color-warning-light: rgba(245, 198, 106, 0.14);
+  --color-danger: #f87171;
+  --color-hover-overlay: rgba(234, 190, 124, 0.08);
+  --color-selected-bg: rgba(234, 190, 124, 0.14);
+  --color-focus-ring: rgba(234, 190, 124, 0.55);
+  --gradient-accent: linear-gradient(135deg, #eabe7c, #d89d3c);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.32);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.42);
+  --z-modal: 6000;
+  --z-modal-top: 11000;
+  --z-toast: 7000;
+  --z-tooltip: 5000;
+}
 
 /* ── Self-contained modal shell ──
    Direct copies of index.css's .modal-overlay/.modal-card/.modal-header/
@@ -2174,12 +2207,8 @@ body.sidebar-expanded .ai-agent-fab {
    are ordinary block children of that div, not flex items themselves. The
    two categories need different treatment below.
 
-   Every var(--color-...) used below was checked against a real search of
-   themes.css (all three themes: light, dark, dark-slate) — none are
-   invented. --color-selected-bg / --color-hover-overlay / --color-focus-ring
-   are the theme's own "interactive state" tokens, used for the persistent
-   attached / hover / keyboard-focus states respectively so they read as
-   three distinct, real states rather than one recolored blob. */
+   The component-scoped interactive tokens distinguish persistent selected,
+   hover, and keyboard-focus states without changing the host page palette. */
 .ai-agent-mention-menu {
   max-height: 320px;
   overflow-y: auto;

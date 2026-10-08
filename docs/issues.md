@@ -7,25 +7,23 @@ Issues in here have to be studies and tested well, then turned into a plan, befo
 
 ## Patches
 
-### DATABASE
-* I went to Supabase, and made a project with these settings: ![screenshot](image.png).
-* I copied the environment variables from Supabase and pasted them to `.env.local` and to Vercel, too.
+* The 
 
 ## New Features
 الموقع ده أنا عملته عن طريق إني اخت Template مجانية ، وغيرت الصور والكلام اللي مكتوب فقط
 
 أنا كنت عامله من سنتين تقريبا ، وأنا في سنة أولى حاسبات. دلوقتي أنا عندي قدرات اكبر بكتير وجه الوقت إني احدثه ، وآخده لمستوى تاني خالص
 
-### لوحة تحكم
+### لوحة تحكم (تم)
 أنا عاوز اعمل لوحة تحكم ليا أنا عشان اقدر اتحكم فيها بكل اللي بيتعرف على الموقع ، وبالذات المشاريع اللي بتتعرض ، لأني بعوز إني ازودها ، ومش كل شوية هحدث الكود.
 
-### تسجيل الدخول
+### تسجيل الدخول (تم)
 لوحة التحكم المفروض يكون فيها تسجيل دخول بالإيميل ، وكمان تسجيل دخول بـ GitHub أو بـ Google
 * أنا رحت لـ `https://console.cloud.google.com/auth/clients?project=belal-amr-mohamed` وعملت كل حاجة ، وكمان رحت لـ Supabase وربط كل حاجة ، لأني عملت الموضوع ده قبل كده كتير جدا ، كان سهل
 * أنا رحت لـ `https://github.com/settings/applications` وعملت واحد جديد ، وكمان ربط كل حاجة بـ Supabase لأني عملت الموضوع ده قبل كده كتير برضوا
 * يعني مفيش أي ربط باقي ، كله شغل كود
 
-### موديل ذكاء اصطناعي
+### موديل ذكاء اصطناعي (تم)
 أنا جتب API Keys من جوجل عشان اعمل موديل ذكاء اصطناعي في الموقع
 * يكون ليه وصول على قاعدة البيانات ، عشان يقدر يجاوب على أي سؤال عني
 * يكون عنده معلومات عني في الـ System Prompt

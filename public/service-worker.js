@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v6";
+const CACHE_VERSION = "v7";
 const CACHE_NAME = `belal-portfolio-cache-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
 
@@ -20,7 +20,6 @@ const filesToCache = [
   "css/styles.css",
   "css/vendor.css",
   "css/admin-dashboard.css",
-  "/src/styles/themes.css",
   "/src/components/ai-agent/ai-agent.css",
   "/src/components/notifications/notifications.css",
 
