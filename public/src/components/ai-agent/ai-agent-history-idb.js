@@ -225,10 +225,10 @@ export function deriveConversationTitle(messages) {
     // about. Covers both a file attachment (`.name`) and, per Phase 2a's
     // platform-item attachment refactor, a quiz/course/folder reference
     // (`.title`) — a quiz-only opener with no typed prompt still gets a
-    // sensible history title instead of "محادثة بدون عنوان".
+    // sensible history title instead of "Untitled conversation".
     const firstAttachment = firstUserMsg?.attachments?.[0];
     const label = firstAttachment?.name || firstAttachment?.title;
-    return label ? `📎 ${label}` : "محادثة بدون عنوان";
+    return label ? `📎 ${label}` : "Untitled conversation";
   }
   return text.length > 40 ? `${text.slice(0, 40)}…` : text;
 }
@@ -242,5 +242,5 @@ export function deriveConversationTitle(messages) {
  * @returns {string}
  */
 export function displayTitleFor(conversation) {
-  return conversation?.manualTitle || conversation?.title || "محادثة بدون عنوان";
+  return conversation?.manualTitle || conversation?.title || "Untitled conversation";
 }

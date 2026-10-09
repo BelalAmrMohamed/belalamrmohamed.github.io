@@ -1,6 +1,6 @@
 // =============================================================================
 // public/src/components/ai-agent/ai-agent-history.js
-// "المحادثات السابقة" (previous chats) tab — lists saved conversations for
+// "Previous chats" tab — lists saved conversations for
 // the current page (see ai-agent-history-idb.js for the pageKey scoping
 // rationale), lets the user reopen one into the Chat tab, or delete/rename/
 // pin it.
@@ -26,7 +26,7 @@ const TRASH_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="15" heigh
 const MORE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>`;
 const RENAME_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>`;
 // Filled-pin / outline-pin — swapped per conv.pinned so the same menu row
-// reads as "طي/تثبيت" correctly regardless of current state, same idea as
+// reads as "Unpin/Pin" correctly regardless of current state, same idea as
 // TOOL_DISPLAY_NAMES-style small lookups elsewhere in this component set.
 const PIN_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
 const PINNED_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
@@ -126,8 +126,8 @@ export function createHistoryPanel(options = {}) {
   }
 
   /**
-   * PHASE 5: the per-item "⋮" menu — حذف / إعادة تسمية / تثبيت·إلغاء
-   * التثبيت. Uses openAgentDropdown (ai-agent-dropdown.js) — the agent's own
+   * PHASE 5: the per-item "⋮" menu — Delete / Rename / Pin·Unpin.
+   * Uses openAgentDropdown (ai-agent-dropdown.js) — the agent's own
    * self-contained anchored-dropdown engine, forked from exam-dropdown-menu.js
    * so this module no longer depends on features/home.
    * @param {HTMLElement} triggerBtn
@@ -209,7 +209,7 @@ export function createHistoryPanel(options = {}) {
       item.type = "button";
       item.className = "ai-agent-history-item";
       // Highlights whichever saved conversation the Chat tab currently
-      // has open, so switching to السجل shows at a glance which thread
+      // has open, so switching to History shows at a glance which thread
       // is live — mirrors how the desktop sidebar's recents list does
       // the same (see ai-agent.js's refreshSidebarRecents).
       if (activeId && conv.id === activeId) {

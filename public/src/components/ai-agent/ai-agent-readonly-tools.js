@@ -40,26 +40,26 @@ export async function handleSearchLibraryToolCall(toolCall) {
     const { query, scope } = toolCall?.input || {};
     if (!query || !query.trim()) {
         const err = new Error("search_library called without a query");
-        err.userMessage = "الرجاء تحديد كلمة بحث.";
+        err.userMessage = "Please specify a search term.";
         throw err;
     }
 
     const { mine, platform } = await searchLibrary(query.trim(), { scope });
 
     const formatSection = (label, items) => {
-        if (!items.length) return `${label}: لا توجد نتائج.`;
+        if (!items.length) return `${label}: No results.`;
         const lines = items.map((it) => {
-            const kindLabelAr = { quiz: "امتحان", course: "مادة", folder: "مجلد" }[it.kind] || it.kind;
-            return `  - [${kindLabelAr}] ${it.title} (id: ${it.id})`;
+            const kindLabel = { quiz: "Quiz", course: "Course", folder: "Folder" }[it.kind] || it.kind;
+            return `  - [${kindLabel}] ${it.title} (id: ${it.id})`;
         });
         return `${label}:\n${lines.join("\n")}`;
     };
 
     const sections = [];
-    if (scope !== "platform") sections.push(formatSection("نتائج من مكتبتك", mine));
-    if (scope !== "mine") sections.push(formatSection("نتائج من الصفحة الرئيسية", platform));
+    if (scope !== "platform") sections.push(formatSection("Results from your library", mine));
+    if (scope !== "mine") sections.push(formatSection("Results from the main page", platform));
 
-    return `نتائج البحث عن "${query.trim()}":\n\n${sections.join("\n\n")}`;
+    return `Search results for "${query.trim()}":\n\n${sections.join("\n\n")}`;
 }
 
 /**
@@ -75,20 +75,20 @@ export async function handleParseItemInfoToolCall(toolCall) {
     const { id, kind } = toolCall?.input || {};
     if (!id) {
         const err = new Error("parse_item_info called without an id");
-        err.userMessage = "لم يتم تحديد العنصر المطلوب.";
+        err.userMessage = "No item was specified.";
         throw err;
     }
 
     const item = await resolveLibraryItemById(id, kind);
     if (!item) {
         const err = new Error(`parse_item_info: no item with id "${id}" found`);
-        err.userMessage = "تعذر العثور على العنصر المطلوب.";
+        err.userMessage = "The requested item could not be found.";
         throw err;
     }
 
-    const kindLabelAr = { quiz: "امتحان", course: "مادة", folder: "مجلد" }[item.kind] || item.kind;
-    const body = item.payload ? JSON.stringify(item.payload) : (item.summary || "(لا تفاصيل إضافية متاحة)");
-    return `[${kindLabelAr}: ${item.title}]\n${body}`;
+    const kindLabel = { quiz: "Quiz", course: "Course", folder: "Folder" }[item.kind] || item.kind;
+    const body = item.payload ? JSON.stringify(item.payload) : (item.summary || "(No additional details available)");
+    return `[${kindLabel}: ${item.title}]\n${body}`;
 }
 
 /**
@@ -109,9 +109,9 @@ export async function handleGetUserActivityToolCall(toolCall) {
 
     if (which === "last_created") {
         const [latest] = listRecentUserItems("", 1);
-        if (!latest) return "لم ينشئ المستخدم أي امتحان بعد.";
+        if (!latest) return "The user hasn't created any quiz yet.";
         const item = resolveUserItemById(latest.id);
-        return `آخر امتحان تم إنشاؤه: ${item?.title || latest.title}${item?.summary ? ` — ${item.summary}` : ""}`;
+        return `Last quiz created: ${item?.title || latest.title}${item?.summary ? ` — ${item.summary}` : ""}`;
     }
 
     if (which === "last_taken_or_result") {
@@ -121,12 +121,12 @@ export async function handleGetUserActivityToolCall(toolCall) {
         } catch {
             result = null;
         }
-        if (!result) return "لم يقم المستخدم بحل أي امتحان على هذا الجهاز بعد.";
-        return `آخر امتحان تم حله: ${result.examTitle || "امتحان"} — الدرجة: ${result.score ?? "?"}/${result.total ?? "?"} — عدد الأسئلة: ${result.totalQuestions ?? result.questions?.length ?? 0}`;
+        if (!result) return "The user hasn't taken any quiz on this device yet.";
+        return `Last quiz taken: ${result.examTitle || "Quiz"} — Score: ${result.score ?? "?"}/${result.total ?? "?"} — Question count: ${result.totalQuestions ?? result.questions?.length ?? 0}`;
     }
 
     const err = new Error(`get_user_activity called with unknown which="${which}"`);
-    err.userMessage = "طلب غير معروف.";
+    err.userMessage = "Unknown request.";
     throw err;
 }
 
@@ -149,7 +149,7 @@ export async function handleReadOnlyLibraryToolCall(toolCall) {
             return handleGetUserActivityToolCall(toolCall);
         default: {
             const err = new Error(`Unknown tool call: ${toolCall?.name}`);
-            err.userMessage = "أداة غير معروفة.";
+            err.userMessage = "Unknown tool.";
             throw err;
         }
     }

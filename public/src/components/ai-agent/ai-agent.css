@@ -329,7 +329,7 @@ img:where([class*="ai-agent-"]) {
   }
 }
 
-/* Danger variant — used by the history item menu's "حذف المحادثة". Same
+/* Danger variant — used by the history item menu's "Delete conversation". Same
    shape/layout as a regular .ai-agent-dropdown-item, just colored to
    signal a destructive action. */
 .ai-agent-dropdown-item--danger {
@@ -819,7 +819,7 @@ img:where([class*="ai-agent-"]) {
   min-width: 0;
 }
 
-/* Step badge for multi-step tools e.g. "خطوة 1 من 2" */
+/* Step badge for multi-step tools e.g. "Step 1 of 2" */
 .ai-agent-typing-step {
   font-size: 10.88px;
   font-weight: 700;
@@ -1452,7 +1452,7 @@ img:where([class*="ai-agent-"]) {
 }
 
 /* PHASE 5: renamed from -delete to -more — this button now opens the
-   حذف/إعادة تسمية/تثبيت menu (openItemMenu in ai-agent-history.js) rather
+   Delete/Rename/Pin menu (openItemMenu in ai-agent-history.js) rather
    than deleting directly. Same shape/hover treatment as the old delete
    button, just without the danger-red hover tint (deletion is now one
    menu row among three, not this button's own single action). */
@@ -2288,8 +2288,8 @@ body.sidebar-expanded .ai-agent-fab {
 
    Structural note the fixes below depend on: .ai-agent-mention-menu's
    DIRECT children are the Quick-Access section header, each Quick-Access
-   row, the "مكتبتك" section header, a plain results-host <div>, the
-   "الصفحة الرئيسية" section header, and its own results-host <div> — see
+   row, the "Your Library" section header, a plain results-host <div>, the
+   "Main Page" section header, and its own results-host <div> — see
    ai-agent-mention-menu.js's render(). Only those are real flex items of
    this flex column; database-item rows rendered INSIDE a results-host div
    are ordinary block children of that div, not flex items themselves. The

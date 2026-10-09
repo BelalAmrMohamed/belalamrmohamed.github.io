@@ -43,17 +43,17 @@ function buildQuickAccessItems() {
         {
             quickAccessId: "Last_Created_Quiz",
             label: "@Last_Created_Quiz",
-            description: "آخر امتحان أنشأته",
+            description: "The last quiz you created",
             resolve: () => {
                 const [latest] = listRecentUserItems("", 1);
-                if (!latest) return { item: null, emptyReason: "لم تنشئ أي امتحان بعد." };
+                if (!latest) return { item: null, emptyReason: "You haven't created any quiz yet." };
                 return { item: resolveUserItemById(latest.id), emptyReason: null };
             },
         },
         {
             quickAccessId: "Last_Taken_Quiz",
             label: "@Last_Taken_Quiz",
-            description: "آخر امتحان قمت بحله",
+            description: "The last quiz you took",
             // Backed by the same `last_quiz_result` key as @Last_Quiz_Results
             // (see quiz.js's saveResultAndRedirect-equivalent, which writes both
             // this single overwritten key AND removes that quiz's own
@@ -69,7 +69,7 @@ function buildQuickAccessItems() {
         {
             quickAccessId: "Last_Quiz_Results",
             label: "@Last_Quiz_Results",
-            description: "نتيجة آخر امتحان قمت بحله",
+            description: "The result of the last quiz you took",
             resolve: () => resolveLastQuizResultAttachment("results"),
         },
     ];
@@ -94,17 +94,17 @@ function resolveLastQuizResultAttachment(variant) {
     if (!result) {
         return {
             item: null,
-            emptyReason: "لم تقم بحل أي امتحان في هذا الجهاز بعد.",
+            emptyReason: "You haven't taken any quiz on this device yet.",
         };
     }
 
-    const scorePart = `الدرجة: ${result.score ?? "?"}/${result.total ?? "?"}`;
+    const scorePart = `Score: ${result.score ?? "?"}/${result.total ?? "?"}`;
     const title = variant === "results"
-        ? `نتيجة: ${result.examTitle || "امتحان"}`
-        : (result.examTitle || "آخر امتحان تم حله");
+        ? `Result: ${result.examTitle || "Quiz"}`
+        : (result.examTitle || "Last quiz taken");
     const summary = variant === "results"
         ? scorePart
-        : `${scorePart} — عدد الأسئلة: ${result.totalQuestions ?? result.questions?.length ?? 0}`;
+        : `${scorePart} — Question count: ${result.totalQuestions ?? result.questions?.length ?? 0}`;
 
     return {
         item: {
@@ -224,11 +224,11 @@ export function createMentionMenu(options) {
         // reason (an empty Quick-Access item, e.g. no quiz taken yet).
         if (disabled || checked) btn.setAttribute("disabled", "");
         // Latin/ASCII labels (Quick-Access rows: "@Last_Created_Quiz" etc.)
-        // must stay LTR even inside this RTL menu, or the `@` and word order
-        // visually reverse (see this module's own bug history — the `@`
-        // rendering trailing/last was exactly this). Arabic titles/
-        // descriptions from searched items are unaffected since `dir="auto"`
-        // reads their own script direction per line.
+        // must stay LTR, or the `@` and word order visually reverse (see
+        // this module's own bug history — the `@` rendering trailing/last
+        // was exactly this). Titles/descriptions from searched items are
+        // unaffected since `dir="auto"` reads their own script direction
+        // per line.
         const imageSrc = safeImageUrl(imageUrl);
         if (imageSrc) {
             const image = document.createElement("img");
@@ -312,7 +312,7 @@ export function createMentionMenu(options) {
         if (atCap) {
             const full = document.createElement("div");
             full.className = "ai-agent-trigger-menu-empty";
-            full.textContent = "تم الوصول للحد الأقصى من المرفقات.";
+            full.textContent = "Maximum number of attachments reached.";
             menuEl.appendChild(full);
             return;
         }
@@ -384,7 +384,7 @@ export function createMentionMenu(options) {
         }
 
         // ── Quick-Access section — unfiltered by query, always visible ──
-        menuEl.appendChild(renderSectionHeader("وصول سريع"));
+        menuEl.appendChild(renderSectionHeader("Quick Access"));
         buildQuickAccessItems().forEach((qa) => {
             const attachedAlready = isAttached(qa.quickAccessId);
             const { item, emptyReason } = qa.resolve();
@@ -402,8 +402,8 @@ export function createMentionMenu(options) {
             menuEl.appendChild(row);
         });
 
-        // ── "مكتبتك" (your library) — instant, local ──
-        const localSectionHeader = renderSectionHeader("مكتبتك");
+        // ── "Your Library" — instant, local ──
+        const localSectionHeader = renderSectionHeader("Your Library");
         menuEl.appendChild(localSectionHeader);
 
         const renderLocal = () => {
@@ -411,7 +411,7 @@ export function createMentionMenu(options) {
             if (items.length === 0) {
                 const empty = document.createElement("div");
                 empty.className = "ai-agent-trigger-menu-empty";
-                empty.textContent = query ? "لا توجد نتائج في مكتبتك." : "لا يوجد شيء في مكتبتك بعد.";
+                empty.textContent = query ? "No results in your library." : "Nothing in your library yet.";
                 menuEl.appendChild(empty);
             } else {
                 items.forEach((it) => {
@@ -425,17 +425,18 @@ export function createMentionMenu(options) {
         };
         renderLocal();
 
-        // ── "الصفحة الرئيسية" (main page/platform) — async, own header+state ──
+        // ── "Main Page" (platform) — async, own header+state ──
         // Kept as its own section (own header, own empty/loading message)
-        // rather than sharing one combined header+message with "مكتبتك"
-        // above — the old combined section made it look like one bucket of
-        // results with no way to tell which item came from where, and a
-        // single shared loading/empty message that didn't actually reflect
-        // "مكتبتك" (which is never loading — it's synchronous).
-        menuEl.appendChild(renderSectionHeader("الصفحة الرئيسية"));
+        // rather than sharing one combined header+message with "Your
+        // Library" above — the old combined section made it look like one
+        // bucket of results with no way to tell which item came from
+        // where, and a single shared loading/empty message that didn't
+        // actually reflect "Your Library" (which is never loading — it's
+        // synchronous).
+        menuEl.appendChild(renderSectionHeader("Main Page"));
         const loadingPlatformResultsHost = document.createElement("div");
         menuEl.appendChild(loadingPlatformResultsHost);
-        loadingPlatformResultsHost.innerHTML = '<div class="ai-agent-mention-loading">جارٍ البحث في الصفحة الرئيسية…</div>';
+        loadingPlatformResultsHost.innerHTML = '<div class="ai-agent-mention-loading">Searching the main page…</div>';
         reposition();
 
         // Debounced: only the network half. Local results above already
@@ -453,7 +454,7 @@ export function createMentionMenu(options) {
                 if (platformItems.length === 0) {
                     const empty = document.createElement("div");
                     empty.className = "ai-agent-trigger-menu-empty";
-                    empty.textContent = query ? "لا توجد نتائج في الصفحة الرئيسية." : "لا يوجد شيء لعرضه هنا حاليًا.";
+                    empty.textContent = query ? "No results on the main page." : "Nothing to show here yet.";
                     menuEl.appendChild(empty);
                 } else {
                     platformItems.forEach((it) => {
@@ -466,7 +467,7 @@ export function createMentionMenu(options) {
                 }
             } catch {
                 if (myToken !== platformSearchToken || !menuEl) return;
-                loadingPlatformResultsHost.innerHTML = '<div class="ai-agent-trigger-menu-empty">تعذّر البحث في الصفحة الرئيسية حاليًا.</div>';
+                loadingPlatformResultsHost.innerHTML = '<div class="ai-agent-trigger-menu-empty">Couldn\'t search the main page right now.</div>';
             }
             reposition();
         }, PLATFORM_SEARCH_DEBOUNCE_MS);

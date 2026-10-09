@@ -66,7 +66,7 @@ export function unescapeHtmlEntities(s) {
 // Exported (alongside renderInlineMediaTag) so export-to-quiz.js's
 // .toString()-based static-export bundler can inline both — renderInlineMediaTag
 // references this by bare closure, same situation as _HL_KEYWORDS/ICON_COPY.
-export const MD_MEDIA_SKELETON_HTML = `<div class="media-skeleton" aria-hidden="true"><div class="skeleton-block skeleton-media"></div><span class="media-skeleton-label">جاري التحميل…</span></div>`;
+export const MD_MEDIA_SKELETON_HTML = `<div class="media-skeleton" aria-hidden="true"><div class="skeleton-block skeleton-media"></div><span class="media-skeleton-label">Loading…</span></div>`;
 
 // ─── 3a. Resizable-media key derivation ────────────────────────────────────
 // Every inline media element gets a stable `data-resize-key` so
@@ -107,7 +107,7 @@ export function _makeResizeKey(kind, url, mediaBaseUrl) {
 export function _renderRawImageTag(src, alt, width, height, mediaBaseUrl) {
   const safe = (v) => escHtml(unescapeHtmlEntities(v || ""));
   if (!src || !src.trim()) {
-    return `<div class="media-container md-inline-media md-media-empty"><span class="media-skeleton-label">صورة بلا رابط بعد</span></div>`;
+    return `<div class="media-container md-inline-media md-media-empty"><span class="media-skeleton-label">Image with no link yet</span></div>`;
   }
   const candidates = getMediaUrlCandidates(src, mediaBaseUrl);
   const resolvedSrc = candidates[0] || src;
@@ -138,7 +138,7 @@ export function _renderRawImageTag(src, alt, width, height, mediaBaseUrl) {
  */
 export function _renderRawMediaTag(kind, src, mediaBaseUrl) {
   if (!src || !src.trim()) {
-    const label = kind === "video" ? "فيديو بلا رابط بعد" : "ملف صوتي بلا رابط بعد";
+    const label = kind === "video" ? "Video with no link yet" : "Audio file with no link yet";
     return `<div class="media-container md-inline-media md-media-empty"><span class="media-skeleton-label">${label}</span></div>`;
   }
   return renderInlineMediaTag(kind, src, mediaBaseUrl);
@@ -174,8 +174,8 @@ export function renderInlineMediaTag(kind, url, mediaBaseUrl) {
   const candidatesAttr = safe(JSON.stringify(candidates));
   const fallback =
     kind === "audio"
-      ? "متصفحك لا يدعم تشغيل الصوت."
-      : "متصفحك لا يدعم تشغيل الفيديو.";
+      ? "Your browser doesn't support audio playback."
+      : "Your browser doesn't support video playback.";
   const playsinline = kind === "video" ? " playsinline" : "";
   const containerClass =
     kind === "audio"
@@ -352,13 +352,11 @@ export const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" width="14" he
 </svg>`;
 
 // ─── 4b. Copy-button label (i18n) ──────────────────────────────────────────────
-// The "Copy" text shown on fenced code-block copy buttons. Was previously
-// hardcoded to Arabic ("نسخ") regardless of page language. Pages can set
+// The "Copy" text shown on fenced code-block copy buttons. Pages can set
 // `window.MD_COPY_LABEL` before calling renderMarkdown() to localise it;
-// otherwise it falls back to the original Arabic default to preserve
-// existing visual behaviour for callers that relied on it.
+// otherwise it falls back to this English default.
 export const COPY_LABEL =
-  (typeof window !== "undefined" && window.MD_COPY_LABEL) || "نسخ";
+  (typeof window !== "undefined" && window.MD_COPY_LABEL) || "Copy";
 
 // ─── 5. Copy-button handler (global registration) ─────────────────────────────
 // Buttons use inline onclick="window.copyCodeBlock(this)" so this must be
@@ -558,7 +556,7 @@ export function _equipMediaSkeleton(container) {
     skeleton.classList.remove("media-skeleton--hidden");
     skeleton.classList.add("media-skeleton--error");
     skeleton.innerHTML =
-      '<span class="media-error">تعذّر تحميل الوسائط. تحقق من المسار أو الرابط.</span>';
+      '<span class="media-error">Couldn\'t load the media. Check the path or link.</span>';
   };
 
   const applyMediaSrc = (el, url) => {
@@ -1720,7 +1718,7 @@ export function _renderMarkdownCore(str, options = {}) {
   };
 
   // ── Step -1: Raw HTML media tags: <img>, <video>, <audio> ─────────────────
-  // The editor's صورة/فيديو/صوت toolbar buttons insert real HTML tags
+  // The editor's image/video/audio toolbar buttons insert real HTML tags
   // (e.g. `<img width="400" height="400" alt="x.jpg" src="...">`), not
   // bracket syntax — matching how a raw `<img>`/`<video>`/`<audio>` snippet
   // pasted from a browser's "copy image"/"copy video" action looks. Every
@@ -2140,7 +2138,7 @@ export const _LTR_ONLY_SELECTOR = "pre, code, .code-block, .code-block-wrapper, 
 // Media elements: _processByLine sets textContent="" which destroys
 // <source> children and breaks audio/video playback entirely.
 // BUTTON: buttons only ever carry a short, static, developer-authored
-// label (e.g. "تحقق من الإجابة" / "Show All Answers") — never
+// label (e.g. "Check Answer" / "Show All Answers") — never
 // user-generated or markdown-rendered content — so per-line direction
 // detection buys nothing. Worse, _processByLine() rewrites textContent
 // into `<span class="text-line" style="display:block">` and applies a

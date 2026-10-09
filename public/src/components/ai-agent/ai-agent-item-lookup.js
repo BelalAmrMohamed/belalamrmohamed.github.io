@@ -48,9 +48,9 @@ export function summarizeQuiz(quiz) {
   const count = qz(quiz, "count") || quiz.questions?.length || 0;
   const type = qz(quiz, "type");
   const description = qz(quiz, "description");
-  const parts = [`عدد الأسئلة: ${count}`];
-  if (type) parts.push(`النوع: ${type}`);
-  if (description) parts.push(`الوصف: ${description}`);
+  const parts = [`Question count: ${count}`];
+  if (type) parts.push(`Type: ${type}`);
+  if (description) parts.push(`Description: ${description}`);
   return parts.join(" — ");
 }
 
@@ -66,10 +66,10 @@ export function summarizeLesson(lesson) {
     (n, sec) => n + sec.blocks.filter((b) => b?.type === "question").length,
     0,
   );
-  const parts = [`عدد الأقسام: ${sections.length}`];
-  if (questions) parts.push(`الأسئلة المدمجة: ${questions}`);
+  const parts = [`Section count: ${sections.length}`];
+  if (questions) parts.push(`Embedded questions: ${questions}`);
   const titles = sections.map((sec) => sec.title).filter(Boolean);
-  if (titles.length) parts.push(`الأقسام: ${titles.join("، ")}`);
+  if (titles.length) parts.push(`Sections: ${titles.join(", ")}`);
   return parts.join(" — ");
 }
 
@@ -96,10 +96,10 @@ function lessonPayload(lesson) {
 export function summarizeFolder(userQuizzes, folderId) {
   const { subfolderCount, quizCount, lessonCount } = getFolderContentsCount(userQuizzes, folderId);
   const parts = [];
-  if (quizCount) parts.push(`${quizCount} امتحان`);
-  if (lessonCount) parts.push(`${lessonCount} درس`);
-  if (subfolderCount) parts.push(`${subfolderCount} مجلد فرعي`);
-  return parts.length ? `يحتوي على: ${parts.join(" و")}` : "مجلد فارغ حاليًا";
+  if (quizCount) parts.push(`${quizCount} quiz(zes)`);
+  if (lessonCount) parts.push(`${lessonCount} lesson(s)`);
+  if (subfolderCount) parts.push(`${subfolderCount} subfolder(s)`);
+  return parts.length ? `Contains: ${parts.join(" and ")}` : "Currently empty folder";
 }
 
 function buildItemTree(userQuizzes, parentId) {
@@ -110,7 +110,7 @@ function buildItemTree(userQuizzes, parentId) {
       const kind = item.meta?.type === "course" || item.meta?.type === "folder" || item.meta?.type === "lesson"
         ? item.meta.type
         : "quiz";
-      const node = { kind, id, title: qz(item, "title") || item.meta?.title || "بدون عنوان" };
+      const node = { kind, id, title: qz(item, "title") || item.meta?.title || "Untitled" };
       if (kind === "quiz") node.questionCount = qz(item, "count");
       else if (kind === "lesson") node.sectionCount = item.stats?.sectionCount ?? 0;
       else node.children = buildItemTree(userQuizzes, id);
@@ -132,7 +132,7 @@ export function resolveUserItemById(id, userQuizzes = readUserQuizzes()) {
   const item = userQuizzes.find((q) => (q.meta?.id || q.id) === id);
   if (!item) return null;
 
-  const title = qz(item, "title") || item.meta?.title || "بدون عنوان";
+  const title = qz(item, "title") || item.meta?.title || "Untitled";
   const metaType = item.meta?.type;
   if (metaType === "lesson") {
     return {
@@ -162,7 +162,7 @@ export function resolveUserItemById(id, userQuizzes = readUserQuizzes()) {
     kind,
     id,
     title,
-    summary: `عدد الامتحانات: ${counts.quizCount} — عدد الدروس: ${counts.lessonCount} — عدد المجلدات: ${counts.subfolderCount}`,
+    summary: `Quiz count: ${counts.quizCount} — Lesson count: ${counts.lessonCount} — Folder count: ${counts.subfolderCount}`,
     source: "local",
     payload: {
       totalQuizCount: counts.quizCount,
@@ -193,7 +193,7 @@ export function listRecentUserItems(query = "", limit = 8) {
     .map((item) => {
       const id = item.meta?.id || item.id;
       if (!id) return null;
-      const title = qz(item, "title") || item.meta?.title || "بدون عنوان";
+      const title = qz(item, "title") || item.meta?.title || "Untitled";
       if (q && !title.toLowerCase().includes(q)) return null;
       const metaType = item.meta?.type;
       const kind = metaType === "folder" || metaType === "course" || metaType === "lesson" ? metaType : "quiz";
@@ -235,8 +235,8 @@ export function buildUserRootAttachment(userQuizzes = readUserQuizzes()) {
   return {
     kind: "folder",
     id: "user-quizzes-root",
-    title: "امتحاناتك",
-    summary: `عدد الامتحانات: ${quizCount} — عدد المجلدات: ${folderCount}`,
+    title: "Your Library",
+    summary: `Quiz count: ${quizCount} — Folder count: ${folderCount}`,
     source: "local",
     payload: { totalQuizCount: quizCount, totalFolderCount: folderCount, tree },
   };

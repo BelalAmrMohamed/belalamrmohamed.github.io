@@ -1,6 +1,6 @@
 // =============================================================================
 // public/src/components/ai-agent/ai-agent-attach-launcher.js
-// PHASE 2c: shared "اسأل الباشـمبصمج" entry-point helper. Every card/tooltip
+// PHASE 2c: shared "Ask the Assistant" entry-point helper. Every card/tooltip
 // that wants an "ask the assistant about this" button calls
 // openAIAgentWithAttachment() from here rather than each reimplementing its
 // own resolve-then-open logic.
@@ -17,7 +17,7 @@
 //     client-side at that point, so these resolve to a title-only
 //     attachment (no deep summary). ai-agent-chat.js's own
 //     expandPlatformAttachment() already handles a missing `summary`
-//     gracefully ("لا تفاصيل إضافية متاحة عن هذا العنصر").
+//     gracefully ("No additional details available for this item").
 //
 // Deliberately NOT importing quiz-schema/storage helpers into
 // ai-agent-chat.js itself (see that file's own header comment on staying
@@ -74,7 +74,7 @@ export function buildPlatformCourseAttachment(course, categoryTree = null) {
     return {
       kind: "folder",
       id: resolvedNode?.key || resolvedNode?.name || "course",
-      title: resolvedNode?.name || "بدون عنوان",
+      title: resolvedNode?.name || "Untitled",
       children: [
         ...(resolvedNode?.subcategories || []).map((child) => buildTree(child)),
         ...(resolvedNode?.exams || []).map((exam) => ({
@@ -95,7 +95,7 @@ export function buildPlatformCourseAttachment(course, categoryTree = null) {
     id: course.key || course.name,
     title: course.name,
     source: "platform",
-    summary: `عدد الامتحانات: ${countQuizzes(tree.children)} — عدد المجلدات: ${countFolders(tree.children)}`,
+    summary: `Quiz count: ${countQuizzes(tree.children)} — Folder count: ${countFolders(tree.children)}`,
     payload: {
       totalQuizCount: countQuizzes(tree.children),
       totalFolderCount: countFolders(tree.children),
@@ -120,9 +120,9 @@ export function buildPlatformLessonAttachment(lesson) {
   return {
     kind: "lesson",
     id: lesson?.id,
-    title: lesson?.title || lesson?.id || "درس",
+    title: lesson?.title || lesson?.id || "Lesson",
     source: "platform",
-    summary: lesson?.description || (protectedContent ? "هذا الدرس محمي بكلمة مرور." : ""),
+    summary: lesson?.description || (protectedContent ? "This lesson is password-protected." : ""),
     payload: {
       description: lesson?.description || "",
       ...(lesson?.content ? { content: lesson.content } : {}),
@@ -191,20 +191,20 @@ export function openAIAgentWithAttachment(attachment, pageOptions = {}) {
         const requestedId = String(toolCall.input?.lessonId || "");
         if (![attachment.id].some((id) => String(id || "") === requestedId)) {
           const local = resolveUserItemById(requestedId, readUserQuizzes());
-          if (!local || local.kind !== "lesson") throw new Error("الدرس المطلوب غير موجود في المرفق الحالي.");
-          return `بيانات الدرس ${local.title} (المعرّف ${requestedId}):\n${JSON.stringify(local.payload || {})}`;
+          if (!local || local.kind !== "lesson") throw new Error("The requested lesson was not found in the current attachment.");
+          return `Lesson data for ${local.title} (ID ${requestedId}):\n${JSON.stringify(local.payload || {})}`;
         }
         if (attachment.payload?.content) {
-          return `بيانات الدرس ${attachment.title} (المعرّف ${requestedId}):\n${JSON.stringify(attachment.payload)}`;
+          return `Lesson data for ${attachment.title} (ID ${requestedId}):\n${JSON.stringify(attachment.payload)}`;
         }
         if (attachment.payload?.passwordProtected) {
-          return `الدرس ${attachment.title} محمي بكلمة مرور. لا يمكن لأداة المرفق تجاوز الحماية أو طلب كلمة المرور. افتح الدرس وأدخِل كلمة المرور أولاً، ثم أعد المحاولة.`;
+          return `The lesson ${attachment.title} is password-protected. The attachment tool cannot bypass the protection or request the password. Open the lesson and enter the password first, then try again.`;
         }
         const remote = await unlockRemoteLesson(requestedId, "");
         if (remote?.content) {
-          return `بيانات الدرس ${attachment.title} (المعرّف ${requestedId}):\n${JSON.stringify({ description: remote.description || "", content: remote.content })}`;
+          return `Lesson data for ${attachment.title} (ID ${requestedId}):\n${JSON.stringify({ description: remote.description || "", content: remote.content })}`;
         }
-        return `معلومات الدرس ${attachment.title} (المعرّف ${requestedId}): لا يتوفر محتوى الدرس في المرفق الحالي.`;
+        return `Lesson info for ${attachment.title} (ID ${requestedId}): lesson content is not available in the current attachment.`;
       }
       if (toolCall?.name !== "fetch_attached_quiz") {
         throw new Error("Unknown attachment tool");
@@ -230,7 +230,7 @@ export function openAIAgentWithAttachment(attachment, pageOptions = {}) {
         : null;
       const quiz = resolveUserItemById(requestedId, readUserQuizzes());
       if (!directAttachedQuiz && !attachedQuiz && (!quiz || quiz.kind !== "quiz")) {
-        throw new Error("الامتحان المطلوب غير موجود في المرفق الحالي.");
+        throw new Error("The requested quiz was not found in the current attachment.");
       }
       let payload = directAttachedQuiz?.payload || attachedQuiz?.payload || quiz?.payload;
       if (!payload && attachedQuiz?.dbId) {
@@ -241,7 +241,7 @@ export function openAIAgentWithAttachment(attachment, pageOptions = {}) {
           questions: loaded.questions || [],
         };
       }
-      return `بيانات الامتحان ${directAttachedQuiz?.title || attachedQuiz?.title || quiz?.title} (المعرّف ${requestedId}):\n${JSON.stringify(payload || {})}`;
+      return `Quiz data for ${directAttachedQuiz?.title || attachedQuiz?.title || quiz?.title} (ID ${requestedId}):\n${JSON.stringify(payload || {})}`;
     },
     ...pageOptions,
   };

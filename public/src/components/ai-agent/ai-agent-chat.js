@@ -5,7 +5,7 @@
 // provider/model answers — this file never sends or stores a model, a
 // provider, or an API key. Self-contained — takes everything it
 // needs via createChatPanel(options) so it can be mounted from either the
-// "امتحاناتك" view or result.html with different contextual system prompts.
+// "library" view or result.html with different contextual system prompts.
 // =============================================================================
 
 import { renderMarkdown } from "../../shared/markdown.js";
@@ -101,7 +101,7 @@ function base64ByteLength(base64) {
  * @param {Array<object>|(() => Array<object>)} [options.contextSummary] -
  *   lightweight per-item summaries (e.g. {title, questionCount, types}) —
  *   ONLY for the home page's specific "list of saved quizzes" rendering
- *   (see the hardcoded amتحانات-المستخدم-الحالية template in sendMessage
+ *   (see the hardcoded "user's current quizzes" template in sendMessage
  *   below); a page with a single/different-shaped state to describe should
  *   use contextPrompt (a plain string) instead, not force its data into
  *   this array-of-objects shape. Folded into the same one-off context
@@ -233,7 +233,7 @@ export function createChatPanel(options = {}) {
   panel.appendChild(messagesEl);
 
   function extractQuizTitle(value) {
-    if (!value || typeof value !== "object") return "امتحان";
+    if (!value || typeof value !== "object") return "Quiz";
     const keys = ["title", "name", "quizTitle", "quizName"];
     for (const key of keys) {
       if (typeof value[key] === "string" && value[key].trim()) return value[key].trim();
@@ -241,31 +241,31 @@ export function createChatPanel(options = {}) {
     for (const child of Object.values(value)) {
       if (child && typeof child === "object") {
         const title = extractQuizTitle(child);
-        if (title !== "امتحان") return title;
+        if (title !== "Quiz") return title;
       }
     }
-    return "امتحان";
+    return "Quiz";
   }
 
   function sanitizeToolOutput(content) {
     if (typeof content !== "string") return String(content ?? "");
     const trimmed = content.trim();
     const looksLikeQuizPayload =
-      trimmed.startsWith("بيانات الامتحان") ||
-      trimmed.startsWith("{") && /questions|quiz|امتحان/i.test(trimmed) ||
-      trimmed.length > 800 && /questions|quiz|امتحان|أسئلة/i.test(trimmed);
+      trimmed.startsWith("Quiz data") ||
+      trimmed.startsWith("{") && /questions|quiz/i.test(trimmed) ||
+      trimmed.length > 800 && /questions|quiz/i.test(trimmed);
     if (!looksLikeQuizPayload) return content;
 
     const firstBrace = trimmed.indexOf("{");
     const lastBrace = trimmed.lastIndexOf("}");
     const jsonCandidate = firstBrace >= 0 && lastBrace > firstBrace
       ? trimmed.slice(firstBrace, lastBrace + 1)
-      : trimmed.replace(/^بيانات الامتحان\s*:?\s*/i, "");
+      : trimmed.replace(/^Quiz data\s*:?\s*/i, "");
     try {
-      return `[تم الحصول على بيانات امتحان: ${extractQuizTitle(JSON.parse(jsonCandidate))}]`;
+      return `[Retrieved quiz data: ${extractQuizTitle(JSON.parse(jsonCandidate))}]`;
     } catch {
-      const titleMatch = content.match(/(?:title|name|اسم الامتحان)\s*["'=:]+\s*([^,"'{}\n]+)/i);
-      return `[تم الحصول على بيانات امتحان: ${titleMatch?.[1]?.trim() || "امتحان"}]`;
+      const titleMatch = content.match(/(?:title|name)\s*["'=:]+\s*([^,"'{}\n]+)/i);
+      return `[Retrieved quiz data: ${titleMatch?.[1]?.trim() || "Quiz"}]`;
     }
   }
 
@@ -283,7 +283,7 @@ export function createChatPanel(options = {}) {
     return getExportMessages()
       .map((message) => {
         const label = message.type === "tool-result"
-          ? "🔧 النظام"
+          ? "🔧 System"
           : message.role === "user" ? "You" : "Belal's Assistant";
         return `${label}: ${message.content}`;
       })
@@ -489,11 +489,11 @@ export function createChatPanel(options = {}) {
         "Answer questions using this specific published project as context. Do not substitute a different project.",
       ].filter(Boolean).join("\n");
     }
-    const kindLabelAr = { quiz: "امتحان", lesson: "درس", course: "مادة", folder: "مجلد" }[att.kind] || att.kind;
+    const kindLabel = { quiz: "Quiz", lesson: "Lesson", course: "Course", folder: "Folder" }[att.kind] || att.kind;
     const body = att.payload
       ? JSON.stringify(att.payload)
-      : att.summary || "(لا تفاصيل إضافية متاحة عن هذا العنصر)";
-    return `[مرفق ${kindLabelAr}: ${att.title}]\n${body}`;
+      : att.summary || "(No additional details available for this item)";
+    return `[Attached ${kindLabel}: ${att.title}]\n${body}`;
   }
 
   function iconForAttachment(att) {
@@ -509,7 +509,7 @@ export function createChatPanel(options = {}) {
     return att.kind === "file" ? att.name : att.title;
   }
 
-  const ATTACHMENT_KIND_LABEL_AR = { quiz: "امتحان", lesson: "درس", course: "مادة", folder: "مجلد", project: "Project", file: "ملف" };
+  const ATTACHMENT_KIND_LABEL = { quiz: "Quiz", lesson: "Lesson", course: "Course", folder: "Folder", project: "Project", file: "File" };
 
   function safeProjectImageUrl(value) {
     if (!value) return null;
@@ -590,13 +590,13 @@ export function createChatPanel(options = {}) {
 
     const kindBadge = document.createElement("div");
     kindBadge.className = "ai-agent-attachment-preview-kind";
-    kindBadge.textContent = ATTACHMENT_KIND_LABEL_AR[att.kind] || att.kind || "مرفق";
+    kindBadge.textContent = ATTACHMENT_KIND_LABEL[att.kind] || att.kind || "Attachment";
     card.appendChild(kindBadge);
 
     const titleEl = document.createElement("h2");
     titleEl.className = "ai-agent-attachment-preview-title";
     titleEl.dir = "auto";
-    titleEl.textContent = labelForAttachment(att) || "بدون عنوان";
+    titleEl.textContent = labelForAttachment(att) || "Untitled";
     card.appendChild(titleEl);
 
     // Related context: prefer a human-written summary (already built at
@@ -767,7 +767,7 @@ export function createChatPanel(options = {}) {
   let moreBtn = null;
 
   /**
-   * Shared by the "more" menu's "إرفاق ملف" item, drag-and-drop, and
+   * Shared by the "more" menu's "Attach file" item, drag-and-drop, and
    * clipboard paste — validates and reads a single File into a
    * `kind:"file"` pendingAttachments entry, APPENDING it alongside any
    * existing file/platform attachments rather than replacing them. The
@@ -786,12 +786,12 @@ export function createChatPanel(options = {}) {
     if (!file) return;
 
     if (pendingAttachments.filter((a) => a.kind === "file").length >= MAX_PENDING_ATTACHMENTS) {
-      appendError(`تم الوصول للحد الأقصى (${MAX_PENDING_ATTACHMENTS} مرفقات). أزل مرفقًا قبل إضافة آخر.`);
+      appendError(`Maximum reached (${MAX_PENDING_ATTACHMENTS} attachments). Remove an attachment before adding another.`);
       return;
     }
 
     if (file.size > MAX_ATTACHMENT_BYTES) {
-      appendError("حجم الملف كبير جدًا (الحد الأقصى 4 ميجابايت لكل ملف).");
+      appendError("File is too large (maximum 4MB per file).");
       return;
     }
 
@@ -800,7 +800,7 @@ export function createChatPanel(options = {}) {
       .reduce((sum, a) => sum + base64ByteLength(a.base64), 0);
     if (currentFileBytes + file.size > MAX_TOTAL_FILE_ATTACHMENT_BYTES) {
       const remainingMb = Math.max(0, (MAX_TOTAL_FILE_ATTACHMENT_BYTES - currentFileBytes) / (1024 * 1024));
-      appendError(`الحجم الإجمالي للملفات سيتجاوز الحد الأقصى (متبقٍ ~${remainingMb.toFixed(1)} ميجابايت من إجمالي ${(MAX_TOTAL_FILE_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(1)} ميجابايت). أزل مرفقًا أو اختر ملفًا أصغر.`);
+      appendError(`Total file size would exceed the maximum (~${remainingMb.toFixed(1)}MB left of ${(MAX_TOTAL_FILE_ATTACHMENT_BYTES / (1024 * 1024)).toFixed(1)}MB total). Remove an attachment or choose a smaller file.`);
       return;
     }
 
@@ -815,7 +815,7 @@ export function createChatPanel(options = {}) {
       renderAttachmentChips();
     } catch (err) {
       console.error("[ai-agent-chat] failed to read file:", err);
-      appendError("تعذرت قراءة الملف. حاول مرة أخرى.");
+      appendError("Couldn't read the file. Please try again.");
     }
   }
 
@@ -829,7 +829,7 @@ export function createChatPanel(options = {}) {
     // PHASE 3c: "more" menu — a generic {icon,label,onClick} popover so
     // future AI Agent features can add entries here without rebuilding it
     // (per the plan's own stated reason for the redesign). Today it has
-    // exactly one item ("إرفاق ملف"), wired to the same fileInput.click()
+    // exactly one item ("Attach file"), wired to the same fileInput.click()
     // the old standalone paperclip button used — moved, not reimplemented.
     // Styled with this widget's own small-anchored-popover chrome (see
     // ai-agent-dropdown.js's openAgentDropdown and its
@@ -1023,7 +1023,7 @@ export function createChatPanel(options = {}) {
         const ext = fileToAttach.type?.split("/")[1] || "png";
         const dateStr = new Date().toISOString().replace(/[:.]/g, "-").slice(11, 19);
         try {
-          fileToAttach = new File([targetFile], `صورة-ملصقة-${dateStr}.${ext}`, { type: targetFile.type });
+          fileToAttach = new File([targetFile], `pasted-image-${dateStr}.${ext}`, { type: targetFile.type });
         } catch {
           // fallback to original targetFile
         }
@@ -1243,7 +1243,7 @@ export function createChatPanel(options = {}) {
   /**
    * Single state machine for the whole input row's dictation mode — NOT
    * two separate labeled buttons swapped in for the mic (a previous
-   * version's "إيقاف الإملاء" / "إرسال" pair, since removed per the
+   * version's "Stop dictation" / "Send" pair, since removed per the
    * request to cut labeled-button clutter). Instead, the SAME mic button
    * element transforms in place: its icon/label/handler swap between
    * "start" (mic) and "cancel" (X) depending on `dictating`, and
@@ -1676,7 +1676,7 @@ export function createChatPanel(options = {}) {
    * message bubble only — assistant/tool-result messages never get one,
    * since "editing" only makes sense for a prompt the user themselves
    * wrote. Clicking it swaps the bubble's static text for an editable
-   * textarea plus إرسال/إلغاء (Submit/Cancel) beneath it.
+   * textarea plus Send/Cancel beneath it.
    *
    * BRANCHING, not in-place editing: this app persists conversations to
    * IndexedDB by a stable `conversationId` (see saveConversation calls in
@@ -1684,7 +1684,7 @@ export function createChatPanel(options = {}) {
    * that same id. Rewriting `history` and `conversationId` in place here
    * would silently mutate — and on the next send, overwrite — the
    * ORIGINAL saved conversation the user might still want to go back to.
-   * Instead, on إرسال this fires `onBranchConversation` with the history
+   * Instead, on Send this fires `onBranchConversation` with the history
    * truncated up to and including the edited prompt (content replaced),
    * and the caller (ai-agent.js) is responsible for spinning up a
    * genuinely new chat panel/session from that branch — mirroring how
@@ -1715,11 +1715,11 @@ export function createChatPanel(options = {}) {
 
   /**
    * Transforms a rendered user-message bubble into an editable textarea +
-   * إرسال (Submit) / إلغاء (Cancel) controls, per the pen-icon Edit button
-   * above. إرسال starts disabled and only enables once the text actually
+   * Send / Cancel controls, per the pen-icon Edit button
+   * above. Send starts disabled and only enables once the text actually
    * differs from the original — resubmitting an unedited prompt would
    * just create a pointless duplicate branch of the exact same
-   * conversation. إلغاء restores the original static bubble unchanged.
+   * conversation. Cancel restores the original static bubble unchanged.
    * @param {HTMLElement} el - the message bubble (already in the DOM).
    * @param {number} historyIndex
    */
@@ -1729,7 +1729,7 @@ export function createChatPanel(options = {}) {
     const originalText = original.content || "";
 
     // Preserve the bubble's original children (text + copy/edit buttons)
-    // so إلغاء can restore them exactly rather than re-rendering from
+    // so Cancel can restore them exactly rather than re-rendering from
     // scratch and potentially losing e.g. the attachment chip's markup.
     const savedChildren = Array.from(el.childNodes);
     el.innerHTML = "";
@@ -1963,8 +1963,8 @@ export function createChatPanel(options = {}) {
     const el = document.createElement("div");
     el.className = "ai-agent-msg ai-agent-msg--assistant ai-agent-msg--tool-result";
     const isRawQuizPayload = typeof text === "string" &&
-      (text.startsWith("بيانات الامتحان") || text.length > 800 || text.trim().startsWith("{"));
-    el.textContent = isRawQuizPayload ? "تم استرجاع بيانات الامتحان بنجاح." : text;
+      (text.startsWith("Quiz data") || text.length > 800 || text.trim().startsWith("{"));
+    el.textContent = isRawQuizPayload ? "Quiz data retrieved successfully." : text;
     if (messagesEl.querySelector(".ai-agent-msg--empty")) {
       messagesEl.innerHTML = "";
     }
@@ -1973,26 +1973,26 @@ export function createChatPanel(options = {}) {
     resetErrorDedup();
   }
 
-  // Human-readable Arabic label per tool name, shown in the typing
+  // Human-readable label per tool name, shown in the typing
   // indicator while that tool is actively running (see the tool loop in
   // resendLastUserTurn below). Mirrors the tool names defined server-side
   // in api/ai-agent/_tools.js — kept as a small local lookup rather than
   // importing that module, since this is presentation-only and the two
   // are already independently versioned across the network boundary.
   const TOOL_DISPLAY_NAMES = {
-    create_quiz: "إنشاء امتحان",
-    edit_quiz: "تعديل الامتحان",
-    delete_quiz: "حذف الامتحان",
-    create_folder: "إنشاء مجلد",
-    create_course: "إنشاء مادة",
-    move_item: "نقل عنصر",
-    reset_quiz_page: "إعادة تعيين الصفحة",
-    fetch_attached_quiz: "استرجاع بيانات الامتحان",
-    fetch_attached_lesson: "استرجاع بيانات الدرس",
+    create_quiz: "Create Quiz",
+    edit_quiz: "Edit Quiz",
+    delete_quiz: "Delete Quiz",
+    create_folder: "Create Folder",
+    create_course: "Create Course",
+    move_item: "Move Item",
+    reset_quiz_page: "Reset Page",
+    fetch_attached_quiz: "Retrieve Quiz Data",
+    fetch_attached_lesson: "Retrieve Lesson Data",
   };
 
   function describeToolCall(toolCall) {
-    return TOOL_DISPLAY_NAMES[toolCall?.name] || toolCall?.name || "أداة";
+    return TOOL_DISPLAY_NAMES[toolCall?.name] || toolCall?.name || "Tool";
   }
 
   /**
@@ -2016,7 +2016,7 @@ export function createChatPanel(options = {}) {
    * @param {string} [label]
    * @param {"thinking"|"tool"} [kind]
    */
-  function abortCurrentTurn(reason = "تم إيقاف الرد بواسطة المستخدم.") {
+  function abortCurrentTurn(reason = "Response stopped by the user.") {
     if (currentAbortController) {
       try {
         currentAbortController.abort();
@@ -2058,10 +2058,10 @@ export function createChatPanel(options = {}) {
     let onStopCallback = null;
 
     function formatElapsed(seconds) {
-      if (seconds < 60) return `${seconds}ث`;
+      if (seconds < 60) return `${seconds}s`;
       const m = Math.floor(seconds / 60);
       const s = seconds % 60;
-      return `${m}د ${s}ث`;
+      return `${m}m ${s}s`;
     }
 
     function buildElement() {
@@ -2101,9 +2101,9 @@ export function createChatPanel(options = {}) {
       stopBtn = document.createElement("button");
       stopBtn.type = "button";
       stopBtn.className = "ai-agent-typing-stop-btn";
-      stopBtn.setAttribute("aria-label", "إيقاف الرد");
-      stopBtn.title = "إيقاف الرد";
-      stopBtn.innerHTML = `${TYPING_STOP_ICON_SVG}<span>إيقاف</span>`;
+      stopBtn.setAttribute("aria-label", "Stop response");
+      stopBtn.title = "Stop response";
+      stopBtn.innerHTML = `${TYPING_STOP_ICON_SVG}<span>Stop</span>`;
       stopBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (typeof onStopCallback === "function") {
@@ -2140,7 +2140,7 @@ export function createChatPanel(options = {}) {
     }
 
     return {
-      show({ label = "جارِ التفكير…", kind = "thinking", step = "", onStop = null } = {}) {
+      show({ label = "Thinking…", kind = "thinking", step = "", onStop = null } = {}) {
         onStopCallback = onStop;
 
         if (!activeEl || !activeEl.isConnected) {
@@ -2193,7 +2193,7 @@ export function createChatPanel(options = {}) {
     };
   })();
 
-  function showTyping(label = "جارِ التفكير…", kind = "thinking") {
+  function showTyping(label = "Thinking…", kind = "thinking") {
     typingController.show({ label, kind });
     return {
       setLabel(text, nextKind) {
@@ -2231,9 +2231,9 @@ export function createChatPanel(options = {}) {
     sendBtn.disabled = true;
 
     typingController.show({
-      label: "جارِ التفكير…",
+      label: "Thinking…",
       kind: "thinking",
-      onStop: () => abortCurrentTurn("تم إيقاف الرد بواسطة المستخدم."),
+      onStop: () => abortCurrentTurn("Response stopped by the user."),
     });
 
     const resolvedContextPrompt =
@@ -2242,8 +2242,8 @@ export function createChatPanel(options = {}) {
       typeof contextSummary === "function" ? contextSummary() : contextSummary;
     const summaryText =
       Array.isArray(resolvedContextSummary) && resolvedContextSummary.length
-        ? `امتحانات المستخدم الحالية:\n${resolvedContextSummary
-          .map((q) => `- ${q.title} (${q.questionCount} سؤال، ${q.types || "غير محدد"})`)
+        ? `User's current quizzes:\n${resolvedContextSummary
+          .map((q) => `- ${q.title} (${q.questionCount} questions, ${q.types || "unspecified"})`)
           .join("\n")}`
         : "";
     const combinedContext = [resolvedContextPrompt, summaryText].filter(Boolean).join("\n\n");
@@ -2278,14 +2278,14 @@ export function createChatPanel(options = {}) {
 
       if (isSlashCommand || (role === "user" && typeof content === "string" && content.trim().startsWith("/"))) {
         const cmdName = slashCmdName || content.trim().match(/^\/([^\s]+)/)?.[1] || "";
-        const directive = slashDirective || "نفّذ المطلوب واستدعِ الأداة فوراً دون طلب تأكيد";
-        effectiveContent = `${effectiveContent}\n\n[توجيه تنفيذي مباشر: هذا طلب صريح ومباشر عبر أمر Slash (/${cmdName}). ${directive}].`;
+        const directive = slashDirective || "Execute the request and call the tool immediately without asking for confirmation";
+        effectiveContent = `${effectiveContent}\n\n[Direct execution directive: this is an explicit, direct request via a Slash command (/${cmdName}). ${directive}].`;
       }
 
       if (type === "tool-result") {
         return {
           role: "user",
-          content: `[نتيجة أداة]: ${content}\n(توجيه للنظام: تم تنفيذ هذا الإجراء بنجاح وأصبح موجوداً بالفعل. لا تُعد إنشاء أو تكرار نفس العنصر مجدداً، وتابع لتنفيذ بقية خطوات المستخدم إن وُجدت، أو قدم الرد النهائي).`,
+          content: `[Tool result]: ${content}\n(System directive: this action was already executed successfully and the item already exists. Do not recreate or duplicate the same item again — continue with the rest of the user's steps if any, or provide the final response).`,
           attachments: fileAttachments,
           type,
         };
@@ -2328,7 +2328,7 @@ export function createChatPanel(options = {}) {
           data,
         );
         const msg = data.detail
-          ? `${data.error || "خطأ"}: ${data.detail}`
+          ? `${data.error || "Error"}: ${data.detail}`
           : data.error || "An error occurred while contacting the assistant.";
         appendError(msg);
         return;
@@ -2347,8 +2347,8 @@ export function createChatPanel(options = {}) {
           : [];
 
       if (!data.text && toolCallsToRun.length) {
-        const toolSummary = toolCallsToRun.map((tc) => describeToolCall(tc)).join("، ");
-        history.push({ role: "assistant", content: `[تم استدعاء: ${toolSummary}]` });
+        const toolSummary = toolCallsToRun.map((tc) => describeToolCall(tc)).join(", ");
+        history.push({ role: "assistant", content: `[Called: ${toolSummary}]` });
       }
 
       // toPersistedMessages (defined once, near createChatPanel's other
@@ -2397,12 +2397,12 @@ export function createChatPanel(options = {}) {
           sessionExecutedTools.add(sig);
           executedCount++;
 
-          const stepLabel = totalTools > 1 ? `خطوة ${i + 1} من ${totalTools}` : "";
+          const stepLabel = totalTools > 1 ? `Step ${i + 1} of ${totalTools}` : "";
           typingController.show({
-            label: `جارِ استخدام أداة: ${describeToolCall(toolCall)}`,
+            label: `Using tool: ${describeToolCall(toolCall)}`,
             kind: "tool",
             step: stepLabel,
-            onStop: () => abortCurrentTurn("تم إيقاف الرد بواسطة المستخدم."),
+            onStop: () => abortCurrentTurn("Response stopped by the user."),
           });
 
           try {
@@ -2434,7 +2434,7 @@ export function createChatPanel(options = {}) {
             }
           } catch (toolErr) {
             console.error("[ai-agent-chat] onToolCall failed:", toolErr);
-            appendError(toolErr?.userMessage || "تعذر تنفيذ العملية. حاول مرة أخرى.");
+            appendError(toolErr?.userMessage || "Couldn't complete the operation. Please try again.");
             allToolCallsSucceeded = false;
             break;
           }
@@ -2451,15 +2451,15 @@ export function createChatPanel(options = {}) {
       if (toolCallsToRun.length && allToolCallsSucceeded && !currentAbortController?.signal?.aborted) {
         if (agentDepth + 1 >= MAX_AGENT_DEPTH) {
           appendError(
-            "توقف الباشــمبصمج بعد عدد كبير من خطوات الأدوات المتتالية في نفس الطلب. أعد صياغة طلبك أو قسّمه إلى خطوات أصغر.",
+            "The assistant stopped after a large number of consecutive tool steps on the same request. Please rephrase your request or split it into smaller steps.",
           );
           return;
         }
         typingController.show({
-          label: "جارِ التفكير…",
+          label: "Thinking…",
           kind: "thinking",
           step: "",
-          onStop: () => abortCurrentTurn("تم إيقاف الرد بواسطة المستخدم."),
+          onStop: () => abortCurrentTurn("Response stopped by the user."),
         });
         await resendLastUserTurn(agentDepth + 1);
         return;
@@ -2469,7 +2469,7 @@ export function createChatPanel(options = {}) {
         return;
       }
       console.error("[ai-agent-chat] request failed:", err);
-      appendError("تعذر الاتصال بالخادم. حاول مرة أخرى.");
+      appendError("Couldn't connect to the server. Please try again.");
     } finally {
       if (agentDepth === 0) {
         typingController.clear();
@@ -2535,7 +2535,7 @@ export function createChatPanel(options = {}) {
         if (action?.systemDirective) {
           slashDirective = action.systemDirective;
         } else {
-          slashDirective = `المستخدم استدعى الأمر المباشر (/${slashCmdName}). نفّذ الإجراء المناسب فوراً واستدعِ الأداة البرمجية دون طلب أي تأكيد مسبق.`;
+          slashDirective = `The user invoked the direct command (/${slashCmdName}). Execute the appropriate action immediately and call the corresponding tool without asking for any prior confirmation.`;
         }
       }
     }
@@ -2778,7 +2778,7 @@ export function createChatPanel(options = {}) {
   /**
    * Whether this panel currently has any messages at all — mirrors the
   * same history.length signal used by the desktop sidebar's own
-  * "نسخ المحادثة" button (see ai-agent.js), which
+  * "Export conversation" button (see ai-agent.js), which
    * can disable itself on an empty/new chat, where there's nothing to
    * copy — same signal, just readable from outside the panel's closure.
    * @returns {boolean}
@@ -2800,7 +2800,7 @@ export function createChatPanel(options = {}) {
   panel.addPendingAttachment = function addPendingAttachment(attachment) {
     if (!attachment || !attachment.kind || attachment.kind === "file") return;
     // Avoid duplicate tiles if the same item is attached twice in a row
-    // (e.g. the user reopens the same card's "اسأل الباشـمبصمج" button).
+    // (e.g. the user reopens the same card's "Ask the Assistant" button).
     const alreadyPending = pendingAttachments.some(
       (a) => a.kind === attachment.kind && a.id === attachment.id && a.title === attachment.title,
     );
@@ -2989,7 +2989,7 @@ export function createChatPanel(options = {}) {
   };
 
   panel.abortGeneration = function abortGeneration() {
-    abortCurrentTurn("تم إيقاف الرد.");
+    abortCurrentTurn("Response stopped.");
   };
 
   panel.isGenerating = function isGeneratingStatus() {

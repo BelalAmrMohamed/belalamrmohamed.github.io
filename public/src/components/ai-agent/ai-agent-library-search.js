@@ -75,8 +75,8 @@ export async function searchPlatformLibrary(query, limit = 8) {
 
     // Courses first — a matching subject is usually what the user means when
     // a course name and a quiz title both happen to contain the term (e.g.
-    // searching "تشريح" matches the "تشريح" course AND quizzes titled
-    // "امتحان تشريح 1"); quizzes fill the remainder of the limit.
+    // searching "Anatomy" matches the "Anatomy" course AND quizzes titled
+    // "Anatomy Quiz 1"); quizzes fill the remainder of the limit.
     return [...courseResults, ...quizResults].slice(0, limit);
 }
 
@@ -138,7 +138,7 @@ export async function resolveLibraryItemById(id, kindHint) {
                 dbId: exam.dbId,
                 title: exam.title,
                 source: "platform",
-                summary: `عدد الأسئلة: ${exam.questionCount || 0}`,
+                summary: `Question count: ${exam.questionCount || 0}`,
             };
         }
     }
@@ -160,7 +160,7 @@ export async function resolveLibraryItemById(id, kindHint) {
             id: course.key,
             title: course.name,
             source: "platform",
-            summary: `عدد الامتحانات: ${countQuizzes(course)} — عدد المجلدات: ${(course.subcategories || []).length}`,
+            summary: `Quiz count: ${countQuizzes(course)} — Folder count: ${(course.subcategories || []).length}`,
         };
     }
 

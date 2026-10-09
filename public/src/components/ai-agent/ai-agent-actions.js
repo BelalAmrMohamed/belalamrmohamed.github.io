@@ -84,198 +84,198 @@ export function getPageActions(pageKey, instanceActions = null) {
 
 // ── Built-in Standard Action Sets ─────────────────────────────────────────────
 
-// Home page actions ("امتحاناتك")
+// Home page actions ("your library")
 const HOME_PAGE_ACTIONS = [
     {
         id: "create-lesson",
         command: "create-lesson",
-        label: "إنشاء درس",
-        description: "إنشاء درس جديد بأقسام ومحتوى تعليمي وحفظه في «امتحاناتك»",
+        label: "Create Lesson",
+        description: "Create a new lesson with sections and educational content, and save it to your library",
         icon: ICON_LESSON,
         systemDirective: "The user explicitly invoked /create-lesson. Prepare a lesson with a title, description, ordered sections, Markdown blocks, and suitable embedded interactive MCQ or essay questions. Use zero-based correctIndex/correctIndexes, multiSelect for multiple answers, explanations for MCQs, and a complete modelAnswer for essays. Call create_lesson immediately to save it in the user's library without confirmation.",
-        placeholder: "موضوع الدرس ومستوى التفصيل المطلوب...",
+        placeholder: "Lesson topic and the level of detail you need...",
     },
     {
         id: "create-quiz",
         command: "create-quiz",
-        label: "إنشاء امتحان",
-        description: "إنشاء امتحان جديد وحفظه مباشرة في قسم «امتحاناتك»",
+        label: "Create Quiz",
+        description: "Create a new quiz and save it directly to your library",
         icon: ICON_QUIZ,
-        systemDirective: "المستخدم يطلب إنشاء امتحان جديد بشكل صريح عبر أمر /create-quiz. نفّذ الإجراء مباشرة فوراً واستدعِ أداة create_quiz لحفظه في قسم «امتحاناتك» دون طلب أي تأكيد مسبق.",
-        placeholder: "اكتب موضوع الامتحان وعدد الأسئلة...",
+        systemDirective: "The user explicitly requested creating a new quiz via the /create-quiz command. Execute the action immediately and call the create_quiz tool to save it to the user's library, without asking for any prior confirmation.",
+        placeholder: "Write the quiz topic and number of questions...",
     },
     {
         id: "create-folder",
         command: "create-folder",
-        label: "إنشاء مجلد",
-        description: "إنشاء مجلد جديد لتنظيم وترتيب امتحاناتك",
+        label: "Create Folder",
+        description: "Create a new folder to organize and arrange your library",
         icon: ICON_FOLDER,
-        systemDirective: "المستخدم يطلب إنشاء مجلد جديد صراحة عبر أمر /create-folder. استدعِ أداة create_folder فوراً دون طلب تأكيد.",
-        placeholder: "اسم المجلد ومكانه...",
+        systemDirective: "The user explicitly requested creating a new folder via the /create-folder command. Call the create_folder tool immediately without asking for confirmation.",
+        placeholder: "Folder name and location...",
     },
     {
         id: "create-course",
         command: "create-course",
-        label: "إنشاء مادة",
-        description: "إنشاء مادة دراسية جديدة (كورس) في المستوى الأعلى",
+        label: "Create Course",
+        description: "Create a new course at the top level",
         icon: ICON_COURSE,
-        systemDirective: "المستخدم يطلب إنشاء مادة جديدة صراحة عبر أمر /create-course. استدعِ أداة create_course فوراً دون طلب تأكيد.",
-        placeholder: "اسم المادة الدراسية...",
+        systemDirective: "The user explicitly requested creating a new course via the /create-course command. Call the create_course tool immediately without asking for confirmation.",
+        placeholder: "Course name...",
     },
 ];
 
-// Create Quiz page actions ("إنشاء امتحان")
+// Create Quiz page actions ("Create Quiz")
 const CREATE_QUIZ_PAGE_ACTIONS = [
     {
         id: "generate-quiz",
         command: "generate-quiz",
-        label: "توليد امتحان",
-        description: "توليد محتوى الامتحان وتعبئته مباشرة في النموذج الحالي",
+        label: "Generate Quiz",
+        description: "Generate the quiz content and fill it directly into the current form",
         icon: ICON_SPARKLE,
-        systemDirective: "المستخدم يطلب توليد أو استبدال أسئلة الامتحان الحالي صراحة عبر أمر /generate-quiz. استدعِ أداة edit_current_quiz فوراً وضع الأسئلة الجديدة في النموذج دون طلب تأكيد.",
-        placeholder: "موضوع الامتحان، عدد الأسئلة، ونوعها...",
+        systemDirective: "The user explicitly requested generating or replacing the current quiz's questions via the /generate-quiz command. Call the edit_current_quiz tool immediately and place the new questions in the form without asking for confirmation.",
+        placeholder: "Quiz topic, number of questions, and type...",
     },
     {
         id: "add-questions",
         command: "add-questions",
-        label: "إضافة أسئلة",
-        description: "إضافة أسئلة جديدة إلى الامتحان الحالي مع الإبقاء على الأسئلة السابقة",
+        label: "Add Questions",
+        description: "Add new questions to the current quiz while keeping the existing ones",
         icon: ICON_QUESTION,
-        systemDirective: "المستخدم يطلب إضافة أسئلة جديدة للامتحان الحالي عبر أمر /add-questions. استدعِ أداة edit_current_quiz مع الاحتفاظ بكافة الأسئلة الحالية وإضافة الأسئلة الجديدة دون طلب تأكيد.",
-        placeholder: "اكتب الأسئلة المراد إضافتها أو موضوعها...",
+        systemDirective: "The user requested adding new questions to the current quiz via the /add-questions command. Call the edit_current_quiz tool, keeping all existing questions and adding the new ones, without asking for confirmation.",
+        placeholder: "Write the questions to add, or their topic...",
     },
     {
         id: "clear-quiz",
         command: "clear-quiz",
-        label: "مسح النموذج",
-        description: "مسح كافة حقول وأسئلة النموذج الحالي وإعادة ضبط الصفحة",
+        label: "Clear Form",
+        description: "Clear all fields and questions in the current form and reset the page",
         icon: ICON_TRASH,
-        systemDirective: "المستخدم يطلب مسح الصفحة بالكامل صراحة عبر أمر /clear-quiz. استدعِ أداة reset_quiz_page فوراً دون طلب تأكيد.",
+        systemDirective: "The user explicitly requested clearing the page entirely via the /clear-quiz command. Call the reset_quiz_page tool immediately without asking for confirmation.",
     },
 ];
 
-// Lesson Reader page actions ("صفحة الدرس")
+// Lesson Reader page actions ("lesson page")
 const LESSON_PAGE_ACTIONS = [
     {
         id: "create-quiz",
         command: "create-quiz",
-        label: "إنشاء تدريب من الدرس",
-        description: "إنشاء تدريب تفاعلي مؤقت من محتوى هذا الدرس كاملاً، يظهر داخل الصفحة فقط",
+        label: "Create Practice from Lesson",
+        description: "Create a temporary interactive practice set from this entire lesson's content, shown only within the page",
         icon: ICON_QUIZ,
-        systemDirective: "المستخدم يطلب إنشاء تدريب تفاعلي مؤقت من محتوى هذا الدرس صراحة عبر أمر /create-quiz. استخرج الأسئلة من الدرس كاملاً واستدعِ أداة create_quiz فوراً لعرض التدريب داخل صفحة الدرس. هذا التدريب مؤقت ولا يُحفظ في «امتحاناتك» ولا يظهر فيها أبداً — دون طلب تأكيد.",
-        placeholder: "عدد الأسئلة أو الأقسام المراد التركيز عليها...",
+        systemDirective: "The user explicitly requested creating a temporary interactive practice set from this lesson's content via the /create-quiz command. Extract questions from the full lesson and call the create_quiz tool immediately to display the practice set within the lesson page. This practice set is temporary and is never saved to or shown in the user's library — do not ask for confirmation.",
+        placeholder: "Number of questions or sections to focus on...",
     },
     {
         id: "create-quiz-section",
         command: "create-quiz-section",
-        label: "تدريب من القسم الحالي فقط",
-        description: "إنشاء تدريب تفاعلي مؤقت يغطي القسم الذي يقرأه المستخدم الآن فقط، لا الدرس كاملاً",
+        label: "Practice From Current Section Only",
+        description: "Create a temporary interactive practice set covering only the section the user is currently reading, not the whole lesson",
         icon: ICON_QUIZ,
-        systemDirective: "المستخدم يطلب إنشاء تدريب تفاعلي مؤقت من القسم الحالي فقط (وليس الدرس كاملاً) عبر أمر /create-quiz-section. استخدم القسم الحالي المُشار إليه في سياق الصفحة فقط كمصدر للأسئلة، واستدعِ أداة create_quiz فوراً لعرض التدريب داخل صفحة الدرس دون طلب تأكيد. هذا التدريب مؤقت ولا يُحفظ في «امتحاناتك».",
-        placeholder: "عدد الأسئلة المطلوبة من هذا القسم...",
+        systemDirective: "The user requested creating a temporary interactive practice set from only the current section (not the whole lesson) via the /create-quiz-section command. Use only the current section referenced in the page context as the source for questions, and call the create_quiz tool immediately to display the practice set within the lesson page without asking for confirmation. This practice set is temporary and is not saved to the user's library.",
+        placeholder: "Number of questions needed from this section...",
     },
     {
         id: "explain",
         command: "explain",
-        label: "شرح وتبسيط",
-        description: "شرح تفصيلي ومبسط لأهم نقاط ومفاهيم هذا الدرس",
+        label: "Explain & Simplify",
+        description: "A detailed, simplified explanation of this lesson's key points and concepts",
         icon: ICON_LESSON,
-        systemDirective: "المستخدم يطلب شرحاً وتبسيطاً للدرس عبر أمر /explain. قدّم شرحاً تعليمياً ممتعاً ومبسطاً.",
-        placeholder: "أي مفهوم تريد شرحه بالتحديد؟...",
+        systemDirective: "The user requested an explanation and simplification of the lesson via the /explain command. Provide an engaging, simplified, educational explanation.",
+        placeholder: "Which concept would you like explained specifically?...",
     },
     {
         id: "simplify-section",
         command: "simplify",
-        label: "بسّط القسم الحالي",
-        description: "إعادة صياغة القسم الذي يقرأه المستخدم الآن بأسلوب أبسط",
+        label: "Simplify Current Section",
+        description: "Rephrase the section the user is currently reading in a simpler style",
         icon: ICON_LESSON,
-        systemDirective: "المستخدم يطلب تبسيط القسم الحالي عبر أمر /simplify. أعد صياغة أفكار القسم الحالي فقط (المُشار إليه في سياق الصفحة) بلغة أبسط وأمثلة أوضح، دون اختصار المعلومات المهمة.",
-        placeholder: "أي جزء بالتحديد تريد تبسيطه؟...",
+        systemDirective: "The user requested simplifying the current section via the /simplify command. Rephrase only the current section's ideas (as referenced in the page context) in simpler language and clearer examples, without cutting important information.",
+        placeholder: "Which specific part would you like simplified?...",
     },
     {
         id: "flashcards",
         command: "flashcards",
-        label: "بطاقات مراجعة",
-        description: "توليد بطاقات مراجعة (سؤال/جواب) من أهم أفكار هذا الدرس — للمذاكرة فقط، لا تُحفظ",
+        label: "Flashcards",
+        description: "Generate review flashcards (question/answer) from this lesson's key ideas — for studying only, not saved",
         icon: ICON_SPARKLE,
-        systemDirective: "المستخدم يطلب بطاقات مراجعة (Flashcards) من هذا الدرس عبر أمر /flashcards. اكتب سلسلة من البطاقات كل واحدة بصيغة «سؤال: ... / جواب: ...» تغطي أهم مفاهيم الدرس. هذه بطاقات نصية للمذاكرة فقط داخل المحادثة، وليست تدريباً تفاعلياً ولا تُحفظ في أي مكان.",
-        placeholder: "عدد البطاقات أو الموضوع المطلوب التركيز عليه...",
+        systemDirective: "The user requested flashcards from this lesson via the /flashcards command. Write a series of flashcards, each in the format 'Question: ... / Answer: ...', covering the lesson's key concepts. These are text-only study cards within the conversation, not an interactive practice set, and are not saved anywhere.",
+        placeholder: "Number of cards or topic to focus on...",
     },
     {
         id: "summarize-full-lesson",
         command: "summarize",
-        label: "تلخيص الدرس كامل",
-        description: "ملخص شامل ومركز لكل أقسام الدرس",
+        label: "Summarize Full Lesson",
+        description: "A comprehensive, focused summary of all the lesson's sections",
         icon: ICON_LESSON,
-        systemDirective: "المستخدم يطلب تلخيصاً شاملاً للدرس كاملاً عبر أمر /summarize. لخّص كل الأقسام بشكل مركز ومرتب، وليس قسماً واحداً فقط.",
+        systemDirective: "The user requested a comprehensive summary of the entire lesson via the /summarize command. Summarize all sections in a focused, organized way, not just one section.",
     },
     {
         id: "practice-weak-topic",
         command: "practice",
-        label: "تدريب على نقطة محددة",
-        description: "أسئلة تدريبية نصية (غير تفاعلية) على مفهوم معين يشعر المستخدم بالضعف فيه",
+        label: "Practice a Specific Point",
+        description: "Text-based (non-interactive) practice questions on a specific concept the user feels weak on",
         icon: ICON_QUESTION,
-        systemDirective: "المستخدم يطلب أسئلة تدريبية إضافية على مفهوم معين يشعر بالضعف فيه عبر أمر /practice. اكتب أسئلة نصية (وليس عبر أداة create_quiz) تركز على النقطة التي يذكرها المستخدم، مع ذكر الإجابة الصحيحة وسبب صحتها لكل سؤال.",
-        placeholder: "ما هي النقطة أو المفهوم الذي تريد التدرب عليه؟...",
+        systemDirective: "The user requested additional practice questions on a specific concept they feel weak on via the /practice command. Write text-based questions (not via the create_quiz tool) focused on the point the user mentions, including the correct answer and why it's correct for each question.",
+        placeholder: "What point or concept would you like to practice?...",
     },
 ];
 
-// Create Lesson page actions ("محرر الدروس")
+// Create Lesson page actions ("lesson editor")
 const CREATE_LESSON_PAGE_ACTIONS = [
     {
         id: "create-lesson",
         command: "create-lesson",
-        label: "إنشاء محتوى الدرس",
-        description: "إنشاء عنوان الدرس وأقسامه ومحتواها في المحرر الحالي",
+        label: "Create Lesson Content",
+        description: "Create the lesson's title, sections, and content in the current editor",
         icon: ICON_LESSON,
         systemDirective: "The user explicitly invoked /create-lesson. Create a title, description, ordered sections with Markdown blocks, and suitable embedded interactive MCQ or essay questions. Use zero-based correctIndex/correctIndexes, multiSelect for multiple answers, MCQ explanations, and a complete modelAnswer for essays. Call create_lesson immediately to fill the current editor without confirmation.",
-        placeholder: "موضوع الدرس ومستوى التفصيل المطلوب...",
+        placeholder: "Lesson topic and the level of detail you need...",
     },
     {
         id: "add-section",
         command: "add-section",
-        label: "إضافة قسم",
-        description: "إضافة قسم جديد ومحتوى تعليمي إلى الدرس الحالي",
+        label: "Add Section",
+        description: "Add a new section and educational content to the current lesson",
         icon: ICON_SECTION,
-        systemDirective: "المستخدم يطلب إضافة قسم صراحة عبر أمر /add-section. أنشئ عنوان القسم ومحتواه، ثم استدعِ أداة add_lesson_section فوراً دون طلب تأكيد.",
-        placeholder: "عنوان القسم ومحتواه...",
+        systemDirective: "The user explicitly requested adding a section via the /add-section command. Create the section's title and content, then call the add_lesson_section tool immediately without asking for confirmation.",
+        placeholder: "Section title and content...",
     },
     {
         id: "add-question",
         command: "add-question",
-        label: "إضافة سؤال للدرس",
-        description: "صياغة وإدراج سؤال تفاعلي جديد في الدرس الحالي",
+        label: "Add Question to Lesson",
+        description: "Draft and insert a new interactive question into the current lesson",
         icon: ICON_QUESTION,
-        systemDirective: "المستخدم يطلب إضافة سؤال تفاعلي للدرس صراحة عبر أمر /add-question. استدعِ أداة add_lesson_question فوراً لإدراج السؤال في الدرس دون طلب تأكيد.",
-        placeholder: "اكتب صيغة السؤال أو فكرته وقسمه...",
+        systemDirective: "The user explicitly requested adding an interactive question to the lesson via the /add-question command. Call the add_lesson_question tool immediately to insert the question into the lesson without asking for confirmation.",
+        placeholder: "Write the question's wording or idea, and its section...",
     },
     {
         id: "summarize-lesson",
         command: "summarize-lesson",
-        label: "تلخيص الدرس",
-        description: "توليد ملخص مركز وشامل لنقاط وأقسام الدرس",
+        label: "Summarize Lesson",
+        description: "Generate a focused, comprehensive summary of the lesson's points and sections",
         icon: ICON_LESSON,
-        systemDirective: "المستخدم يطلب تلخيص الدرس عبر أمر /summarize-lesson. قدّم تلخيصاً واضحاً لأقسام الدرس.",
+        systemDirective: "The user requested a summary of the lesson via the /summarize-lesson command. Provide a clear summary of the lesson's sections.",
     },
 ];
 
-// Result page actions ("صفحة النتيجة")
+// Result page actions ("result page")
 const RESULT_PAGE_ACTIONS = [
     {
         id: "analyze-result",
         command: "analyze-result",
-        label: "تحليل النتيجة",
-        description: "تحليل تفصيلي لأدائك في الامتحان وتحديد مواطن القوة والضعف",
+        label: "Analyze Result",
+        description: "A detailed analysis of your quiz performance, identifying strengths and weaknesses",
         icon: ICON_ANALYZE,
-        systemDirective: "المستخدم يطلب تحليلاً تفصيلياً لنتيجته عبر أمر /analyze-result. حلل الأداء وقدم تقييماً شاملاً.",
+        systemDirective: "The user requested a detailed analysis of their result via the /analyze-result command. Analyze the performance and provide a comprehensive assessment.",
     },
     {
         id: "recommendations",
         command: "recommendations",
-        label: "توصيات وخطة مراجعة",
-        description: "اقتراح خطة مراجعة مخصصة تركز على الأسئلة الخاطئة والمتروكة",
+        label: "Recommendations & Review Plan",
+        description: "Suggest a custom review plan focused on incorrect and skipped questions",
         icon: ICON_SPARKLE,
-        systemDirective: "المستخدم يطلب خطة وتوصيات عبر أمر /recommendations. قدم خطة مراجعة عملية ومباشرة.",
+        systemDirective: "The user requested a plan and recommendations via the /recommendations command. Provide a practical, direct review plan.",
     },
 ];
 
@@ -385,7 +385,7 @@ export function createSlashMenu(options) {
         if (currentActions.length === 0) {
             const emptyEl = document.createElement("div");
             emptyEl.className = "ai-agent-slash-empty";
-            emptyEl.textContent = cleanQuery ? "لا توجد أوامر مطابقة" : "لا توجد أوامر متوفرة لهذه الصفحة";
+            emptyEl.textContent = cleanQuery ? "No matching commands" : "No commands available for this page";
             menuEl.appendChild(emptyEl);
             activeIndex = -1;
             reposition();
@@ -394,7 +394,7 @@ export function createSlashMenu(options) {
 
         const sectionHeader = document.createElement("div");
         sectionHeader.className = "ai-agent-mention-section-header ai-agent-slash-section-header";
-        sectionHeader.textContent = "الأوامر المتاحة";
+        sectionHeader.textContent = "Available commands";
         menuEl.appendChild(sectionHeader);
 
         activeIndex = 0;

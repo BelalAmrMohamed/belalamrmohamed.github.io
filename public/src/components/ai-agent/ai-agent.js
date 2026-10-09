@@ -4,14 +4,14 @@
 // action button (FAB), rather than inlined into the page's DOM.
 // Framework-free, self-contained, and page-agnostic: pass everything it
 // needs via the `options` object rather than reaching for globals, so the
-// same createAIAgentFab() call works from both the "امتحاناتك" view
+// same createAIAgentFab() call works from both the "your library" view
 // (user-quizzes-view.js) and result.html.
 //
 // Usage:
 //   import { createAIAgentFab } from "../../components/ai-agent/ai-agent.js";
 //   const fab = createAIAgentFab({
-//     contextPrompt: "المستخدم يسأل عن نتيجة امتحان مادة الفيزياء...", // optional
-//     placeholder: "اسأل عن نتيجتك...", // optional
+//     contextPrompt: "The user is asking about their physics quiz result...", // optional
+//     placeholder: "Ask about your result...", // optional
 //   });
 //   someContainer.appendChild(fab);
 //
@@ -401,7 +401,7 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
     });
   });
 
-  // Disables (visually + functionally) the "نسخ المحادثة" button whenever
+  // Disables (visually + functionally) the "Export conversation" button whenever
   // the active panel has no messages yet — a brand new/empty chat has
   // nothing to copy. Reuses panel.hasMessages() (ai-agent-chat.js), the
   // same history.length signal that already drives the corner "new
@@ -420,8 +420,8 @@ function buildWidgetContent(options = {}, existingChatPanel = null, branchHandle
   }
   refreshCopyButtonState();
 
-  // Mirrors refreshCopyButtonState just above, but inverted: "محادثة
-  // جديدة" starts a fresh, empty conversation, so it's redundant (and
+  // Mirrors refreshCopyButtonState just above, but inverted: "New
+  // chat" starts a fresh, empty conversation, so it's redundant (and
   // would just silently no-op) when the active panel is ALREADY a new,
   // empty chat — i.e. exactly when sidebarCopyBtn is disabled for having
   // nothing to export. Same hasMessages() signal, same refresh hook.
