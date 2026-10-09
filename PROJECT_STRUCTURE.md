@@ -12,6 +12,7 @@ Belal Amr Mohamed/
 ├── LICENSE.txt
 ├── package-lock.json
 ├── package.json
+├── PROJECT_STRUCTURE.md
 ├── README.md
 ├── skills-lock.json
 ├── vercel.json
@@ -219,7 +220,7 @@ Belal Amr Mohamed/
 | `api` | 1226 |
 | `scripts` | 1103 |
 | `supabase` | 785 |
-| `(root)` | 122 |
+| `(root)` | 391 |
 | `docs` | 50 |
 
 ### Top 10 Largest Code Files
@@ -243,8 +244,8 @@ Belal Amr Mohamed/
 |-----------|-------|---------------|------------|
 | .js | 82 | 32045 | 1.56 MB |
 | .css | 10 | 13719 | 324.25 KB |
+| .md | 5 | 1014 | 42.36 KB |
 | .sql | 5 | 429 | 14.91 KB |
-| .md | 4 | 745 | 32.07 KB |
 | .json | 4 | 60 | 15.64 KB |
 | .html | 4 | 1716 | 65.75 KB |
 | .txt | 2 | 33 | 1.8 KB |
@@ -252,7 +253,7 @@ Belal Amr Mohamed/
 | .xml | 1 | 9 | 280 B |
 | .mjs | 1 | 362 | 14.02 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **115** | **49617** | **2.04 MB** |
+| **Total** | **116** | **49886** | **2.05 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -264,5 +265,5 @@ Belal Amr Mohamed/
 | .pdf | 1 | 100.13 KB |
 | **Total** | **43** | **2.05 MB** |
 
-**Grand Total Files:** 158  
-**Total Repository Size:** 4.08 MB
+**Grand Total Files:** 159  
+**Total Repository Size:** 4.09 MB
