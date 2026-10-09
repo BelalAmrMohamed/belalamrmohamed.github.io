@@ -39,7 +39,7 @@ Serve `public/` as the site root (the code uses absolute `/assets/...` and `/api
 `POST /api/ai-agent/chat` body: `{ messages, systemPrompt?, enableTools?, toolNames? }` → `{ text, toolCalls? }`.
 Env vars: `AI_AGENT_GOOGLE_KEYS` / `AI_AGENT_DEEPSEEK_KEYS` / `AI_AGENT_CLAUDE_KEYS` (comma-separated),
 optional `AI_AGENT_PROVIDER`, optional `AI_AGENT_MODEL` (must be in `ALLOWED_MODELS`),
-plus `JWT_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`.
+plus `JWT_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 npm: `jsonwebtoken`, `mammoth`, `@supabase/supabase-js`.
 
 The client gets its identity token from `getUserToken()` (`shared/userLevel.js` → `/api/user-profile?action=identify`) and admins via `shared/adminAuth.js`.

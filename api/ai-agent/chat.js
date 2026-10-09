@@ -29,7 +29,7 @@
 //   AI_AGENT_MODEL     (optional) a model id from ALLOWED_MODELS in
 //       _providerClients.js. When unset (or not on that allowlist), the
 //       provider's own lightest default is used.
-//   SUPABASE_URL and SUPABASE_SERVICE_KEY are required for identity/quota
+//   NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are required for identity/quota
 //       checks and loading the published portfolio context.
 //
 // ATTACHMENTS: max 1 per message, 4MB decoded (see MAX_ATTACHMENT_BYTES —
@@ -255,12 +255,12 @@ const DEFAULT_ALLOWED_ORIGINS = [
 let cachedSupabaseClient = null;
 function getSupabaseClient() {
   if (!cachedSupabaseClient) {
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-      throw new Error("SUPABASE_URL and SUPABASE_SERVICE_KEY are required");
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+      throw new Error("NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are required");
     }
     cachedSupabaseClient = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY,
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     );
   }
   return cachedSupabaseClient;
@@ -283,7 +283,7 @@ function applyCors(req, res) {
 }
 
 function hashQuotaSubject(kind, value) {
-  const secret = process.env.AI_AGENT_RATE_LIMIT_SECRET || process.env.SUPABASE_SERVICE_KEY;
+  const secret = process.env.AI_AGENT_RATE_LIMIT_SECRET || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!secret) throw new Error("AI quota hashing is not configured");
   return createHmac("sha256", secret).update(`${kind}:${value}`).digest("hex");
 }
@@ -407,16 +407,16 @@ export default async function handler(req, res) {
   if (
     !provider
     || !keys.length
-    || !process.env.SUPABASE_URL
-    || !process.env.SUPABASE_SERVICE_KEY
+    || !process.env.NEXT_PUBLIC_SUPABASE_URL
+    || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
     console.error("[ai-agent/chat] server configuration is incomplete", {
       providerConfigured: Boolean(provider && keys.length),
-      supabaseConfigured: Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY),
+      supabaseConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),
     });
     return res.status(503).json({
       code: "AI_SERVICE_NOT_CONFIGURED",
-      error: "The AI service is not configured on the server. Configure an AI_AGENT_* provider key, SUPABASE_URL, and SUPABASE_SERVICE_KEY in the deployment environment.",
+      error: "The AI service is not configured on the server. Configure an AI_AGENT_* provider key, NEXT_PUBLIC_SUPABASE_URL, and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in the deployment environment.",
     });
   }
 

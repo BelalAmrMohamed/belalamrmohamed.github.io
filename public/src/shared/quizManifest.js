@@ -24,7 +24,7 @@
 
 import { generateQuizId } from "./quizId.js";
 import { ensureSharedSupabaseClient } from "./supabaseClientRegistry.js";
-import { SUPABASE_URL } from "./public-config.js";
+import { NEXT_PUBLIC_SUPABASE_URL } from "./public-config.js";
 
 let cached = null;
 
@@ -90,7 +90,7 @@ function saveManifestCache({ quizzes, lessons, courses, folders }) {
       // provide an honest course-level lesson-progress total, so let it miss
       // the cache and fetch a current catalog instead.
       v: 2,
-      project: SUPABASE_URL,
+      project: NEXT_PUBLIC_SUPABASE_URL,
       savedAt: new Date().toISOString(),
       quizzes: slimQuizzes,
       lessons,
@@ -119,7 +119,7 @@ function tryRestoreManifestCache() {
     const raw = localStorage.getItem(MANIFEST_CACHE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (!data || data.v !== 2 || data.project !== SUPABASE_URL) return null;
+    if (!data || data.v !== 2 || data.project !== NEXT_PUBLIC_SUPABASE_URL) return null;
     if (
       !Array.isArray(data.courses) ||
       !Array.isArray(data.folders) ||

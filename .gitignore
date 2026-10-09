@@ -2,5 +2,6 @@ belal-amr-mohamed.zip
 node_modules/
 .vercel
 .env*
+!.env.example
 
 docs/secret/ 

@@ -31,8 +31,8 @@ export async function ensureSharedSupabaseClient() {
   creationPromise = (async () => {
     if (typeof window !== "undefined" && window.supabase) {
       try {
-        const { SUPABASE_URL, SUPABASE_ANON_KEY } = await import("./public-config.js");
-        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+        const { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_ANON_KEY } = await import("./public-config.js");
+        if (NEXT_PUBLIC_SUPABASE_URL && SUPABASE_ANON_KEY) {
           // autoRefreshToken disabled, persistSession left ON:
           //  - persistSession must stay true — sign-in.js's OAuth/OTP flow
           //    and oauth-callback.html both rely on this same shared client
@@ -51,7 +51,7 @@ export async function ensureSharedSupabaseClient() {
           //    getSession()/signIn(), which happens explicitly and rarely
           //    enough not to matter.
           sharedSupabaseClient = window.supabase.createClient(
-            SUPABASE_URL,
+            NEXT_PUBLIC_SUPABASE_URL,
             SUPABASE_ANON_KEY,
             {
               auth: {
