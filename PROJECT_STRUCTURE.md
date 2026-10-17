@@ -16,8 +16,8 @@ Belal Amr Mohamed/
 ├── README.md
 ├── skills-lock.json
 ├── vercel.json
-├── Animated UI Components/ [838.6 KB, 20031 LOC]
-│   ├── Professional-AI-Agent-Template.md/ [815.22 KB, 19422 LOC]
+├── Animated UI Components/ [841.67 KB, 20031 LOC]
+│   ├── Professional-AI-Agent-Template.md/ [818.3 KB, 19422 LOC]
 │   │   ├── api/ [63.71 KB, 1352 LOC]
 │   │   │   ├── ai-agent/ [58.67 KB, 1217 LOC]
 │   │   │   │   ├── _keyPool.js
@@ -27,16 +27,16 @@ Belal Amr Mohamed/
 │   │   │   │
 │   │   │   └── _middleware.js
 │   │   │
-│   │   ├── public/ [745.51 KB, 17958 LOC]
+│   │   ├── public/ [748.54 KB, 17958 LOC]
 │   │   │   ├── assets/ [26.59 KB, 0 LOC]
 │   │   │   │   └── images/ [26.59 KB, 0 LOC]
 │   │   │   │       └── ... (max depth reached)
 │   │   │   │
-│   │   │   └── src/ [718.93 KB, 17958 LOC]
-│   │   │       ├── components/ [462.7 KB, 11499 LOC]
+│   │   │   └── src/ [721.95 KB, 17958 LOC]
+│   │   │       ├── components/ [465.59 KB, 11499 LOC]
 │   │   │       │   └── ... (max depth reached)
 │   │   │       │
-│   │   │       ├── features/ [38.88 KB, 955 LOC]
+│   │   │       ├── features/ [39.02 KB, 955 LOC]
 │   │   │       │   └── ... (max depth reached)
 │   │   │       │
 │   │   │       ├── shared/ [199.03 KB, 4964 LOC]
@@ -127,9 +127,9 @@ Belal Amr Mohamed/
 │   │   ├── screenshot-desktop.png
 │   │   └── screenshot-mobile.png
 │   │
-│   ├── src/ [706.14 KB, 17711 LOC]
-│   │   ├── components/ [467.94 KB, 11790 LOC]
-│   │   │   ├── ai-agent/ [394.48 KB, 9403 LOC]
+│   ├── src/ [709.91 KB, 17711 LOC]
+│   │   ├── components/ [471.57 KB, 11790 LOC]
+│   │   │   ├── ai-agent/ [398.12 KB, 9403 LOC]
 │   │   │   │   ├── ai-agent-actions.js
 │   │   │   │   ├── ai-agent-attach-launcher.js
 │   │   │   │   ├── ai-agent-chat.js
@@ -154,8 +154,8 @@ Belal Amr Mohamed/
 │   │   │       ├── telegram-bot-card.css
 │   │   │       └── telegram-bot-card.js
 │   │   │
-│   │   ├── features/ [38.88 KB, 955 LOC]
-│   │   │   ├── home/ [15.54 KB, 376 LOC]
+│   │   ├── features/ [39.02 KB, 955 LOC]
+│   │   │   ├── home/ [15.68 KB, 376 LOC]
 │   │   │   │   ├── quiz-data-loader.js
 │   │   │   │   ├── quiz-schema.js
 │   │   │   │   └── user-quizzes-folders.js
@@ -199,10 +199,11 @@ Belal Amr Mohamed/
 │   ├── release.js
 │   └── seo-check.mjs
 │
-└── supabase/ [27.81 KB, 785 LOC]
-    ├── migrations/ [9.97 KB, 297 LOC]
+└── supabase/ [28.14 KB, 791 LOC]
+    ├── migrations/ [10.3 KB, 303 LOC]
     │   ├── 20261008145231_create_portfolio_admin_schema.sql
-    │   └── 20261008145317_add_ai_agent_usage_quota.sql
+    │   ├── 20261008145317_add_ai_agent_usage_quota.sql
+    │   └── 20261017235500_grant_service_role_read_portfolio_tables.sql
     │
     ├── config.toml
     ├── schema.sql
@@ -219,7 +220,7 @@ Belal Amr Mohamed/
 | `Animated UI Components` | 20031 |
 | `api` | 1227 |
 | `scripts` | 1103 |
-| `supabase` | 785 |
+| `supabase` | 791 |
 | `(root)` | 392 |
 | `docs` | 50 |
 
@@ -242,18 +243,18 @@ Belal Amr Mohamed/
 
 | Extension | Files | Lines of Code | Size |
 |-----------|-------|---------------|------------|
-| .js | 82 | 32046 | 1.56 MB |
+| .js | 82 | 32046 | 1.57 MB |
 | .css | 10 | 13719 | 324.25 KB |
-| .md | 5 | 1015 | 42.39 KB |
-| .sql | 5 | 429 | 14.91 KB |
-| .json | 4 | 60 | 15.64 KB |
+| .sql | 6 | 435 | 15.24 KB |
+| .md | 5 | 1015 | 42.71 KB |
+| .json | 4 | 60 | 15.65 KB |
 | .html | 4 | 1716 | 65.75 KB |
 | .txt | 2 | 33 | 1.8 KB |
 | .webmanifest | 1 | 84 | 1.91 KB |
 | .xml | 1 | 9 | 280 B |
 | .mjs | 1 | 362 | 14.02 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **116** | **49888** | **2.05 MB** |
+| **Total** | **117** | **49894** | **2.05 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -265,5 +266,5 @@ Belal Amr Mohamed/
 | .pdf | 1 | 100.13 KB |
 | **Total** | **43** | **2.05 MB** |
 
-**Grand Total Files:** 159  
-**Total Repository Size:** 4.09 MB
+**Grand Total Files:** 160  
+**Total Repository Size:** 4.1 MB
