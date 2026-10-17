@@ -53,8 +53,8 @@ Belal Amr Mohamed/
 │   │
 │   └── sign-in-page-template.md
 │
-├── api/ [57.87 KB, 1226 LOC]
-│   └── ai-agent/ [57.87 KB, 1226 LOC]
+├── api/ [57.85 KB, 1227 LOC]
+│   └── ai-agent/ [57.85 KB, 1227 LOC]
 │       ├── _keyPool.js
 │       ├── _providerClients.js
 │       ├── _tools.js
@@ -217,10 +217,10 @@ Belal Amr Mohamed/
 |-----------|---------------|
 | `public` | 26300 |
 | `Animated UI Components` | 20031 |
-| `api` | 1226 |
+| `api` | 1227 |
 | `scripts` | 1103 |
 | `supabase` | 785 |
-| `(root)` | 391 |
+| `(root)` | 392 |
 | `docs` | 50 |
 
 ### Top 10 Largest Code Files
@@ -242,9 +242,9 @@ Belal Amr Mohamed/
 
 | Extension | Files | Lines of Code | Size |
 |-----------|-------|---------------|------------|
-| .js | 82 | 32045 | 1.56 MB |
+| .js | 82 | 32046 | 1.56 MB |
 | .css | 10 | 13719 | 324.25 KB |
-| .md | 5 | 1014 | 42.36 KB |
+| .md | 5 | 1015 | 42.39 KB |
 | .sql | 5 | 429 | 14.91 KB |
 | .json | 4 | 60 | 15.64 KB |
 | .html | 4 | 1716 | 65.75 KB |
@@ -253,7 +253,7 @@ Belal Amr Mohamed/
 | .xml | 1 | 9 | 280 B |
 | .mjs | 1 | 362 | 14.02 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **116** | **49886** | **2.05 MB** |
+| **Total** | **116** | **49888** | **2.05 MB** |
 
 ### Binary / Media Files (Physical Size)
 
