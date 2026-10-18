@@ -250,7 +250,7 @@ Belal Amr Mohamed/
 | `supabase` | 1533 |
 | `api` | 1248 |
 | `scripts` | 1103 |
-| `(root)` | 393 |
+| `(root)` | 422 |
 | `docs` | 68 |
 
 ### Top 10 Largest Code Files
@@ -275,7 +275,7 @@ Belal Amr Mohamed/
 | .js | 95 | 34332 | 1.66 MB |
 | .sql | 16 | 1163 | 47.14 KB |
 | .css | 10 | 13851 | 343.1 KB |
-| .md | 7 | 1048 | 46.07 KB |
+| .md | 7 | 1077 | 47.29 KB |
 | .json | 4 | 60 | 15.65 KB |
 | .html | 4 | 1936 | 79 KB |
 | .txt | 2 | 33 | 1.8 KB |
@@ -283,7 +283,7 @@ Belal Amr Mohamed/
 | .xml | 1 | 9 | 280 B |
 | .mjs | 1 | 362 | 14.02 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **142** | **53293** | **2.21 MB** |
+| **Total** | **142** | **53322** | **2.21 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -296,4 +296,4 @@ Belal Amr Mohamed/
 | **Total** | **43** | **2.05 MB** |
 
 **Grand Total Files:** 185  
-**Total Repository Size:** 4.25 MB
+**Total Repository Size:** 4.26 MB
