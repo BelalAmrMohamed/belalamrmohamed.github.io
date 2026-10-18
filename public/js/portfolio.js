@@ -136,11 +136,42 @@
     }
   }
 
+  // Settings that the dashboard can override on the page. Each one only takes
+  // effect when it has a value; otherwise the text/link written in index.html
+  // stays exactly as it is.
+  const SETTING_KEYS = [
+    'site_title', 'site_tagline', 'about_bio',
+    'contact_email', 'contact_github', 'contact_linkedin', 'contact_telegram', 'cv_url',
+  ];
+  const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+  function applySettingHooks(settings) {
+    // data-setting="key": replace the element's text.
+    document.querySelectorAll('[data-setting]').forEach((element) => {
+      const value = (settings[element.dataset.setting] || '').trim();
+      if (!value) return;
+      element.textContent = value;
+      if (element.dataset.setting === 'about_bio') element.style.whiteSpace = 'pre-line';
+    });
+    // data-setting-href="key": replace the link target (validated).
+    document.querySelectorAll('[data-setting-href]').forEach((element) => {
+      const key = element.dataset.settingHref;
+      const value = (settings[key] || '').trim();
+      if (!value) return;
+      if (key === 'contact_email') {
+        if (EMAIL_PATTERN.test(value)) element.href = `mailto:${value}`;
+        return;
+      }
+      const safe = safeLink(value, key === 'cv_url');
+      if (safe) element.href = safe;
+    });
+  }
+
   async function loadPublicSettings(client) {
     const { data, error } = await client
       .from('portfolio_settings')
       .select('key, value')
-      .in('key', ['site_title', 'site_tagline']);
+      .in('key', SETTING_KEYS);
     if (error) throw error;
 
     const settings = Object.fromEntries((data || []).map(({ key, value }) => [key, value]));
@@ -157,6 +188,7 @@
         element.textContent = settings.site_tagline;
       });
     }
+    applySettingHooks(settings);
   }
 
   async function loadPortfolio() {
@@ -176,7 +208,10 @@
           .neq('status', 'archived')
           .order('sort_order', { ascending: true })
           .order('created_at', { ascending: false }),
-        loadPublicSettings(client),
+        // Settings are cosmetic: if they fail, the projects must still render.
+        loadPublicSettings(client).catch((settingsError) => {
+          console.warn('Public settings failed to load', settingsError);
+        }),
       ]);
       if (error) throw error;
       window.BELAL_PORTFOLIO_PROJECTS = data || [];

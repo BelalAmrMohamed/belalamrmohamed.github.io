@@ -1,380 +1,331 @@
-const config = window.BELAL_PORTFOLIO_CONFIG || {};
-const supabaseLibrary = window.supabase;
-const authView = document.querySelector('.login');
-const dashboardView = document.getElementById('dashboardView');
-const authStatus = document.getElementById('auth-status');
-const dashboardStatus = document.getElementById('dashboardStatus');
-const loginForm = document.getElementById('email-form');
-const projectForm = document.getElementById('projectForm');
-const settingsForm = document.getElementById('settingsForm');
-const projectList = document.getElementById('projectList');
-const projectIdField = document.getElementById('projectId');
-const userEmail = document.getElementById('userEmail');
-const supabaseClient = supabaseLibrary && config.supabaseUrl && config.publishableKey
-  ? supabaseLibrary.createClient(config.supabaseUrl, config.publishableKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    })
-  : null;
+// Portfolio dashboard entry point: sign-in, the server-side admin check,
+// tab navigation, session-expiry handling and wiring of the feature modules.
+//
+// SECURITY NOTE: nothing in the browser decides who is an admin. After sign-in
+// the page asks the database (portfolio_admin_status RPC); every read/write is
+// then enforced again by Row Level Security and admin-only RPCs. If this file
+// were edited in dev tools, a non-admin would still be denied by Postgres.
 
-let projects = [];
+import { $, $$ } from './admin/dom.js';
+import { client, config, sessionEvents, isMissingFunction } from './admin/api.js';
+import { toast, confirmDiscard, anyDirty } from './admin/ui.js';
+import { initEditor } from './admin/project-editor.js';
+import { initProjects } from './admin/projects.js';
+import { initSettings } from './admin/settings.js';
+import { initAiPanel } from './admin/ai-panel.js';
+import { initAdmins } from './admin/admins.js';
+import { initActivity } from './admin/activity.js';
+
+const authView = $('.login');
+const dashboardView = $('#dashboardView');
+const authStatus = $('#auth-status');
+const TABS = ['projects', 'settings', 'ai', 'admins', 'activity'];
+const TAB_LABEL = { projects: 'Projects', settings: 'Settings', ai: 'AI assistant', admins: 'Admins', activity: 'Activity' };
+
 let activeUserId = null;
+let verifyingUserId = null;
+let activeTab = null;
+let userInitiatedSignOut = false;
+let expiredShown = false;
+let modules = null;
 
-function showStatus(element, message, kind = 'info') {
-  element.textContent = message;
-  element.dataset.kind = kind;
+function showAuthStatus(message, kind = 'info') {
+  authStatus.textContent = message;
+  authStatus.dataset.kind = kind;
 }
 
 function toggleBusy(isBusy) {
-  document.querySelectorAll('#email-form button, #google-btn, #github-btn').forEach((button) => {
-    button.disabled = isBusy;
-  });
+  $$('#email-form button, #google-btn, #github-btn').forEach((button) => { button.disabled = isBusy; });
 }
 
 function setView(isAuthenticated) {
   authView.classList.toggle('hidden', isAuthenticated);
   dashboardView.classList.toggle('hidden', !isAuthenticated);
+  document.title = isAuthenticated ? 'Dashboard | Belal Amr' : 'Sign in | Belal Amr';
 }
 
-function createProjectCard(project) {
-  const item = document.createElement('li');
-  item.className = 'project-item';
-
-  const header = document.createElement('div');
-  header.className = 'project-item-header';
-  const title = document.createElement('strong');
-  title.textContent = project.title;
-  const category = document.createElement('span');
-  category.className = 'project-tag';
-  category.textContent = project.category || 'Project';
-  header.append(title, category);
-
-  const summary = document.createElement('p');
-  summary.textContent = project.summary || 'No description yet.';
-
-  const meta = document.createElement('div');
-  meta.className = 'project-item-meta';
-  const status = document.createElement('span');
-  status.className = 'project-tag';
-  status.textContent = project.status;
-  const published = document.createElement('span');
-  published.className = 'project-tag';
-  published.textContent = project.is_published ? 'Published' : 'Draft';
-  meta.append(status, published);
-
-  const actions = document.createElement('div');
-  actions.className = 'project-item-actions';
-  const editButton = document.createElement('button');
-  editButton.className = 'btn btn-outline';
-  editButton.type = 'button';
-  editButton.textContent = 'Edit';
-  editButton.addEventListener('click', () => populateProjectForm(project));
-
-  const deleteButton = document.createElement('button');
-  deleteButton.className = 'btn btn-outline delete-project';
-  deleteButton.type = 'button';
-  deleteButton.textContent = 'Delete';
-  deleteButton.addEventListener('click', () => deleteProject(project));
-  actions.append(editButton, deleteButton);
-
-  item.append(header, summary, meta, actions);
-  return item;
-}
-
-function renderProjects() {
-  document.getElementById('totalProjects').textContent = String(projects.length);
-  document.getElementById('featuredProjects').textContent = String(projects.filter((project) => project.featured).length);
-  document.getElementById('publishedProjects').textContent = String(projects.filter((project) => project.is_published).length);
-
-  projectList.replaceChildren();
-  if (!projects.length) {
-    const empty = document.createElement('li');
-    empty.className = 'project-empty';
-    empty.textContent = 'No projects yet. Add one using the project editor.';
-    projectList.appendChild(empty);
-    return;
-  }
-
-  projects.forEach((project) => projectList.appendChild(createProjectCard(project)));
-}
-
-function resetProjectForm() {
-  projectForm.reset();
-  projectIdField.value = '';
-  document.getElementById('projectPublished').checked = true;
-  document.getElementById('formTitle').textContent = 'Add project';
-  document.getElementById('saveProjectBtn').textContent = 'Save project';
-}
-
-function populateProjectForm(project) {
-  projectIdField.value = project.id;
-  document.getElementById('projectTitle').value = project.title || '';
-  document.getElementById('projectCategory').value = project.category || '';
-  document.getElementById('projectSummary').value = project.summary || '';
-  document.getElementById('projectImage').value = project.image_url || '';
-  document.getElementById('projectUrl').value = project.project_url || '';
-  document.getElementById('projectGithub').value = project.github_url || '';
-  document.getElementById('projectStatus').value = project.status || 'active';
-  document.getElementById('projectPublished').checked = Boolean(project.is_published);
-  document.getElementById('formTitle').textContent = 'Edit project';
-  document.getElementById('saveProjectBtn').textContent = 'Update project';
-  document.getElementById('projectTitle').focus();
-}
-
-async function loadProjects() {
-  showStatus(dashboardStatus, 'Loading portfolio data…');
-  try {
-    const { data, error } = await supabaseClient
-      .from('portfolio_projects')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    projects = data || [];
-    renderProjects();
-    showStatus(dashboardStatus, '');
-  } catch (error) {
-    console.error('Project query failed', error);
-    showStatus(dashboardStatus, `Could not load projects: ${error.message || 'Unexpected error.'}`, 'error');
-  }
-}
-
-function getProjectRecord() {
-  const status = document.getElementById('projectStatus').value;
+// ---- feature modules ---------------------------------------------------------------------------
+function buildModules() {
+  let projectsApi = null;
+  const editor = initEditor({
+    getProjects: () => projectsApi?.getProjects() || [],
+    onSaved: () => projectsApi.load(),
+    showList: () => { $('#projectEditorView').hidden = true; $('#projectsListView').hidden = false; $('#h-projects').focus(); },
+    showEditor: () => { $('#projectsListView').hidden = true; $('#projectEditorView').hidden = false; },
+  });
+  projectsApi = initProjects({ editor, onUpgradeNeeded: () => { $('#upgradeBanner').hidden = false; } });
   return {
-    title: document.getElementById('projectTitle').value.trim(),
-    category: document.getElementById('projectCategory').value.trim(),
-    summary: document.getElementById('projectSummary').value.trim(),
-    image_url: document.getElementById('projectImage').value.trim() || null,
-    project_url: document.getElementById('projectUrl').value.trim() || null,
-    github_url: document.getElementById('projectGithub').value.trim() || null,
-    status,
-    featured: status === 'featured',
-    is_published: document.getElementById('projectPublished').checked,
+    editor,
+    projects: projectsApi,
+    settings: initSettings(),
+    ai: initAiPanel({ goToTab: (name) => switchTab(name) }),
+    admins: initAdmins(),
+    activity: initActivity(),
   };
 }
 
-async function saveProject(event) {
-  event.preventDefault();
-  const record = getProjectRecord();
-  const projectId = projectIdField.value;
+// ---- tabs ------------------------------------------------------------------------------------------
+async function switchTab(name, { fromHash = false } = {}) {
+  if (!TABS.includes(name)) name = 'projects';
+  if (name === activeTab) return;
 
-  if (!record.title || !record.category) {
-    showStatus(dashboardStatus, 'Project title and category are required.', 'error');
+  if (anyDirty() && !(await confirmDiscard())) {
+    if (fromHash && activeTab) history.replaceState(null, '', `#${activeTab}`);
     return;
   }
+  // Leaving the project editor discards it (the user just agreed, or nothing was dirty).
+  if (modules.editor.isOpen()) await modules.editor.close({ force: true });
 
-  const saveButton = document.getElementById('saveProjectBtn');
-  saveButton.disabled = true;
-  try {
-    const query = projectId
-      ? supabaseClient.from('portfolio_projects').update(record).eq('id', projectId)
-      : supabaseClient.from('portfolio_projects').insert(record);
-    const { error } = await query.select('id').single();
-    if (error) throw error;
+  activeTab = name;
+  $$('[data-panel]').forEach((panel) => { panel.hidden = panel.dataset.panel !== name; });
+  $$('.nav-btn').forEach((button) => {
+    if (button.dataset.tab === name) button.setAttribute('aria-current', 'page');
+    else button.removeAttribute('aria-current');
+  });
+  if (location.hash !== `#${name}`) history.replaceState(null, '', `#${name}`);
+  document.title = `${TAB_LABEL[name]} | Dashboard | Belal Amr`;
+  $(`#h-${name}`)?.focus({ preventScroll: true });
 
-    resetProjectForm();
-    showStatus(dashboardStatus, projectId ? 'Project updated.' : 'Project created.', 'success');
-    await loadProjects();
-  } catch (error) {
-    console.error('Project save failed', error);
-    showStatus(dashboardStatus, `Could not save the project: ${error.message}`, 'error');
-  } finally {
-    saveButton.disabled = false;
-  }
+  if (name === 'settings') modules.settings.load({ quiet: modules.settings.isLoaded() });
+  else if (name === 'ai') modules.ai.load();
+  else if (name === 'admins') modules.admins.load();
+  else if (name === 'activity') modules.activity.load();
+  else if (name === 'projects' && modules.projects.isReady()) modules.projects.load();
 }
 
-async function deleteProject(project) {
-  if (!window.confirm(`Delete “${project.title}”? This cannot be undone.`)) return;
+// ---- sign-in state --------------------------------------------------------------------------------------
+/** Asks the database whether this account is an admin. Never trusts the browser. */
+async function checkAdmin(user) {
+  const { data, error } = await client.rpc('portfolio_admin_status');
+  if (!error) return { isAdmin: Boolean(data?.[0]?.is_admin), legacy: false };
 
-  try {
-    const { error } = await supabaseClient
-      .from('portfolio_projects')
-      .delete()
-      .eq('id', project.id);
-    if (error) throw error;
-
-    if (projectIdField.value === project.id) resetProjectForm();
-    showStatus(dashboardStatus, 'Project deleted.', 'success');
-    await loadProjects();
-  } catch (error) {
-    console.error('Project delete failed', error);
-    showStatus(dashboardStatus, `Could not delete the project: ${error.message}`, 'error');
+  if (isMissingFunction(error)) {
+    // Migrations not applied yet: fall back to the old single-email gate so the
+    // dashboard still opens. Row Level Security still protects every write.
+    const allowed = Boolean(config.adminEmail) && user.email?.toLowerCase() === config.adminEmail.toLowerCase();
+    return { isAdmin: allowed, legacy: true };
   }
-}
-
-async function loadSettings() {
-  try {
-    const { data, error } = await supabaseClient
-      .from('portfolio_settings')
-      .select('key, value')
-      .in('key', ['site_title', 'site_tagline']);
-
-    if (error) throw error;
-    const settings = Object.fromEntries((data || []).map((setting) => [setting.key, setting.value]));
-    document.getElementById('siteTitle').value = settings.site_title || '';
-    document.getElementById('siteTagline').value = settings.site_tagline || '';
-  } catch (error) {
-    console.error('Site settings query failed', error);
-    showStatus(dashboardStatus, `Could not load site settings: ${error.message || 'Unexpected error.'}`, 'error');
-  }
-}
-
-async function saveSettings(event) {
-  event.preventDefault();
-  const settings = [
-    { key: 'site_title', value: document.getElementById('siteTitle').value.trim(), is_public: true },
-    { key: 'site_tagline', value: document.getElementById('siteTagline').value.trim(), is_public: true },
-  ];
-
-  try {
-    const { error } = await supabaseClient
-      .from('portfolio_settings')
-      .upsert(settings, { onConflict: 'key' });
-    if (error) throw error;
-    showStatus(dashboardStatus, 'Public site details saved.', 'success');
-  } catch (error) {
-    console.error('Site settings save failed', error);
-    showStatus(dashboardStatus, `Could not save site settings: ${error.message}`, 'error');
-  }
+  throw error;
 }
 
 async function acceptSessionUser(user) {
   if (!user) {
+    const hadSession = activeUserId !== null;
     activeUserId = null;
+    activeTab = null;
     setView(false);
+    if (hadSession && !userInitiatedSignOut) {
+      modules?.editor.stashDraft();
+      showAuthStatus('Your session ended. Please sign in again.', 'error');
+    }
+    userInitiatedSignOut = false;
     return;
   }
 
-  if (!config.adminEmail || user.email?.toLowerCase() !== config.adminEmail.toLowerCase()) {
+  if (activeUserId === user.id || verifyingUserId === user.id) return; // refresh / duplicate event
+
+  verifyingUserId = user.id;
+  let verdict;
+  try {
+    verdict = await checkAdmin(user);
+  } finally {
+    verifyingUserId = null;
+  }
+  const { isAdmin, legacy } = verdict;
+  if (!isAdmin) {
     activeUserId = null;
     setView(false);
-    showStatus(authStatus, 'This account is not authorized to manage this portfolio.', 'error');
-    const { error } = await supabaseClient.auth.signOut();
+    showAuthStatus('This account is not authorized to manage this portfolio.', 'error');
+    const { error } = await client.auth.signOut();
     if (error) {
       console.error('Could not clear the unauthorized session', error);
-      showStatus(authStatus, 'This account is not authorized, and its session could not be cleared. Sign out manually.', 'error');
+      showAuthStatus('This account is not authorized, and its session could not be cleared. Sign out manually.', 'error');
     }
     return;
   }
 
-  if (activeUserId === user.id) return;
   activeUserId = user.id;
-  userEmail.textContent = user.email;
+  expiredShown = false;
+  showAuthStatus('');
+  $('#userEmail').textContent = user.email || '';
+  $('#upgradeBanner').hidden = !legacy;
   setView(true);
-  await Promise.all([loadProjects(), loadSettings()]);
+
+  modules ||= buildModules();
+  const startTab = location.hash.replace('#', '');
+  activeTab = null;
+  await switchTab(TABS.includes(startTab) ? startTab : 'projects');
+  await modules.projects.load();
+  modules.editor.offerDraft();
 }
 
+// ---- auth actions -------------------------------------------------------------------------------------------
 async function signInWithPassword(event) {
   event.preventDefault();
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
+  const email = $('#email').value.trim();
+  const password = $('#password').value;
   toggleBusy(true);
-  showStatus(authStatus, 'Signing in…');
-
+  showAuthStatus('Signing in…');
   try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     if (!data.user) throw new Error('Supabase did not return a signed-in user.');
   } catch (error) {
     console.error('Email sign-in failed', error);
-    showStatus(authStatus, error.message || 'Sign-in failed.', 'error');
+    showAuthStatus(error.message || 'Sign-in failed.', 'error');
   } finally {
     toggleBusy(false);
   }
 }
 
 async function signInWithProvider(provider) {
-  if (!supabaseClient) return;
   toggleBusy(true);
-  showStatus(authStatus, `Redirecting to ${provider === 'google' ? 'Google' : 'GitHub'}…`);
-
+  showAuthStatus(`Redirecting to ${provider === 'google' ? 'Google' : 'GitHub'}…`);
   try {
-    const { error } = await supabaseClient.auth.signInWithOAuth({
+    const { error } = await client.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/admin` },
     });
     if (error) throw error;
   } catch (error) {
     console.error(`${provider} OAuth sign-in failed`, error);
-    showStatus(authStatus, error.message || 'OAuth sign-in failed.', 'error');
+    showAuthStatus(error.message || 'OAuth sign-in failed.', 'error');
     toggleBusy(false);
   }
 }
 
 async function requestPasswordReset(event) {
   event.preventDefault();
-  const email = document.getElementById('email').value.trim();
+  const email = $('#email').value.trim();
   if (!email) {
-    showStatus(authStatus, 'Enter your email address first.', 'error');
-    document.getElementById('email').focus();
+    showAuthStatus('Enter your email address first.', 'error');
+    $('#email').focus();
     return;
   }
-
   try {
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/admin`,
-    });
+    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/admin` });
     if (error) throw error;
-    showStatus(authStatus, 'If the address belongs to an account, a password reset link has been sent.', 'success');
+    showAuthStatus('If the address belongs to an account, a password reset link has been sent.', 'success');
   } catch (error) {
     console.error('Password reset request failed', error);
-    showStatus(authStatus, error.message || 'Password reset request failed.', 'error');
+    showAuthStatus(error.message || 'Password reset request failed.', 'error');
   }
 }
 
 async function signOut() {
+  if (anyDirty() && !(await confirmDiscard())) return;
+  userInitiatedSignOut = true;
   try {
-    const { error } = await supabaseClient.auth.signOut();
+    const { error } = await client.auth.signOut();
     if (error) throw error;
+    activeUserId = null;
     setView(false);
-    showStatus(authStatus, 'You are signed out.', 'success');
+    showAuthStatus('You are signed out.', 'success');
   } catch (error) {
+    userInitiatedSignOut = false;
     console.error('Sign-out failed', error);
-    showStatus(dashboardStatus, error.message || 'Sign-out failed.', 'error');
+    toast(error.message || 'Sign-out failed.', { kind: 'error' });
   }
 }
 
+// ---- session expiry + password recovery -------------------------------------------------------------------------
+function showExpiredDialog() {
+  if (expiredShown || activeUserId === null) return;
+  expiredShown = true;
+  modules?.editor.stashDraft();
+  const dialog = $('#expiredDialog');
+  dialog.addEventListener('cancel', (event) => event.preventDefault()); // must choose
+  dialog.showModal();
+  $('#expiredBtn').focus();
+}
+
+async function finishExpiry() {
+  $('#expiredDialog').close();
+  userInitiatedSignOut = true;
+  await client.auth.signOut({ scope: 'local' }).catch(() => {});
+  activeUserId = null;
+  setView(false);
+  showAuthStatus('Please sign in again to continue.', 'error');
+}
+
+function showPasswordDialog() {
+  const dialog = $('#passwordDialog');
+  if (!dialog.open) dialog.showModal();
+  $('#newPassword').focus();
+}
+
+function wirePasswordDialog() {
+  const dialog = $('#passwordDialog');
+  const status = $('#pwStatus');
+  $('#pwSkip').addEventListener('click', () => dialog.close());
+  $('#passwordForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const password = $('#newPassword').value;
+    if (password.length < 8) {
+      status.textContent = 'Use at least 8 characters.';
+      status.hidden = false;
+      return;
+    }
+    const { error } = await client.auth.updateUser({ password });
+    if (error) {
+      status.textContent = error.message;
+      status.hidden = false;
+      return;
+    }
+    status.hidden = true;
+    $('#newPassword').value = '';
+    dialog.close();
+    toast('Password updated.', { kind: 'success' });
+  });
+}
+
+// ---- boot -------------------------------------------------------------------------------------------------------------
 function initialize() {
-  if (!supabaseClient) {
-    showStatus(authStatus, 'Supabase configuration is missing. Authentication is unavailable.', 'error');
+  if (!client) {
+    showAuthStatus('Supabase configuration is missing. Authentication is unavailable.', 'error');
     toggleBusy(true);
     return;
   }
 
-  loginForm.addEventListener('submit', signInWithPassword);
-  document.getElementById('google-btn').addEventListener('click', () => signInWithProvider('google'));
-  document.getElementById('github-btn').addEventListener('click', () => signInWithProvider('github'));
-  document.getElementById('reset-password').addEventListener('click', requestPasswordReset);
-  document.getElementById('signOutBtn').addEventListener('click', signOut);
-  document.getElementById('refreshProjectsBtn').addEventListener('click', loadProjects);
-  document.getElementById('resetProjectForm').addEventListener('click', resetProjectForm);
-  projectForm.addEventListener('submit', saveProject);
-  settingsForm.addEventListener('submit', saveSettings);
+  $('#email-form').addEventListener('submit', signInWithPassword);
+  $('#google-btn').addEventListener('click', () => signInWithProvider('google'));
+  $('#github-btn').addEventListener('click', () => signInWithProvider('github'));
+  $('#reset-password').addEventListener('click', requestPasswordReset);
+  $('#signOutBtn').addEventListener('click', signOut);
+  $('#expiredBtn').addEventListener('click', finishExpiry);
+  wirePasswordDialog();
+  sessionEvents.addEventListener('expired', showExpiredDialog);
 
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
+  $$('.nav-btn').forEach((button) => button.addEventListener('click', () => switchTab(button.dataset.tab)));
+  window.addEventListener('hashchange', () => {
+    if (activeUserId) switchTab(location.hash.replace('#', ''), { fromHash: true });
+  });
+
+  const handleSession = (session) => {
+    void acceptSessionUser(session?.user || null).catch((error) => {
+      console.error('Could not process the Supabase auth state', error);
+      activeUserId = null;
+      setView(false);
+      showAuthStatus('Could not verify your account. Please sign in again.', 'error');
+    });
+  };
+
+  client.auth.onAuthStateChange((event, session) => {
+    // Never await Supabase calls inside this callback (deadlock risk): defer.
     setTimeout(() => {
-      void acceptSessionUser(session?.user || null).catch((error) => {
-        console.error('Could not process the Supabase auth state', error);
-        activeUserId = null;
-        setView(false);
-        showStatus(authStatus, 'Could not verify your account. Please sign in again.', 'error');
-      });
+      if (event === 'PASSWORD_RECOVERY') showPasswordDialog();
+      handleSession(session);
     }, 0);
   });
 
-  supabaseClient.auth.getSession()
+  client.auth.getSession()
     .then(({ data, error }) => {
       if (error) throw error;
-      return acceptSessionUser(data.session?.user || null);
+      handleSession(data.session);
     })
     .catch((error) => {
       console.error('Could not restore the Supabase session', error);
-      showStatus(authStatus, 'Could not restore your session. Please sign in again.', 'error');
+      showAuthStatus('Could not restore your session. Please sign in again.', 'error');
       setView(false);
     });
 }

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
   <title>Sign in | Belal Amr</title>
   <link rel="stylesheet" href="css/admin-dashboard.css">
 
@@ -412,135 +413,354 @@
     </div>
   </section>
 
-  <main id="dashboardView" class="dashboard-page hidden" aria-label="Portfolio dashboard">
-    <div class="dashboard-container">
-      <header class="dashboard-topbar">
-        <a class="dashboard-brand" href="/">Belal<span>.</span></a>
-        <div class="dashboard-account">
-          <span id="userEmail"></span>
-          <button id="signOutBtn" class="btn btn-outline" type="button">Sign out</button>
-        </div>
-      </header>
+  <div id="dashboardView" class="dashboard-page hidden">
+    <a class="skip-link" href="#mainArea">Skip to content</a>
 
-      <section class="dashboard-heading">
-        <div>
-          <p class="dashboard-eyebrow">Portfolio administration</p>
-          <h1>Dashboard</h1>
-          <p>Manage the projects and public details shown on your portfolio.</p>
-        </div>
-        <a class="btn btn-default" href="/" target="_blank" rel="noopener noreferrer">View portfolio</a>
-      </section>
+    <header class="dashboard-topbar">
+      <a class="dashboard-brand" href="/" aria-label="Belal — home">Belal<span>.</span></a>
+      <div class="dashboard-account">
+        <a class="btn btn-outline btn-sm" href="/" target="_blank" rel="noopener noreferrer">View site<span class="sr-only"> (opens in a new tab)</span></a>
+        <span id="userEmail" class="account-email"></span>
+        <button id="signOutBtn" class="btn btn-outline btn-sm" type="button">Sign out</button>
+      </div>
+    </header>
 
-      <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
+    <div id="upgradeBanner" class="banner banner-warn" role="status" hidden>
+      <strong>Database upgrade pending.</strong>
+      Reordering, admin management, the activity log and AI statistics need the latest migrations in
+      <code>supabase/migrations/</code>. Everything else keeps working.
+    </div>
 
-      <section class="dashboard-stats" aria-label="Portfolio summary">
-        <article class="dashboard-card dashboard-stat">
-          <span>Total projects</span>
-          <strong id="totalProjects">0</strong>
-        </article>
-        <article class="dashboard-card dashboard-stat">
-          <span>Featured projects</span>
-          <strong id="featuredProjects">0</strong>
-        </article>
-        <article class="dashboard-card dashboard-stat">
-          <span>Published projects</span>
-          <strong id="publishedProjects">0</strong>
-        </article>
-      </section>
+    <div class="dashboard-shell">
+      <nav class="dashboard-nav" aria-label="Dashboard sections">
+        <ul>
+          <li><button type="button" class="nav-btn" data-tab="projects"><span class="nav-ico" aria-hidden="true">▦</span>Projects</button></li>
+          <li><button type="button" class="nav-btn" data-tab="settings"><span class="nav-ico" aria-hidden="true">⚙</span>Settings</button></li>
+          <li><button type="button" class="nav-btn" data-tab="ai"><span class="nav-ico" aria-hidden="true">✦</span>AI assistant</button></li>
+          <li><button type="button" class="nav-btn" data-tab="admins"><span class="nav-ico" aria-hidden="true">☻</span>Admins</button></li>
+          <li><button type="button" class="nav-btn" data-tab="activity"><span class="nav-ico" aria-hidden="true">≡</span>Activity</button></li>
+        </ul>
+      </nav>
 
-      <section class="dashboard-grid">
-        <article class="dashboard-card dashboard-editor">
-          <div class="dashboard-card-heading">
-            <div>
-              <p class="dashboard-eyebrow">Project editor</p>
-              <h2 id="formTitle">Add project</h2>
-            </div>
-          </div>
+      <main id="mainArea" class="dashboard-main" tabindex="-1" aria-label="Portfolio dashboard">
 
-          <form id="projectForm" class="dashboard-form">
-            <input id="projectId" type="hidden">
-            <div class="dashboard-form-row">
-              <div class="field">
-                <label class="label" for="projectTitle">Project title</label>
-                <input class="input" id="projectTitle" type="text" maxlength="120" required>
+        <!-- ================= Projects ================= -->
+        <section id="panel-projects" class="panel" data-panel="projects" aria-labelledby="h-projects" hidden>
+
+          <div id="projectsListView">
+            <header class="panel-head">
+              <div>
+                <p class="dashboard-eyebrow">Your work</p>
+                <h2 id="h-projects" tabindex="-1">Projects</h2>
+              </div>
+              <div class="panel-actions">
+                <button id="newProjectBtn" class="btn btn-default" type="button">New project</button>
+                <button id="exportBtn" class="btn btn-outline" type="button">Export JSON</button>
+                <button id="importBtn" class="btn btn-outline" type="button">Import JSON</button>
+                <input id="importFile" type="file" accept="application/json,.json" hidden>
+                <button id="refreshProjectsBtn" class="btn btn-outline" type="button">Refresh</button>
+              </div>
+            </header>
+
+            <section class="dashboard-stats" aria-label="Portfolio summary">
+              <article class="dashboard-card dashboard-stat"><span>Total projects</span><strong id="statTotal">–</strong></article>
+              <article class="dashboard-card dashboard-stat"><span>Live on the site</span><strong id="statPublished">–</strong></article>
+              <article class="dashboard-card dashboard-stat"><span>Featured</span><strong id="statFeatured">–</strong></article>
+              <article class="dashboard-card dashboard-stat"><span>Drafts &amp; archived</span><strong id="statHidden">–</strong></article>
+            </section>
+
+            <div class="toolbar" role="search" aria-label="Filter projects">
+              <div class="field toolbar-search">
+                <label class="label" for="filterQuery">Search</label>
+                <input class="input" id="filterQuery" type="search" placeholder="Title, description or category" autocomplete="off">
               </div>
               <div class="field">
-                <label class="label" for="projectCategory">Category</label>
-                <input class="input" id="projectCategory" type="text" maxlength="80" required>
-              </div>
-            </div>
-            <div class="field">
-              <label class="label" for="projectSummary">Description</label>
-              <textarea class="input dashboard-textarea" id="projectSummary" maxlength="1200"></textarea>
-            </div>
-            <div class="field">
-              <label class="label" for="projectImage">Image URL or site-relative path</label>
-              <input class="input" id="projectImage" type="text" maxlength="500" placeholder="images/portfolio/project.jpg">
-            </div>
-            <div class="dashboard-form-row">
-              <div class="field">
-                <label class="label" for="projectUrl">Project URL</label>
-                <input class="input" id="projectUrl" type="url" maxlength="500" placeholder="https://example.com">
-              </div>
-              <div class="field">
-                <label class="label" for="projectGithub">GitHub URL</label>
-                <input class="input" id="projectGithub" type="url" maxlength="500" placeholder="https://github.com/owner/repo">
-              </div>
-            </div>
-            <div class="dashboard-form-row dashboard-options">
-              <div class="field">
-                <label class="label" for="projectStatus">Status</label>
-                <select class="input" id="projectStatus">
+                <label class="label" for="filterStatus">Status</label>
+                <select class="input" id="filterStatus">
+                  <option value="">All statuses</option>
                   <option value="featured">Featured</option>
                   <option value="active">Active</option>
                   <option value="archived">Archived</option>
                 </select>
               </div>
-              <label class="dashboard-checkbox">
-                <input id="projectPublished" type="checkbox" checked>
-                <span>Published on the public portfolio</span>
-              </label>
+              <div class="field">
+                <label class="label" for="filterCategory">Category</label>
+                <select class="input" id="filterCategory"><option value="">All categories</option></select>
+              </div>
+              <div class="field">
+                <label class="label" for="filterPublished">Visibility</label>
+                <select class="input" id="filterPublished">
+                  <option value="">Published &amp; drafts</option>
+                  <option value="yes">Published</option>
+                  <option value="no">Drafts</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="label" for="sortMode">Sort</label>
+                <select class="input" id="sortMode">
+                  <option value="manual">Site order (drag to rearrange)</option>
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="updated">Recently updated</option>
+                  <option value="title">Title A–Z</option>
+                </select>
+              </div>
+              <button id="clearFiltersBtn" class="btn btn-ghost" type="button" hidden>Clear filters</button>
             </div>
-            <div class="dashboard-actions">
-              <button id="saveProjectBtn" class="btn btn-default" type="submit">Save project</button>
-              <button id="resetProjectForm" class="btn btn-outline" type="button">Clear form</button>
-            </div>
-          </form>
-        </article>
 
-        <article class="dashboard-card dashboard-projects">
-          <div class="dashboard-card-heading">
-            <div>
-              <p class="dashboard-eyebrow">Your work</p>
-              <h2>Projects</h2>
-            </div>
-            <button id="refreshProjectsBtn" class="btn btn-outline" type="button">Refresh</button>
-          </div>
-          <ul id="projectList" class="project-list"></ul>
-        </article>
+            <p id="reorderHint" class="hint"></p>
 
-        <article class="dashboard-card dashboard-settings">
-          <div class="dashboard-card-heading">
-            <div>
-              <p class="dashboard-eyebrow">Public details</p>
-              <h2>Site settings</h2>
+            <div id="reorderBar" class="action-bar action-bar-sticky" role="region" aria-label="Unsaved project order" hidden>
+              <span id="reorderText"></span>
+              <span class="action-bar-buttons">
+                <button id="undoOrderBtn" class="btn btn-outline btn-sm" type="button">Undo</button>
+                <button id="saveOrderBtn" class="btn btn-default btn-sm" type="button">Save order</button>
+              </span>
+            </div>
+
+            <div id="bulkBar" class="action-bar" role="region" aria-label="Bulk actions" hidden>
+              <span id="bulkText"></span>
+              <span class="action-bar-buttons">
+                <button id="bulkPublish" class="btn btn-outline btn-sm" type="button">Publish</button>
+                <button id="bulkUnpublish" class="btn btn-outline btn-sm" type="button">Unpublish</button>
+                <button id="bulkArchive" class="btn btn-outline btn-sm" type="button">Archive</button>
+                <button id="bulkDelete" class="btn btn-outline btn-sm btn-danger-outline" type="button">Delete…</button>
+                <button id="bulkClear" class="btn btn-ghost btn-sm" type="button">Clear selection</button>
+              </span>
+            </div>
+
+            <div class="list-head">
+              <label class="dashboard-checkbox"><input id="selectAll" type="checkbox"><span>Select all shown</span></label>
+              <span id="resultCount" class="hint" aria-live="polite"></span>
+            </div>
+
+            <div id="projectsState"></div>
+            <ul id="projectList" class="project-list" aria-label="Projects"></ul>
+          </div>
+
+          <div id="projectEditorView" hidden>
+            <header class="panel-head">
+              <div>
+                <p class="dashboard-eyebrow">Project editor</p>
+                <h2 id="formTitle" tabindex="-1">New project</h2>
+              </div>
+              <div class="panel-actions">
+                <span id="dirtyBadge" class="badge badge-warn" hidden>Unsaved changes</span>
+                <button id="backToListBtn" class="btn btn-outline" type="button">Back to projects</button>
+              </div>
+            </header>
+
+            <div class="editor-grid">
+              <form id="projectForm" class="dashboard-card dashboard-form" novalidate>
+                <p id="formErrorSummary" class="form-summary" role="alert" hidden></p>
+                <input id="projectId" type="hidden">
+
+                <div class="dashboard-form-row">
+                  <div class="field">
+                    <div class="label-row"><label class="label" for="projectTitle">Project title <span class="req" aria-hidden="true">*</span></label><span class="counter" data-count-for="projectTitle" data-max="120"></span></div>
+                    <input class="input" id="projectTitle" type="text" maxlength="140" required aria-required="true" aria-describedby="projectTitleError" autocomplete="off">
+                    <p class="field-error" id="projectTitleError" hidden></p>
+                  </div>
+                  <div class="field">
+                    <div class="label-row"><label class="label" for="projectCategory">Category <span class="req" aria-hidden="true">*</span></label><span class="counter" data-count-for="projectCategory" data-max="80"></span></div>
+                    <input class="input" id="projectCategory" type="text" maxlength="100" required aria-required="true" list="categoryOptions" aria-describedby="projectCategoryError" autocomplete="off">
+                    <datalist id="categoryOptions"></datalist>
+                    <p class="field-error" id="projectCategoryError" hidden></p>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <div class="label-row"><label class="label" for="projectSummary">Description</label><span class="counter" data-count-for="projectSummary" data-max="1200"></span></div>
+                  <textarea class="input dashboard-textarea" id="projectSummary" maxlength="1500" aria-describedby="projectSummaryError"></textarea>
+                  <p class="field-error" id="projectSummaryError" hidden></p>
+                </div>
+
+                <fieldset class="field image-field">
+                  <legend class="label">Project image</legend>
+                  <div class="image-box">
+                    <div class="image-thumb" id="imageThumb">
+                      <img id="imagePreview" alt="Selected project image" hidden>
+                      <span id="imagePlaceholder">No image</span>
+                    </div>
+                    <div class="image-controls">
+                      <div class="image-buttons">
+                        <button id="uploadBtn" class="btn btn-outline btn-sm" type="button">Upload image</button>
+                        <button id="removeImageBtn" class="btn btn-outline btn-sm" type="button" hidden>Remove image</button>
+                        <input id="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden>
+                      </div>
+                      <p id="imageFileNote" class="hint" role="status"></p>
+                    </div>
+                  </div>
+                  <label class="label" for="projectImage">Or use an image link / site path</label>
+                  <input class="input" id="projectImage" type="text" maxlength="520" placeholder="https://… or images/portfolio/project.jpg" aria-describedby="imageHelp projectImageError" autocomplete="off">
+                  <p id="imageHelp" class="hint">JPEG, PNG, WebP, GIF or AVIF, up to 5&nbsp;MB. An uploaded file is stored when you save.</p>
+                  <p class="field-error" id="projectImageError" hidden></p>
+                </fieldset>
+
+                <div class="dashboard-form-row">
+                  <div class="field">
+                    <label class="label" for="projectUrl">Project URL</label>
+                    <input class="input" id="projectUrl" type="url" maxlength="520" placeholder="https://example.com" aria-describedby="projectUrlError" autocomplete="off">
+                    <p class="field-error" id="projectUrlError" hidden></p>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="projectGithub">GitHub URL</label>
+                    <input class="input" id="projectGithub" type="url" maxlength="520" placeholder="https://github.com/owner/repo" aria-describedby="projectGithubError" autocomplete="off">
+                    <p class="field-error" id="projectGithubError" hidden></p>
+                  </div>
+                </div>
+
+                <div class="dashboard-form-row dashboard-options">
+                  <div class="field">
+                    <label class="label" for="projectStatus">Status</label>
+                    <select class="input" id="projectStatus">
+                      <option value="featured">Featured</option>
+                      <option value="active">Active</option>
+                      <option value="archived">Archived (hidden from the site)</option>
+                    </select>
+                  </div>
+                  <label class="dashboard-checkbox">
+                    <input id="projectPublished" type="checkbox" checked>
+                    <span>Published on the public portfolio</span>
+                  </label>
+                </div>
+
+                <div class="dashboard-actions">
+                  <button id="saveProjectBtn" class="btn btn-default" type="submit">Save project</button>
+                  <button id="cancelEditBtn" class="btn btn-outline" type="button">Cancel</button>
+                </div>
+              </form>
+
+              <aside class="preview dashboard-card" aria-labelledby="previewTitle">
+                <h3 id="previewTitle" class="preview-title">Live preview</h3>
+                <p id="previewVisibility" class="badge" role="status"></p>
+                <p class="dashboard-eyebrow">Grid card</p>
+                <div id="previewCard" class="pv-card"></div>
+                <p class="dashboard-eyebrow">Details popup</p>
+                <div id="previewModal" class="pv-modal"></div>
+              </aside>
             </div>
           </div>
-          <form id="settingsForm" class="dashboard-form">
-            <div class="field">
-              <label class="label" for="siteTitle">Site title</label>
-              <input class="input" id="siteTitle" type="text" maxlength="120" required>
+        </section>
+
+        <!-- ================= Settings ================= -->
+        <section id="panel-settings" class="panel" data-panel="settings" aria-labelledby="h-settings" hidden>
+          <header class="panel-head">
+            <div>
+              <p class="dashboard-eyebrow">Site details</p>
+              <h2 id="h-settings" tabindex="-1">Settings</h2>
             </div>
-            <div class="field">
-              <label class="label" for="siteTagline">Tagline</label>
-              <input class="input" id="siteTagline" type="text" maxlength="240" required>
+          </header>
+          <p class="legend-note">
+            <span class="badge badge-public">Public</span> settings are readable by anyone and are part of what the AI assistant knows about you.
+            <span class="badge badge-private">Private</span> settings are visible only to admins.
+          </p>
+          <div id="settingsState"></div>
+          <form id="settingsForm" class="settings-form" novalidate hidden></form>
+        </section>
+
+        <!-- ================= AI ================= -->
+        <section id="panel-ai" class="panel" data-panel="ai" aria-labelledby="h-ai" hidden>
+          <header class="panel-head">
+            <div>
+              <p class="dashboard-eyebrow">Public assistant</p>
+              <h2 id="h-ai" tabindex="-1">AI assistant</h2>
             </div>
-            <button class="btn btn-default" type="submit">Save public details</button>
+            <div class="panel-actions">
+              <div class="field field-inline">
+                <label class="label" for="aiRange">Period</label>
+                <select class="input" id="aiRange">
+                  <option value="7">Last 7 days</option>
+                  <option value="30" selected>Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </select>
+              </div>
+              <button id="aiRefreshBtn" class="btn btn-outline" type="button">Refresh</button>
+            </div>
+          </header>
+          <div id="aiStats"></div>
+          <div class="ai-grid">
+            <article class="dashboard-card" id="aiKnowledge"></article>
+            <article class="dashboard-card" id="aiTest"></article>
+          </div>
+        </section>
+
+        <!-- ================= Admins ================= -->
+        <section id="panel-admins" class="panel" data-panel="admins" aria-labelledby="h-admins" hidden>
+          <header class="panel-head">
+            <div>
+              <p class="dashboard-eyebrow">Access</p>
+              <h2 id="h-admins" tabindex="-1">Admins</h2>
+            </div>
+          </header>
+          <p class="hint">Admins can edit everything in this dashboard. Access is granted by the email address of the signed-in account.</p>
+          <div id="adminsState"></div>
+          <ul id="adminsList" class="admins-list" aria-label="Admin accounts"></ul>
+          <form id="adminAddForm" class="dashboard-card admin-add" novalidate>
+            <div class="field">
+              <label class="label" for="adminEmail">Add an admin by email</label>
+              <input class="input" id="adminEmail" type="email" autocomplete="off" placeholder="name@example.com" aria-describedby="adminEmailError adminAddNote">
+              <p class="field-error" id="adminEmailError" hidden></p>
+            </div>
+            <button id="adminAddBtn" class="btn btn-default" type="submit">Add admin</button>
+            <p id="adminAddNote" class="hint" role="status">Only add addresses you control or trust. Keep “Confirm email” turned on in Supabase Auth, so nobody can sign up with an address they do not own.</p>
           </form>
-        </article>
-      </section>
+        </section>
+
+        <!-- ================= Activity ================= -->
+        <section id="panel-activity" class="panel" data-panel="activity" aria-labelledby="h-activity" hidden>
+          <header class="panel-head">
+            <div>
+              <p class="dashboard-eyebrow">Read-only history</p>
+              <h2 id="h-activity" tabindex="-1">Activity</h2>
+            </div>
+            <div class="panel-actions">
+              <div class="field field-inline">
+                <label class="label" for="activityFilter">Show</label>
+                <select class="input" id="activityFilter">
+                  <option value="">Everything</option>
+                  <option value="project">Projects</option>
+                  <option value="setting">Settings</option>
+                  <option value="admin">Admins</option>
+                </select>
+              </div>
+              <button id="activityRefreshBtn" class="btn btn-outline" type="button">Refresh</button>
+            </div>
+          </header>
+          <div id="activityState"></div>
+          <ol id="activityList" class="activity-list" aria-label="Recent changes"></ol>
+          <div class="load-more"><button id="activityMoreBtn" class="btn btn-outline" type="button" hidden>Load older activity</button></div>
+        </section>
+      </main>
     </div>
-  </main>
+
+    <div id="toasts" class="toasts" role="region" aria-label="Notifications"></div>
+    <p id="srAnnounce" class="sr-only" aria-live="polite"></p>
+
+    <dialog id="expiredDialog" class="modal" aria-labelledby="expiredTitle" aria-describedby="expiredMsg">
+      <div class="modal-body">
+        <h2 id="expiredTitle">Your session has expired</h2>
+        <p id="expiredMsg">Sign in again to keep working. A project you were editing is saved on this device and can be restored after you sign in.</p>
+      </div>
+      <div class="modal-actions"><button id="expiredBtn" class="btn btn-default" type="button">Sign in again</button></div>
+    </dialog>
+
+    <dialog id="passwordDialog" class="modal" aria-labelledby="pwTitle">
+      <form id="passwordForm" class="modal-body" novalidate>
+        <h2 id="pwTitle">Choose a new password</h2>
+        <p>You opened a password-reset link. Set a new password to finish.</p>
+        <div class="field">
+          <label class="label" for="newPassword">New password</label>
+          <input class="input" id="newPassword" type="password" autocomplete="new-password" minlength="8" required>
+        </div>
+        <p id="pwStatus" class="field-error" role="alert" hidden></p>
+        <div class="modal-actions">
+          <button id="pwSkip" class="btn btn-outline" type="button">Not now</button>
+          <button id="pwSave" class="btn btn-default" type="submit">Save password</button>
+        </div>
+      </form>
+    </dialog>
+  </div>
 
   <script>
     (function () {
