@@ -69,7 +69,7 @@ Belal Amr Mohamed/
 │   │   └── images/ [26.59 KB, 0 LOC]
 │   │       └── el-bash-mebasmag--no-bg.png
 │   │
-│   ├── css/ [134.15 KB, 5927 LOC]
+│   ├── css/ [134.93 KB, 5927 LOC]
 │   │   ├── admin-dashboard.css
 │   │   ├── styles.css
 │   │   └── vendor.css
@@ -274,7 +274,7 @@ Belal Amr Mohamed/
 |-----------|-------|---------------|------------|
 | .js | 95 | 34332 | 1.66 MB |
 | .sql | 16 | 1163 | 47.84 KB |
-| .css | 10 | 14228 | 352.28 KB |
+| .css | 10 | 14228 | 353.06 KB |
 | .md | 7 | 1077 | 47.62 KB |
 | .json | 4 | 60 | 15.65 KB |
 | .html | 4 | 1938 | 80.74 KB |
