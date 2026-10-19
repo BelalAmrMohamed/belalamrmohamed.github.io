@@ -53,23 +53,23 @@ Belal Amr Mohamed/
 │   │
 │   └── sign-in-page-template.md
 │
-├── api/ [58.47 KB, 1248 LOC]
-│   └── ai-agent/ [58.47 KB, 1248 LOC]
+├── api/ [58.96 KB, 1248 LOC]
+│   └── ai-agent/ [58.96 KB, 1248 LOC]
 │       ├── _keyPool.js
 │       ├── _providerClients.js
 │       ├── _tools.js
 │       └── chat.js
 │
-├── docs/ [7.08 KB, 68 LOC]
+├── docs/ [7.09 KB, 68 LOC]
 │   ├── HANDOFF.md
 │   └── issues.md
 │
-├── public/ [3.24 MB, 28917 LOC]
+├── public/ [3.26 MB, 29296 LOC]
 │   ├── assets/ [26.59 KB, 0 LOC]
 │   │   └── images/ [26.59 KB, 0 LOC]
 │   │       └── el-bash-mebasmag--no-bg.png
 │   │
-│   ├── css/ [124.97 KB, 5550 LOC]
+│   ├── css/ [134.15 KB, 5927 LOC]
 │   │   ├── admin-dashboard.css
 │   │   ├── styles.css
 │   │   └── vendor.css
@@ -116,8 +116,8 @@ Belal Amr Mohamed/
 │   │   ├── about-photo@2x.png
 │   │   └── thumbnail.jpg
 │   │
-│   ├── js/ [332.46 KB, 3490 LOC]
-│   │   ├── admin/ [93.64 KB, 2279 LOC]
+│   ├── js/ [335.22 KB, 3490 LOC]
+│   │   ├── admin/ [95.85 KB, 2279 LOC]
 │   │   │   ├── activity.js
 │   │   │   ├── admins.js
 │   │   │   ├── ai-panel.js
@@ -215,18 +215,18 @@ Belal Amr Mohamed/
 │   ├── release.js
 │   └── seo-check.mjs
 │
-└── supabase/ [60.56 KB, 1533 LOC]
-    ├── migrations/ [39.48 KB, 982 LOC]
+└── supabase/ [61.28 KB, 1533 LOC]
+    ├── migrations/ [40.14 KB, 982 LOC]
     │   ├── 20261008145231_create_portfolio_admin_schema.sql
     │   ├── 20261008145317_add_ai_agent_usage_quota.sql
-    │   ├── 20261017235500_grant_service_role_read_portfolio_tables.sql
+    │   ├── 20261017205126_grant_service_role_read_portfolio_tables.sql
     │   ├── 20261018000100_portfolio_grants_and_constraints.sql
     │   ├── 20261018000200_portfolio_audit_log.sql
     │   ├── 20261018000300_portfolio_admin_rpcs.sql
     │   ├── 20261018000400_portfolio_images_bucket.sql
     │   └── 20261018000500_portfolio_sync_featured_flag.sql
     │
-    ├── rollbacks/ [3.24 KB, 63 LOC]
+    ├── rollbacks/ [3.3 KB, 63 LOC]
     │   ├── 20261018000100_rollback.sql
     │   ├── 20261018000200_rollback.sql
     │   ├── 20261018000300_rollback.sql
@@ -245,7 +245,7 @@ Belal Amr Mohamed/
 
 | Directory | Lines of Code |
 |-----------|---------------|
-| `public` | 28917 |
+| `public` | 29296 |
 | `Animated UI Components` | 20031 |
 | `supabase` | 1533 |
 | `api` | 1248 |
@@ -273,17 +273,17 @@ Belal Amr Mohamed/
 | Extension | Files | Lines of Code | Size |
 |-----------|-------|---------------|------------|
 | .js | 95 | 34332 | 1.66 MB |
-| .sql | 16 | 1163 | 47.14 KB |
-| .css | 10 | 13851 | 343.1 KB |
-| .md | 7 | 1077 | 47.29 KB |
+| .sql | 16 | 1163 | 47.84 KB |
+| .css | 10 | 14228 | 352.28 KB |
+| .md | 7 | 1077 | 47.62 KB |
 | .json | 4 | 60 | 15.65 KB |
-| .html | 4 | 1936 | 79 KB |
+| .html | 4 | 1938 | 80.74 KB |
 | .txt | 2 | 33 | 1.8 KB |
 | .webmanifest | 1 | 84 | 1.91 KB |
 | .xml | 1 | 9 | 280 B |
 | .mjs | 1 | 362 | 14.02 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **142** | **53322** | **2.21 MB** |
+| **Total** | **142** | **53701** | **2.23 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -296,4 +296,4 @@ Belal Amr Mohamed/
 | **Total** | **43** | **2.05 MB** |
 
 **Grand Total Files:** 185  
-**Total Repository Size:** 4.26 MB
+**Total Repository Size:** 4.27 MB
