@@ -69,11 +69,48 @@
   section degrades independently. Service worker `v14`.
 - Tests: `npm test` 13 pass. Browser-checked at 360px with mocked Supabase; earlier graphics/videos/public checks re-run.
 
+## Done in round 6 (header redesign)
+- Header reduced from 9 links (wrapping to 2 rows) to one row: Belal. | Work v | About | Say Hello | ... Admin (muted, right).
+  "Work" opens an Apple-style full-width panel (Websites, Apps & Tools, Graphic Designs, Videos, each with a one-line
+  description). Desktop: hover or click; keyboard: Enter/Space, Esc closes and refocuses the trigger, focus leaving closes it.
+  Mobile (<= 800px): the existing slide-down menu with "Work" as an accordion. `aria-expanded`/`aria-controls` set; reduced
+  motion respected. Active page highlights both the panel link and "Work".
+- New `public/js/site/nav.js` (event delegation, loaded on all 5 public pages); markup single-sourced in `shell.js`
+  (`WORK_LINKS`/`NAV_LINKS`), mirrored statically in `index.html`. CSS in `styles.css` ("header dropdown"). Service worker `v15`.
+- Fixed existing bug: on the category pages the mobile menu button did nothing (main.js bound it before `shell.js` rendered
+  the header). `nav.js` now owns the toggle on shell pages (`body[data-shell-nav]`); index.html still uses main.js.
+- Fixed `main.js` scroll-spy crash for sections with no nav link (Intro/Works links were removed from the header).
+  Consequence: the header no longer links to Intro/Works on `/`; the legacy Works section is reached by scrolling.
+- Browser-checked at 1280/820/360px (single row, no horizontal scroll, dropdown open/close, Esc, mobile accordion).
+  Not checked: real-device touch, screen reader. The sandbox blocked the CDN scripts, so the home intro animation was not seen.
+- Not done this round: UI components (Next 3) and Next 1/2/4 (they need your actions/decisions).
+
+## Decisions (owner, round 7)
+- Home header: no Intro/Works links is fine. Admin link stays in the header. Owner applied migrations/env vars/limits (round 6 Next 1-2).
+
+## Done in round 7
+- YouTube errors: 400/401/403/429 are now classified from Google's error reason into fixed codes (`youtube_quota_exceeded`,
+  `youtube_api_not_enabled`, `youtube_key_restricted`, `youtube_key_invalid`; unknown stays `youtube_quota_or_forbidden`) with
+  actionable admin messages. Only the code is kept; the body is never stored. Reported 502 was Google answering 403 to the
+  server-side call; cause is almost always the key (API not enabled, or an HTTP-referrer restriction, which can never work for a
+  server). After this patch the admin shows which one. Test added (19 pass).
+- UI components: `/ui-components` page (`ui-components.html`, `js/site/components-page.js`): search, format filter, detail dialog
+  with format tabs, sandboxed preview iframe (`sandbox="allow-scripts"`, no allow-same-origin), source viewer (textContent only),
+  Copy, Download file. Pure helpers in `js/site/component-model.js` (preview path must be `/previews/**.html`, safe file paths,
+  dependency allowlist react/react-dom/tailwindcss/typescript with exact versions, draft validation). Test file added.
+- Admin: "Component formats" section for Type = UI component (`js/admin/component-panel.js`): per format preview path,
+  dependencies, multiple source files with an entry file, immediate per-format save (removals last), remove format.
+- Previews are prebuilt static pages committed under `public/previews/<name>/index.html`; `vercel.json` serves `/previews/*` with a
+  CSP `sandbox allow-scripts` header and no network. `public/previews/sample-button/` is a sample to delete once real ones exist.
+  No live compilation (owner decision). No new migration; uses the round-1 tables.
+- Header: 5th "UI Components" item in the Work panel; sitemap; service worker `v16`.
+- Browser-checked with mocked Supabase at 1280/360: catalog, search, format tabs, preview frame runs sandboxed, source with
+  `<script>` shown as text (no execution), no horizontal scroll. Admin component panel was NOT browser-checked. Not run against real Supabase.
+
 ## Next
-1. Apply `20261018000500` (if not yet) and `20261120000100`; confirm the project-wide Storage upload limit.
-2. Set `YOUTUBE_DATA_API_KEY`, `CRON_SECRET`, `SUPABASE_PUBLISHABLE_KEY` in Vercel; deploy; connect the channel; Sync now.
-3. UI components (source + curated previews): `portfolio_component_*` admin editor, `/ui-components` catalog with source
-   view/copy/download, preview artifacts served in a sandboxed iframe without `allow-same-origin`.
+1. Fix the YouTube key (see round 7), then connect the channel and Sync now.
+2. Browser-check the admin component panel on the real project; replace the sample preview with real ones.
+3. Seed real components from `Animated UI Components/*.md` (convert to source files + prebuilt previews).
 4. Landing page "Videos" featured group; retire compatibility paths (plan 8 step 9) after production verification.
 
 ## Notes

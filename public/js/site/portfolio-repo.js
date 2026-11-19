@@ -109,3 +109,31 @@ export async function fetchSettings(keys) {
   if (error) throw error;
   return Object.fromEntries((data || []).map(({ key, value }) => [key, value]));
 }
+
+// Published components: variants and their source files in two bounded queries (no N+1).
+export async function fetchComponentVariants(projectIds) {
+  if (!projectIds.length) return {};
+  const client = await getClient();
+  const { data: variants, error } = await client
+    .from('portfolio_component_variants')
+    .select('id, portfolio_project_id, format, entry_file, preview_path, dependencies, build_state, sort_order')
+    .in('portfolio_project_id', projectIds)
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+  const ids = (variants || []).map((v) => v.id);
+  let files = [];
+  if (ids.length) {
+    const res = await client
+      .from('portfolio_component_files')
+      .select('id, variant_id, path, source, is_entry, sort_order')
+      .in('variant_id', ids)
+      .order('sort_order', { ascending: true });
+    if (res.error) throw res.error;
+    files = res.data || [];
+  }
+  const byVariant = {};
+  for (const f of files) (byVariant[f.variant_id] ||= []).push(f);
+  const byProject = {};
+  for (const v of variants || []) (byProject[v.portfolio_project_id] ||= []).push({ ...v, files: byVariant[v.id] || [] });
+  return byProject;
+}

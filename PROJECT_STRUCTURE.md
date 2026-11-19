@@ -55,36 +55,36 @@ Belal Amr Mohamed/
 │   │
 │   └── sign-in-page-template.md
 │
-├── api/ [72.38 KB, 1511 LOC]
+├── api/ [73.47 KB, 1527 LOC]
 │   ├── ai-agent/ [58.96 KB, 1248 LOC]
 │   │   ├── _keyPool.js
 │   │   ├── _providerClients.js
 │   │   ├── _tools.js
 │   │   └── chat.js
 │   │
-│   └── youtube/ [13.43 KB, 263 LOC]
+│   └── youtube/ [14.52 KB, 279 LOC]
 │       ├── _youtube.js
 │       └── sync.js
 │
-├── docs/ [84.75 KB, 1789 LOC]
+├── docs/ [88.41 KB, 1826 LOC]
 │   ├── components/ [45.97 KB, 1420 LOC]
 │   │   ├── 3D Card Effect.md
 │   │   ├── Animated Shader Hero.md
 │   │   └── Bento Card.md
 │   │
-│   ├── plans/ [34.49 KB, 329 LOC]
+│   ├── plans/ [38.15 KB, 366 LOC]
 │   │   ├── portfolio-platform-upgrade-plan.md
 │   │   └── portfolio-platform-upgrade-progress.md
 │   │
 │   ├── HANDOFF.md
 │   └── issues.md
 │
-├── public/ [3.35 MB, 31424 LOC]
+├── public/ [3.38 MB, 32118 LOC]
 │   ├── assets/ [26.59 KB, 0 LOC]
 │   │   └── images/ [26.59 KB, 0 LOC]
 │   │       └── el-bash-mebasmag--no-bg.png
 │   │
-│   ├── css/ [140.48 KB, 6017 LOC]
+│   ├── css/ [146.32 KB, 6172 LOC]
 │   │   ├── admin-dashboard.css
 │   │   ├── category-pages.css
 │   │   ├── styles.css
@@ -132,13 +132,14 @@ Belal Amr Mohamed/
 │   │   ├── about-photo@2x.png
 │   │   └── thumbnail.jpg
 │   │
-│   ├── js/ [406.9 KB, 5125 LOC]
-│   │   ├── admin/ [138.13 KB, 3186 LOC]
+│   ├── js/ [430.15 KB, 5569 LOC]
+│   │   ├── admin/ [146.94 KB, 3319 LOC]
 │   │   │   ├── activity.js
 │   │   │   ├── admins.js
 │   │   │   ├── ai-panel.js
 │   │   │   ├── api.js
 │   │   │   ├── assets-panel.js
+│   │   │   ├── component-panel.js
 │   │   │   ├── dom.js
 │   │   │   ├── images.js
 │   │   │   ├── model.js
@@ -151,11 +152,13 @@ Belal Amr Mohamed/
 │   │   │   ├── video-panel.js
 │   │   │   └── youtube.js
 │   │   │
-│   │   ├── site/ [29.24 KB, 725 LOC]
+│   │   ├── site/ [43.66 KB, 1034 LOC]
 │   │   │   ├── asset-model.js
 │   │   │   ├── category-page.js
-│   │   │   ├── featured-home.js
+│   │   │   ├── component-model.js
+│   │   │   ├── components-page.js
 │   │   │   ├── graphics-page.js
+│   │   │   ├── nav.js
 │   │   │   ├── portfolio-repo.js
 │   │   │   ├── shell.js
 │   │   │   └── videos-page.js
@@ -166,6 +169,10 @@ Belal Amr Mohamed/
 │   │   ├── plugins.js
 │   │   ├── portfolio.js
 │   │   └── site-config.js
+│   │
+│   ├── previews/ [766 B, 9 LOC]
+│   │   └── sample-button/ [766 B, 9 LOC]
+│   │       └── index.html
 │   │
 │   ├── screenshots/ [175.11 KB, 0 LOC]
 │   │   ├── screenshot-desktop.png
@@ -237,6 +244,7 @@ Belal Amr Mohamed/
 │   ├── service-worker.js
 │   ├── site.webmanifest
 │   ├── sitemap.xml
+│   ├── ui-components.html
 │   ├── videos.html
 │   └── websites.html
 │
@@ -276,8 +284,9 @@ Belal Amr Mohamed/
 │   ├── schema.sql
 │   └── seed.sql
 │
-└── tests/ [11.07 KB, 170 LOC]
+└── tests/ [13.78 KB, 215 LOC]
     ├── asset-model.test.mjs
+    ├── component-model.test.mjs
     └── youtube-sync.test.mjs
 ```
 
@@ -287,20 +296,20 @@ Belal Amr Mohamed/
 
 | Directory | Lines of Code |
 |-----------|---------------|
-| `public` | 31424 |
+| `public` | 32118 |
 | `Animated UI Components` | 20031 |
 | `supabase` | 1938 |
-| `docs` | 1789 |
-| `api` | 1511 |
+| `docs` | 1826 |
+| `api` | 1527 |
 | `scripts` | 1105 |
-| `(root)` | 454 |
-| `tests` | 170 |
+| `(root)` | 482 |
+| `tests` | 215 |
 
 ### Top 10 Largest Code Files
 
 | File | Lines of Code |
 |------|---------------|
-| `public/css/styles.css` | 4250 |
+| `public/css/styles.css` | 4387 |
 | `public/src/components/ai-agent/ai-agent-chat.js` | 3004 |
 | `Animated UI Components/Professional-AI-Agent-Template.md/public/src/components/ai-agent/ai-agent-chat.js` | 2953 |
 | `public/src/components/ai-agent/ai-agent.css` | 2822 |
@@ -309,24 +318,24 @@ Belal Amr Mohamed/
 | `Animated UI Components/Professional-AI-Agent-Template.md/public/src/shared/markdown.js` | 2389 |
 | `Animated UI Components/Professional-AI-Agent-Template.md/public/src/shared/markdown-css.js` | 1280 |
 | `public/src/shared/markdown-css.js` | 1280 |
-| `public/admin.html` | 960 |
+| `public/admin.html` | 968 |
 
 ### Code Files
 
 | Extension | Files | Lines of Code | Size |
 |-----------|-------|---------------|------------|
-| .js | 107 | 36244 | 1.74 MB |
+| .js | 110 | 36708 | 1.77 MB |
 | .sql | 22 | 1565 | 69.04 KB |
-| .md | 12 | 2826 | 126.1 KB |
-| .css | 11 | 14318 | 358.61 KB |
-| .html | 8 | 2305 | 99.31 KB |
-| .json | 4 | 67 | 15.8 KB |
-| .mjs | 3 | 532 | 25.09 KB |
+| .md | 12 | 2881 | 130.45 KB |
+| .css | 11 | 14473 | 364.45 KB |
+| .html | 10 | 2393 | 104.78 KB |
+| .json | 4 | 77 | 16.26 KB |
+| .mjs | 4 | 577 | 27.8 KB |
 | .txt | 2 | 33 | 1.8 KB |
 | .webmanifest | 1 | 84 | 1.91 KB |
-| .xml | 1 | 33 | 962 B |
+| .xml | 1 | 36 | 1.02 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **172** | **58422** | **2.44 MB** |
+| **Total** | **178** | **59242** | **2.48 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -338,5 +347,5 @@ Belal Amr Mohamed/
 | .pdf | 1 | 100.13 KB |
 | **Total** | **43** | **2.05 MB** |
 
-**Grand Total Files:** 215  
-**Total Repository Size:** 4.49 MB
+**Grand Total Files:** 221  
+**Total Repository Size:** 4.53 MB

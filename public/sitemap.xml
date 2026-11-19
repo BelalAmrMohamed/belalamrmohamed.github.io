@@ -25,6 +25,9 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://belal-amr.vercel.app/ui-components</loc>
+  </url>
+  <url>
     <loc>https://belal-amr.vercel.app/videos</loc>
     <lastmod>2026-11-19</lastmod>
     <changefreq>weekly</changefreq>

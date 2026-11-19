@@ -11,6 +11,7 @@ import {
 import { uploadProjectImage, removeObjects, removeUnreferencedImages } from './images.js';
 import { initAssetsPanel } from './assets-panel.js';
 import { initVideoPanel } from './video-panel.js';
+import { initComponentPanel } from './component-panel.js';
 
 const TABLE = 'portfolio_projects';
 const DRAFT_KEY = 'portfolio_admin_project_draft';
@@ -56,6 +57,7 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
     syncCover: (url) => syncCoverShared(url),
   });
   const videoPanel = initVideoPanel({ getProject: () => editing, syncCover: (url) => syncCoverShared(url) });
+  const componentPanel = initComponentPanel({ getProject: () => editing });
   registerDirty('video-upload', () => open && videoPanel.isUploading());
   // Keeps the legacy image_url field/baseline in step after the server-side cover changed.
   function syncCoverShared(url) {
@@ -80,6 +82,7 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
     assetsKey = key;
     assets.show({ project: editing, workType, ready: typeFieldsReady() });
     videoPanel.show({ project: editing, workType, ready: typeFieldsReady() });
+    componentPanel.show({ project: editing, workType, ready: typeFieldsReady() });
   }
 
   // ---- form <-> values --------------------------------------------------------------------------
@@ -304,6 +307,7 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
     assetsKey = '';
     assets.show({ project: null, workType: '', ready: false });
     videoPanel.show({ project: null, workType: '', ready: false });
+    componentPanel.show({ project: null, workType: '', ready: false });
     showList();
     // Images are saved as they change, so the list may need a refresh (cover, counts).
     if (assets.hasChanges() || videoPanel.hasChanges()) { assets.resetChanges(); videoPanel.resetChanges(); await onSaved(); }
@@ -361,11 +365,11 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
       await close({ force: true });
       await onSaved(rows[0]?.id);
       // A new graphic case needs its id before images can be attached: reopen it.
-      if (wasNew && (value.work_type === 'graphic_case' || value.work_type === 'edited_video')) {
+      if (wasNew && (value.work_type === 'graphic_case' || value.work_type === 'edited_video' || value.work_type === 'ui_component')) {
         const created = getProjects().find((p) => p.id === rows[0]?.id);
         if (created) {
           await openEditor(created);
-          toast(value.work_type === 'edited_video' ? 'Now upload its video below.' : 'Now add this case\'s images below.', { kind: 'info' });
+          toast(value.work_type === 'edited_video' ? 'Now upload its video below.' : value.work_type === 'ui_component' ? 'Now add its formats and source below.' : 'Now add this case\'s images below.', { kind: 'info' });
         }
       }
     } catch (error) {

@@ -44,3 +44,21 @@
 #editedSection { margin-top: 5rem; }
 #editedSection h2 { margin: 0 0 2rem; }
 .work-card__text p { margin: .4rem 0 0; font-size: 1.5rem; opacity: .85; }
+
+/* ---- UI components catalog ---- */
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.cmp-filters { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; margin-bottom: 2.4rem; }
+.cmp-search input { min-width: 24rem; max-width: 100%; margin: 0; }
+.cmp-chips { display: flex; flex-wrap: wrap; gap: .8rem; margin: 0 0 1.2rem; }
+.cmp-filters .cmp-chips { margin: 0; }
+.cmp-chip { font: inherit; font-size: 1.3rem; padding: .4rem 1.2rem; border: 1px solid var(--color-border); border-radius: 999px; background: transparent; color: var(--color-text); cursor: pointer; }
+.cmp-chip[aria-pressed="true"] { border-color: var(--color-1); color: var(--color-1); }
+.cmp-chip:focus-visible { outline: 2px solid var(--color-1); outline-offset: 2px; }
+.cmp-dialog { width: min(94vw, 90rem); }
+.cmp-h { font-size: 1.6rem; margin: 2rem 0 1rem; }
+.cmp-preview { display: block; width: 100%; height: 36rem; border: 1px solid var(--color-border); border-radius: 4px; background: #fff; }
+.cmp-source { max-height: 40rem; overflow: auto; margin: 0; padding: 1.4rem; font-size: 1.25rem; line-height: 1.5; background: rgba(0,0,0,.35); border: 1px solid var(--color-border); border-radius: 4px; white-space: pre; }
+.cmp-source code { font: inherit; color: inherit; background: none; padding: 0; }
+.cmp-meta { font-size: 1.25rem; margin: .8rem 0; color: var(--color-text-light, inherit); }
+.cmp-filebar { display: flex; gap: 1rem; margin: 0 0 1rem; }
+@media (max-width: 600px) { .cmp-preview { height: 28rem; } .cmp-search input { min-width: 0; width: 100%; } }

@@ -105,3 +105,17 @@ test('handler: cron secret and admin checks', async () => {
   assert.equal((await call(h, { method: 'PUT' })).code, 405);
   assert.equal((await call(createHandler({ env: {}, fetchImpl }), { method: 'GET' })).code, 500);
 });
+
+test('Google error reasons map to fixed, sanitized codes', async () => {
+  const cases = [
+    [403, { error: { errors: [{ reason: 'quotaExceeded' }] } }, 'youtube_quota_exceeded'],
+    [403, { error: { errors: [{ reason: 'accessNotConfigured' }] } }, 'youtube_api_not_enabled'],
+    [403, { error: { details: [{ reason: 'API_KEY_HTTP_REFERRER_BLOCKED' }] } }, 'youtube_key_restricted'],
+    [400, { error: { errors: [{ reason: 'keyInvalid' }] } }, 'youtube_key_invalid'],
+    [403, {}, 'youtube_quota_or_forbidden'],
+  ];
+  for (const [status, body, code] of cases) {
+    const fetchImpl = async () => ({ ok: false, status, json: async () => body });
+    await assert.rejects(() => resolveChannel({ apiKey: 'k', fetchImpl }, '@someone'), (e) => e.code === code || e.message === code);
+  }
+});

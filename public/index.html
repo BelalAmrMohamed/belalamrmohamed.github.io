@@ -134,18 +134,22 @@
             </div>
 
             <div class="row wide main-nav-wrap">
-                <nav class="column lg-12 main-nav">
+                <nav class="column lg-12 main-nav" aria-label="Primary">
                     <ul>
                         <li><a href="/" class="home-link">Belal.</a></li>
-                        <li class="current"><a href="#intro" class="smoothscroll">Intro</a></li>
+                        <li class="has-menu">
+                            <button type="button" class="nav-trigger" aria-expanded="false" aria-controls="nav-work">Work</button>
+                            <div class="nav-panel" id="nav-work">
+                                <a href="/websites"><strong>Websites</strong><small>Sites and web builds</small></a>
+                                <a href="/apps-tools"><strong>Apps &amp; Tools</strong><small>Web apps and utilities</small></a>
+                                <a href="/graphic-designs"><strong>Graphic Designs</strong><small>Branding and visual cases</small></a>
+                                <a href="/ui-components"><strong>UI Components</strong><small>Previews with source</small></a>
+                                <a href="/videos"><strong>Videos</strong><small>YouTube and edited videos</small></a>
+                            </div>
+                        </li>
                         <li><a href="#about" class="smoothscroll">About</a></li>
-                        <li><a href="#works" class="smoothscroll">Works</a></li>
-                        <li><a href="/websites">Websites</a></li>
-                        <li><a href="/apps-tools">Apps &amp; Tools</a></li>
-                        <li><a href="/graphic-designs">Graphic Designs</a></li>
-                        <li><a href="/videos">Videos</a></li>
                         <li><a href="#contact" class="smoothscroll">Say Hello</a></li>
-                        <li><a href="/admin">Admin</a></li>
+                        <li class="nav-admin"><a href="/admin">Admin</a></li>
                     </ul>
                 </nav>
             </div>
@@ -592,6 +596,7 @@
             });
         });
     </script>
+    <script src="/js/site/nav.js" defer></script>
 </body>
 
 </html>

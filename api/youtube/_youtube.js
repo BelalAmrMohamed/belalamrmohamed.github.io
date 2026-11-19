@@ -29,6 +29,21 @@ export function parseChannelInput(raw) {
   return null;
 }
 
+// Maps Google's error reason to a fixed, sanitized code. Only the code is kept; the body is never stored or returned.
+async function classifyGoogleError(res) {
+  let reasons = '';
+  try {
+    const body = await res.json();
+    const parts = [...(body?.error?.errors || []).map((e) => e?.reason), ...(body?.error?.details || []).map((d) => d?.reason), body?.error?.status];
+    reasons = parts.filter((p) => typeof p === 'string').join(' ');
+  } catch { /* unreadable body: fall through to the status-based code */ }
+  if (/quotaExceeded|rateLimitExceeded|dailyLimitExceeded|RATE_LIMIT_EXCEEDED|RESOURCE_EXHAUSTED/i.test(reasons) || res.status === 429) return 'youtube_quota_exceeded';
+  if (/accessNotConfigured|SERVICE_DISABLED|API_KEY_SERVICE_BLOCKED|serviceDisabled/i.test(reasons)) return 'youtube_api_not_enabled';
+  if (/REFERRER_BLOCKED|IP_ADDRESS_BLOCKED|ipRefererBlocked|forbidden/i.test(reasons)) return 'youtube_key_restricted';
+  if (/keyInvalid|API_KEY_INVALID|badRequest|INVALID_ARGUMENT/i.test(reasons) || res.status === 400 || res.status === 401) return 'youtube_key_invalid';
+  return 'youtube_quota_or_forbidden';
+}
+
 async function ytGet(deps, endpoint, params) {
   const url = new URL(`${API}/${endpoint}`);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
@@ -36,8 +51,9 @@ async function ytGet(deps, endpoint, params) {
   let res;
   try { res = await deps.fetchImpl(url.toString(), { headers: { accept: 'application/json' } }); }
   catch { throw new SyncError('youtube_network'); }
-  if (res.status === 403 || res.status === 429) throw new SyncError('youtube_quota_or_forbidden');
-  if (res.status === 400 || res.status === 401) throw new SyncError('youtube_bad_request');
+  if (res.status === 400 || res.status === 401 || res.status === 403 || res.status === 429) {
+    throw new SyncError(await classifyGoogleError(res));
+  }
   if (res.status === 404) throw new SyncError('youtube_not_found');
   if (!res.ok) throw new SyncError('youtube_error');
   return res.json();

@@ -167,10 +167,12 @@
                 * sectionId variable we are getting while looping through sections as 
                 * an selector
                 */
+                const navLink = document.querySelector(".main-nav a[href*=" + sectionId + "]");
+                if (!navLink) return;
                 if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
-                    document.querySelector(".main-nav a[href*=" + sectionId + "]").parentNode.classList.add("current");
+                    navLink.parentNode.classList.add("current");
                 } else {
-                    document.querySelector(".main-nav a[href*=" + sectionId + "]").parentNode.classList.remove("current");
+                    navLink.parentNode.classList.remove("current");
                 }
             });
         }
@@ -380,4 +382,4 @@
 
     })();
 
-})(document.documentElement);
+})(document.documentElement);

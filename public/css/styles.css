@@ -3024,6 +3024,100 @@ img.u-pull-left {
 }
 
 /* --------------------------------------------------------------------
+ * ## header dropdown ("Work") + compact desktop layout
+ * -------------------------------------------------------------------- */
+.main-nav-wrap { position: relative; }
+
+.main-nav li { flex: 0 0 auto; }
+.main-nav li:first-child,
+.main-nav li.nav-admin { flex: 0 0 auto; }
+.main-nav li.nav-admin { margin-left: auto; border-left: 1px solid var(--color-border); border-right: none; }
+.main-nav li.nav-admin a { color: var(--color-text-light, rgba(255, 255, 255, 0.55)); }
+.main-nav li:nth-last-child(2) { border-right: none; }
+
+.main-nav .nav-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  margin: 0;
+  padding: 0 2rem 0 2.4rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  line-height: var(--header-height);
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  color: white;
+  transition-property: color, background-color;
+}
+
+.main-nav .nav-trigger::after {
+  content: "";
+  width: 0.55em;
+  height: 0.55em;
+  margin-top: -0.25em;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.main-nav .nav-trigger:hover,
+.main-nav .nav-trigger:focus-visible,
+.main-nav .has-menu.is-open > .nav-trigger { color: var(--color-1); }
+.main-nav .has-menu.is-open > .nav-trigger::after { transform: rotate(225deg); margin-top: 0.15em; }
+.main-nav .has-menu.current > .nav-trigger { background-color: var(--color-gray-9); }
+.main-nav .nav-trigger:focus-visible,
+.main-nav .nav-panel a:focus-visible { outline: 2px solid var(--color-1); outline-offset: -2px; }
+
+.main-nav .nav-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  background-color: var(--color-body);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  box-shadow: var(--box-shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+}
+
+.main-nav .has-menu.is-open > .nav-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.main-nav .nav-panel a {
+  padding: 2.4rem 2.4rem 2.6rem;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+  border-right: 1px solid var(--color-border);
+}
+
+.main-nav .nav-panel a:last-child { border-right: none; }
+.main-nav .nav-panel strong { display: block; font-size: 1.5rem; font-weight: 400; letter-spacing: 0.02em; color: white; }
+.main-nav .nav-panel small { display: block; margin-top: 0.4rem; font-size: 1.2rem; color: var(--color-text); }
+.main-nav .nav-panel a:hover strong,
+.main-nav .nav-panel a:focus strong,
+.main-nav .nav-panel a[aria-current="page"] strong { color: var(--color-1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .main-nav .nav-panel, .main-nav .nav-trigger::after { transition: none; }
+}
+
+/* --------------------------------------------------------------------
  * ## mobile menu toggle
  * -------------------------------------------------------------------- */
 .mobile-menu-toggle {
@@ -3181,6 +3275,49 @@ img.u-pull-left {
     transition: transform 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
     transition-delay: 0s;
   }
+
+  .menu-is-open .main-nav-wrap {
+    max-height: calc(100vh - var(--header-height));
+    overflow-y: auto;
+  }
+
+  .main-nav li.nav-admin { margin-left: 0; border-left: none; }
+  .main-nav li.nav-admin a { color: var(--color-text); }
+
+  .main-nav .nav-trigger {
+    font-family: var(--font-2);
+    font-size: var(--text-md);
+    line-height: var(--vspace-0_875);
+    text-transform: none;
+    letter-spacing: 0;
+    padding: var(--vspace-0_5) 2.8rem;
+    color: var(--color-text);
+    justify-content: space-between;
+  }
+
+  .main-nav .has-menu.current > .nav-trigger { background-color: transparent; color: var(--color-1); }
+
+  .main-nav .nav-panel {
+    position: static;
+    display: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 0 0 var(--vspace-0_5);
+  }
+
+  .main-nav .has-menu.is-open > .nav-panel { display: block; }
+
+  .main-nav .nav-panel a {
+    border: none;
+    padding: 0.8rem 2.8rem 0.8rem 4.4rem;
+  }
+
+  .main-nav .nav-panel strong { font-size: var(--text-md); color: var(--color-text); }
+  .main-nav .nav-panel small { display: none; }
 
   .menu-is-open .main-nav {
     transform: translateY(0);

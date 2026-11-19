@@ -11,6 +11,10 @@ const PAGE = 50;
 const ERROR_TEXT = {
   invalid_channel_input: 'Enter a @handle, a channel ID (UC…) or a youtube.com channel link.',
   channel_not_found: 'No channel was found for that input.',
+  youtube_quota_exceeded: 'YouTube daily quota is used up. It resets at midnight Pacific time.',
+  youtube_api_not_enabled: 'YouTube Data API v3 is not enabled for the Google Cloud project that owns this key. Enable it in Google Cloud Console > APIs & Services.',
+  youtube_key_restricted: 'The API key restrictions block this server. Use "None" for application restrictions (or an IP allowlist, not HTTP referrers), and allow YouTube Data API v3.',
+  youtube_key_invalid: 'The YouTube API key is missing or invalid. Check YOUTUBE_DATA_API_KEY and redeploy or restart the dev server.',
   youtube_quota_or_forbidden: 'YouTube refused the request (quota or API key restriction).',
   youtube_bad_request: 'YouTube rejected the request. Check the API key.',
   youtube_network: 'Could not reach YouTube.',

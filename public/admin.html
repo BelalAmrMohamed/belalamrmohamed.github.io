@@ -692,6 +692,14 @@
                 <input id="posterFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden>
                 <p id="videoStatus" class="hint" role="status" aria-live="polite"></p>
               </section>
+              <section id="componentSection" class="dashboard-card assets-section" aria-labelledby="componentTitle" hidden>
+                <div>
+                  <h3 id="componentTitle" class="preview-title">Component formats</h3>
+                  <p class="hint">Source is stored as text and never run in the admin. The public preview is a prebuilt page under <code>/previews/</code> shown in a sandboxed frame. Changes here are saved immediately, per format.</p>
+                </div>
+                <p id="componentNote" class="hint" hidden></p>
+                <div id="componentBody"></div>
+              </section>
               </div>
 
               <aside class="preview dashboard-card" aria-labelledby="previewTitle">

@@ -2,6 +2,16 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "outputDirectory": "public",
+  "headers": [
+    {
+      "source": "/previews/(.*)",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:; connect-src 'none'" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "no-referrer" }
+      ]
+    }
+  ],
   "crons": [
     {
       "path": "/api/youtube/sync",
