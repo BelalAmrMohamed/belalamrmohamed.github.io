@@ -62,25 +62,27 @@ Belal Amr Mohamed/
 │       ├── _tools.js
 │       └── chat.js
 │
-├── docs/ [77.26 KB, 1706 LOC]
+├── docs/ [79.67 KB, 1737 LOC]
 │   ├── components/ [45.97 KB, 1420 LOC]
 │   │   ├── 3D Card Effect.md
 │   │   ├── Animated Shader Hero.md
 │   │   └── Bento Card.md
 │   │
-│   ├── plans/ [27.01 KB, 246 LOC]
-│   │   └── portfolio-platform-upgrade-plan.md
+│   ├── plans/ [29.41 KB, 277 LOC]
+│   │   ├── portfolio-platform-upgrade-plan.md
+│   │   └── portfolio-platform-upgrade-progress.md
 │   │
 │   ├── HANDOFF.md
 │   └── issues.md
 │
-├── public/ [3.26 MB, 29296 LOC]
+├── public/ [3.29 MB, 30031 LOC]
 │   ├── assets/ [26.59 KB, 0 LOC]
 │   │   └── images/ [26.59 KB, 0 LOC]
 │   │       └── el-bash-mebasmag--no-bg.png
 │   │
-│   ├── css/ [134.93 KB, 5927 LOC]
+│   ├── css/ [137.2 KB, 5960 LOC]
 │   │   ├── admin-dashboard.css
+│   │   ├── category-pages.css
 │   │   ├── styles.css
 │   │   └── vendor.css
 │   │
@@ -126,8 +128,8 @@ Belal Amr Mohamed/
 │   │   ├── about-photo@2x.png
 │   │   └── thumbnail.jpg
 │   │
-│   ├── js/ [335.22 KB, 3490 LOC]
-│   │   ├── admin/ [95.85 KB, 2279 LOC]
+│   ├── js/ [351.78 KB, 3945 LOC]
+│   │   ├── admin/ [97.6 KB, 2345 LOC]
 │   │   │   ├── activity.js
 │   │   │   ├── admins.js
 │   │   │   ├── ai-panel.js
@@ -141,6 +143,12 @@ Belal Amr Mohamed/
 │   │   │   ├── settings.js
 │   │   │   ├── ui.js
 │   │   │   └── validators.js
+│   │   │
+│   │   ├── site/ [14.81 KB, 389 LOC]
+│   │   │   ├── category-page.js
+│   │   │   ├── graphics-page.js
+│   │   │   ├── portfolio-repo.js
+│   │   │   └── shell.js
 │   │   │
 │   │   ├── admin-app.js
 │   │   ├── ai-agent-bootstrap.js
@@ -206,17 +214,20 @@ Belal Amr Mohamed/
 │   ├── android-chrome-192x192.png
 │   ├── android-chrome-512x512.png
 │   ├── apple-touch-icon.png
+│   ├── apps-tools.html
 │   ├── Belal CV.pdf
 │   ├── favicon-16x16.png
 │   ├── favicon-32x32.png
 │   ├── favicon.png
 │   ├── google0c1df2c3df22a824.html
+│   ├── graphic-designs.html
 │   ├── index.html
 │   ├── offline.html
 │   ├── robots.txt
 │   ├── service-worker.js
 │   ├── site.webmanifest
-│   └── sitemap.xml
+│   ├── sitemap.xml
+│   └── websites.html
 │
 ├── scripts/ [40.35 KB, 1105 LOC]
 │   ├── commit.js
@@ -225,8 +236,8 @@ Belal Amr Mohamed/
 │   ├── release.js
 │   └── seo-check.mjs
 │
-└── supabase/ [61.28 KB, 1533 LOC]
-    ├── migrations/ [40.14 KB, 982 LOC]
+└── supabase/ [79.27 KB, 1882 LOC]
+    ├── migrations/ [56.78 KB, 1307 LOC]
     │   ├── 20261008145231_create_portfolio_admin_schema.sql
     │   ├── 20261008145317_add_ai_agent_usage_quota.sql
     │   ├── 20261017205126_grant_service_role_read_portfolio_tables.sql
@@ -234,14 +245,18 @@ Belal Amr Mohamed/
     │   ├── 20261018000200_portfolio_audit_log.sql
     │   ├── 20261018000300_portfolio_admin_rpcs.sql
     │   ├── 20261018000400_portfolio_images_bucket.sql
-    │   └── 20261018000500_portfolio_sync_featured_flag.sql
+    │   ├── 20261018000500_portfolio_sync_featured_flag.sql
+    │   ├── 20261119000100_portfolio_work_types_and_media.sql
+    │   └── 20261119000200_portfolio_backfill_work_types.sql
     │
-    ├── rollbacks/ [3.3 KB, 63 LOC]
+    ├── rollbacks/ [4.64 KB, 87 LOC]
     │   ├── 20261018000100_rollback.sql
     │   ├── 20261018000200_rollback.sql
     │   ├── 20261018000300_rollback.sql
     │   ├── 20261018000400_rollback.sql
     │   ├── 20261018000500_rollback.sql
+    │   ├── 20261119000100_rollback.sql
+    │   ├── 20261119000200_rollback.sql
     │   └── README.md
     │
     ├── config.toml
@@ -255,13 +270,13 @@ Belal Amr Mohamed/
 
 | Directory | Lines of Code |
 |-----------|---------------|
-| `public` | 29296 |
+| `public` | 30031 |
 | `Animated UI Components` | 20031 |
-| `docs` | 1706 |
-| `supabase` | 1533 |
+| `supabase` | 1882 |
+| `docs` | 1737 |
 | `api` | 1248 |
 | `scripts` | 1105 |
-| `(root)` | 424 |
+| `(root)` | 432 |
 
 ### Top 10 Largest Code Files
 
@@ -276,24 +291,24 @@ Belal Amr Mohamed/
 | `Animated UI Components/Professional-AI-Agent-Template.md/public/src/shared/markdown.js` | 2389 |
 | `Animated UI Components/Professional-AI-Agent-Template.md/public/src/shared/markdown-css.js` | 1280 |
 | `public/src/shared/markdown-css.js` | 1280 |
-| `public/css/vendor.css` | 872 |
+| `public/admin.html` | 891 |
 
 ### Code Files
 
 | Extension | Files | Lines of Code | Size |
 |-----------|-------|---------------|------------|
-| .js | 95 | 34334 | 1.66 MB |
-| .sql | 16 | 1163 | 47.84 KB |
-| .md | 11 | 2717 | 117.83 KB |
-| .css | 10 | 14228 | 353.06 KB |
+| .js | 99 | 34797 | 1.68 MB |
+| .sql | 20 | 1510 | 65.75 KB |
+| .md | 12 | 2758 | 120.32 KB |
+| .css | 11 | 14261 | 355.33 KB |
+| .html | 7 | 2159 | 91.08 KB |
 | .json | 4 | 60 | 15.65 KB |
-| .html | 4 | 1938 | 80.74 KB |
 | .txt | 2 | 33 | 1.8 KB |
 | .webmanifest | 1 | 84 | 1.91 KB |
-| .xml | 1 | 9 | 280 B |
+| .xml | 1 | 27 | 788 B |
 | .mjs | 1 | 362 | 14.02 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **146** | **55343** | **2.3 MB** |
+| **Total** | **159** | **56466** | **2.34 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -305,5 +320,5 @@ Belal Amr Mohamed/
 | .pdf | 1 | 100.13 KB |
 | **Total** | **43** | **2.05 MB** |
 
-**Grand Total Files:** 189  
-**Total Repository Size:** 4.34 MB
+**Grand Total Files:** 202  
+**Total Repository Size:** 4.39 MB

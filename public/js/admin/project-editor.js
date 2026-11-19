@@ -6,7 +6,7 @@ import { client, run } from './api.js';
 import { toast, registerDirty, confirmDiscard, setBusy } from './ui.js';
 import { topSortOrder } from './model.js';
 import {
-  validateProject, validateImageFile, isUrlOrSitePath, IMAGE_MAX_BYTES, LIMITS,
+  validateProject, validateImageFile, WORK_TYPES, isUrlOrSitePath, IMAGE_MAX_BYTES, LIMITS,
 } from './validators.js';
 import { uploadProjectImage, removeObjects, removeUnreferencedImages } from './images.js';
 
@@ -21,6 +21,8 @@ const FIELDS = {
   project_url: 'projectUrl',
   github_url: 'projectGithub',
   status: 'projectStatus',
+  work_type: 'projectWorkType',
+  slug: 'projectSlug',
 };
 const ERROR_IDS = {
   title: 'projectTitleError',
@@ -29,6 +31,8 @@ const ERROR_IDS = {
   image_url: 'projectImageError',
   project_url: 'projectUrlError',
   github_url: 'projectGithubError',
+  work_type: 'projectWorkTypeError',
+  slug: 'projectSlugError',
 };
 
 export function initEditor({ getProjects, onSaved, showList, showEditor }) {
@@ -45,8 +49,15 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
   let open = false;
 
   // ---- form <-> values --------------------------------------------------------------------------
+  // The type/slug fields exist only after the 20261119000100 migration is applied.
+  const typeFieldsReady = () => getProjects().some((p) => 'work_type' in p);
+
   function readValues() {
+    const typed = typeFieldsReady()
+      ? { work_type: el('projectWorkType').value, slug: el('projectSlug').value }
+      : {};
     return {
+      ...typed,
       title: el('projectTitle').value,
       category: el('projectCategory').value,
       summary: el('projectSummary').value,
@@ -59,6 +70,9 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
   }
 
   function writeValues(project) {
+    el('workTypeRow').hidden = !typeFieldsReady();
+    el('projectWorkType').value = project?.work_type || '';
+    el('projectSlug').value = project?.slug || '';
     el('projectTitle').value = project?.title || '';
     el('projectCategory').value = project?.category || '';
     el('projectSummary').value = project?.summary || '';
@@ -264,7 +278,7 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
     if (failing.length) {
       failing.forEach((field) => setError(field, errors[field]));
       const summary = el('formErrorSummary');
-      summary.textContent = `Fix ${failing.length} field${failing.length === 1 ? '' : 's'} before saving: ${failing.map((f) => ({ title: 'title', category: 'category', summary: 'description', image_url: 'image', project_url: 'project URL', github_url: 'GitHub URL', status: 'status' }[f])).join(', ')}.`;
+      summary.textContent = `Fix ${failing.length} field${failing.length === 1 ? '' : 's'} before saving: ${failing.map((f) => ({ title: 'title', category: 'category', summary: 'description', image_url: 'image', project_url: 'project URL', github_url: 'GitHub URL', status: 'status', work_type: 'type', slug: 'slug' }[f])).join(', ')}.`;
       summary.hidden = false;
       el(FIELDS[failing[0]]).focus();
       return;

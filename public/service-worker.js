@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v9";
+const CACHE_VERSION = "v11";
 const CACHE_NAME = `belal-portfolio-cache-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
 
@@ -7,6 +7,9 @@ const filesToCache = [
   "/",
   "/offline",
   "/admin",
+  "/websites",
+  "/apps-tools",
+  "/graphic-designs",
   "site.webmanifest",
   "android-chrome-192x192.png",
   "android-chrome-512x512.png",
@@ -20,6 +23,7 @@ const filesToCache = [
   "css/styles.css",
   "css/vendor.css",
   "css/admin-dashboard.css",
+  "css/category-pages.css",
   "/src/components/ai-agent/ai-agent.css",
   "/src/components/notifications/notifications.css",
 
@@ -28,6 +32,10 @@ const filesToCache = [
   "js/plugins.js",
   "js/site-config.js",
   "js/portfolio.js",
+  "js/site/portfolio-repo.js",
+  "js/site/shell.js",
+  "js/site/category-page.js",
+  "js/site/graphics-page.js",
   "js/admin-app.js",
   "js/ai-agent-bootstrap.js",
   "/src/components/ai-agent/ai-agent.js",

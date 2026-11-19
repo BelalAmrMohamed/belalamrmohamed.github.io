@@ -3,6 +3,24 @@
 
 export const LIMITS = Object.freeze({ title: 120, category: 80, summary: 1200, url: 500 });
 export const STATUSES = Object.freeze(['featured', 'active', 'archived']);
+export const WORK_TYPES = Object.freeze({
+  website: 'Website',
+  app_tool: 'App / Tool',
+  graphic_case: 'Graphic design',
+  ui_component: 'UI component',
+  edited_video: 'Edited video',
+});
+export const SLUG_MAX = 80;
+const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+/** Lowercase, hyphen-separated slug ('' when nothing usable remains). */
+export function slugify(value) {
+  return String(value ?? '')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    .slice(0, SLUG_MAX).replace(/-+$/, '');
+}
+
 export const IMAGE_BUCKET = 'portfolio-images';
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const IMAGE_TYPES = Object.freeze({
@@ -74,9 +92,27 @@ export function validateProject(raw) {
   }
   if (!STATUSES.includes(status)) errors.status = 'Choose a status.';
 
+  // work_type / slug are only validated and returned when the caller supplies
+  // them, so the admin keeps working before the 20261119000100 migration is applied.
+  let workType;
+  let slug;
+  if (raw?.work_type !== undefined) {
+    workType = text('work_type') || null;
+    if (workType && !Object.hasOwn(WORK_TYPES, workType)) errors.work_type = 'Choose a valid type.';
+  }
+  if (raw?.slug !== undefined) {
+    slug = text('slug') || null;
+    if (!slug && workType) slug = slugify(title) || null; // auto-fill for classified work
+    if (slug && (slug.length > SLUG_MAX || !SLUG_RE.test(slug))) {
+      errors.slug = 'Use lowercase letters, numbers and single hyphens (max 80).';
+    }
+  }
+
   return {
     errors,
     value: {
+      ...(workType !== undefined ? { work_type: workType } : {}),
+      ...(slug !== undefined ? { slug } : {}),
       title,
       category,
       summary,
@@ -124,6 +160,8 @@ export function projectToExport(project) {
     image_url: project.image_url ?? null,
     project_url: project.project_url ?? null,
     github_url: project.github_url ?? null,
+    ...(project.work_type !== undefined ? { work_type: project.work_type ?? null } : {}),
+    ...(project.slug !== undefined ? { slug: project.slug ?? null } : {}),
   };
 }
 

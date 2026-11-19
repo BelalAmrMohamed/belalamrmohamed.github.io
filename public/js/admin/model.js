@@ -19,11 +19,12 @@ export function sortProjects(list, mode = 'manual') {
   return [...list].sort(SORTERS[mode] || byManual);
 }
 
-export function filterProjects(list, { query = '', status = '', category = '', published = '' } = {}) {
+export function filterProjects(list, { query = '', status = '', category = '', published = '', workType = '' } = {}) {
   const q = query.trim().toLowerCase();
   return list.filter((project) => {
     if (status && project.status !== status) return false;
     if (category && project.category !== category) return false;
+    if (workType === 'none' ? project.work_type : workType && project.work_type !== workType) return false;
     if (published === 'yes' && !project.is_published) return false;
     if (published === 'no' && project.is_published) return false;
     if (q) {
@@ -35,7 +36,7 @@ export function filterProjects(list, { query = '', status = '', category = '', p
 }
 
 export function hasActiveFilters(filters) {
-  return Boolean(filters.query?.trim() || filters.status || filters.category || filters.published);
+  return Boolean(filters.query?.trim() || filters.status || filters.category || filters.published || filters.workType);
 }
 
 export function moveInArray(array, from, to) {

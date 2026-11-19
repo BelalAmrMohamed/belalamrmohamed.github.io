@@ -485,6 +485,18 @@
                   <option value="archived">Archived</option>
                 </select>
               </div>
+              <div class="field" id="filterWorkTypeField" hidden>
+                <label class="label" for="filterWorkType">Type</label>
+                <select class="input" id="filterWorkType">
+                  <option value="">All types</option>
+                  <option value="website">Website</option>
+                  <option value="app_tool">App / Tool</option>
+                  <option value="graphic_case">Graphic design</option>
+                  <option value="ui_component">UI component</option>
+                  <option value="edited_video">Edited video</option>
+                  <option value="none">Not classified</option>
+                </select>
+              </div>
               <div class="field">
                 <label class="label" for="filterCategory">Category</label>
                 <select class="input" id="filterCategory"><option value="">All categories</option></select>
@@ -568,6 +580,26 @@
                     <input class="input" id="projectCategory" type="text" maxlength="100" required aria-required="true" list="categoryOptions" aria-describedby="projectCategoryError" autocomplete="off">
                     <datalist id="categoryOptions"></datalist>
                     <p class="field-error" id="projectCategoryError" hidden></p>
+                  </div>
+                </div>
+                <div class="dashboard-form-row" id="workTypeRow" hidden>
+                  <div class="field">
+                    <label class="label" for="projectWorkType">Type</label>
+                    <select class="input" id="projectWorkType" aria-describedby="projectWorkTypeError">
+                      <option value="">Not classified (home page only)</option>
+                      <option value="website">Website</option>
+                      <option value="app_tool">App / Tool</option>
+                      <option value="graphic_case">Graphic design</option>
+                      <option value="ui_component">UI component</option>
+                      <option value="edited_video">Edited video</option>
+                    </select>
+                    <p class="field-error" id="projectWorkTypeError" hidden></p>
+                  </div>
+                  <div class="field">
+                    <div class="label-row"><label class="label" for="projectSlug">Slug</label><span class="counter" data-count-for="projectSlug" data-max="80"></span></div>
+                    <input class="input" id="projectSlug" type="text" maxlength="100" aria-describedby="projectSlugError projectSlugHint" autocomplete="off" spellcheck="false">
+                    <p class="hint" id="projectSlugHint">Leave blank to generate from the title.</p>
+                    <p class="field-error" id="projectSlugError" hidden></p>
                   </div>
                 </div>
 

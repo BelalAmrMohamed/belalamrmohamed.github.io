@@ -1,0 +1,32 @@
+/* Category pages (Websites, Apps & Tools, ...). Uses the existing site header. */
+.s-page { padding: calc(var(--vspace-4, 8rem) + 6rem) 0 var(--vspace-3, 6rem); min-height: 70vh; }
+.s-page__head { margin-bottom: 4rem; }
+.s-page__head h1 { margin: 0 0 1rem; }
+.s-page__head p { max-width: 60ch; margin: 0; }
+.work-status { padding: 2rem 0; opacity: .8; }
+.work-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 2.4rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 28rem), 1fr)); }
+.work-card { margin: 0; padding: 0; }
+.work-card__open { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer;
+  border-radius: 6px; overflow: hidden; background: rgba(127,127,127,.12); }
+.work-card__open:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.work-card__pic { aspect-ratio: 4 / 3; background: rgba(127,127,127,.2); }
+.work-card__pic img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+.work-card__open:hover .work-card__pic img { transform: scale(1.04); }
+.work-card__text { padding: 1.4rem 1.6rem 1.8rem; display: grid; gap: .4rem; }
+.work-card__cat { font-size: 1.3rem; text-transform: uppercase; letter-spacing: .12em; opacity: .7; }
+.work-card__title { font-size: 2rem; line-height: 1.25; }
+.work-dialog { width: min(92vw, 64rem); max-height: 90vh; border: 0; border-radius: 8px; padding: 0;
+  overflow: auto; color: inherit; background: #fff; }
+.work-dialog::backdrop { background: rgba(0,0,0,.6); }
+.work-dialog__inner { padding: 2.4rem; }
+.work-dialog img { display: block; max-width: 100%; height: auto; margin-bottom: 2rem; border-radius: 4px; }
+.work-dialog__close { float: right; }
+.work-dialog__actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+@media (prefers-reduced-motion: reduce) { .work-card__pic img { transition: none; } }
+@media (max-width: 400px) { .work-dialog__inner { padding: 1.6rem; } }
+.asset-gallery { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 1.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+.asset-gallery figure { margin: 0; }
+.asset-gallery img { margin: 0; width: 100%; height: auto; background: rgba(127,127,127,.15); }
+.asset-gallery figcaption { font-size: 1.3rem; opacity: .75; padding-top: .4rem; }

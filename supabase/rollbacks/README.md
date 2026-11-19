@@ -3,6 +3,8 @@
 These are **not** migrations (they live outside `supabase/migrations/` so they never run
 automatically). Run them by hand, newest first, only if you need to undo an upgrade:
 
+0a. `20261119000200_rollback.sql`
+0. `20261119000100_rollback.sql` (platform upgrade)
 1. `20261018000500_rollback.sql`
 2. `20261018000400_rollback.sql`
 3. `20261018000300_rollback.sql`

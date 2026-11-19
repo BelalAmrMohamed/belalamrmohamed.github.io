@@ -7,7 +7,7 @@ import { toast, confirmDialog, confirmDiscard, registerDirty, stateBlock, skelet
 import {
   sortProjects, filterProjects, hasActiveFilters, moveInArray, sameOrder, topSortOrder, stats,
 } from './model.js';
-import { buildExport, parseImport, IMPORT_MAX_BYTES, validateProject, LIMITS } from './validators.js';
+import { buildExport, parseImport, IMPORT_MAX_BYTES, validateProject, LIMITS, WORK_TYPES, slugify } from './validators.js';
 import { removeUnreferencedImages } from './images.js';
 
 const TABLE = 'portfolio_projects';
@@ -19,6 +19,8 @@ export function initProjects({ editor, onUpgradeNeeded }) {
     query: $('#filterQuery'),
     status: $('#filterStatus'),
     category: $('#filterCategory'),
+    workType: $('#filterWorkType'),
+    workTypeField: $('#filterWorkTypeField'),
     published: $('#filterPublished'),
     sort: $('#sortMode'),
     clear: $('#clearFiltersBtn'),
@@ -41,7 +43,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
   let reorderMissing = false;
   let busy = false;
   const selected = new Set();
-  const filters = { query: '', status: '', category: '', published: '' };
+  const filters = { query: '', status: '', category: '', published: '', workType: '' };
   let sortMode = 'manual';
 
   registerDirty('reorder', () => hasPendingOrder());
@@ -106,6 +108,8 @@ export function initProjects({ editor, onUpgradeNeeded }) {
     );
     els.category.value = categories().includes(current) ? current : '';
     filters.category = els.category.value;
+    // Type controls only appear once the database has the work_type column.
+    els.workTypeField.hidden = !projects.some((p) => 'work_type' in p);
     els.categoryOptions.replaceChildren(...categories().map((c) => h('option', { value: c })));
   }
 
@@ -228,6 +232,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
         h('div', { class: 'project-title-row' },
           h('strong', {}, project.title),
           tag(project.category),
+          project.work_type ? tag(WORK_TYPES[project.work_type] || project.work_type) : null,
           tag(project.status === 'featured' ? '★ Featured' : project.status === 'archived' ? 'Archived' : 'Active', `tag-${project.status}`),
           tag(project.is_published ? 'Published' : 'Draft', project.is_published ? 'tag-live' : 'tag-draft')),
         h('p', { class: 'project-summary' }, project.summary || 'No description yet.'),
@@ -391,6 +396,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
     filters.query = els.query.value;
     filters.status = els.status.value;
     filters.category = els.category.value;
+    filters.workType = els.workType.value;
     filters.published = els.published.value;
     sortMode = els.sort.value;
     const visible = new Set(visibleProjects().map((p) => p.id));
@@ -402,6 +408,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
     els.query.value = '';
     els.status.value = '';
     els.category.value = '';
+    els.workType.value = '';
     els.published.value = '';
     els.sort.value = 'manual';
     syncFilters();
@@ -494,7 +501,13 @@ export function initProjects({ editor, onUpgradeNeeded }) {
   async function duplicate(project) {
     const ok = await mutate('Duplicate', async () => {
       const title = `Copy of ${project.title}`.slice(0, LIMITS.title);
-      const { value } = validateProject({ ...project, title, is_published: false });
+      const { value } = validateProject({
+        ...project,
+        title,
+        is_published: false,
+        // Slugs are unique: give the copy its own (only when the column exists).
+        ...('slug' in project ? { slug: project.slug ? `${slugify(title).slice(0, 70)}-${Math.random().toString(36).slice(2, 6)}` : '' } : {}),
+      });
       const created = await run(() => client.from(TABLE)
         .insert({ ...value, sort_order: topSortOrder(projects) }).select('id').single());
       // Place the copy directly below the original.
@@ -559,7 +572,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
 
   // ---- wiring ----------------------------------------------------------------------------------------------
   els.query.addEventListener('input', debounce(syncFilters, 150));
-  for (const control of [els.status, els.category, els.published, els.sort]) {
+  for (const control of [els.status, els.category, els.workType, els.published, els.sort]) {
     control.addEventListener('change', syncFilters);
   }
   els.clear.addEventListener('click', clearFilters);
