@@ -47,3 +47,15 @@ test('cover sync never overwrites a hand-entered cover', () => {
   assert.deepEqual(coverSyncPlan({ ...base, currentUrl: own, assets: [] }), { change: true, url: null });
   assert.deepEqual(coverSyncPlan({ ...base, currentUrl: null, assets: [] }), { change: false });
 });
+
+import { validateVideoFile, makeVideoPath, pickVideoAsset, VIDEO_MAX_BYTES } from '../public/js/site/asset-model.js';
+test('video validation and paths', () => {
+  assert.equal(validateVideoFile({ type: 'video/mp4', size: 1000 }), null);
+  assert.ok(validateVideoFile({ type: 'video/webm', size: 1000 }));
+  assert.ok(validateVideoFile({ type: 'video/mp4', size: VIDEO_MAX_BYTES + 1 }));
+  assert.ok(validateVideoFile({ type: 'video/mp4', size: 0 }));
+  assert.equal(makeVideoPath(PID, PID), `videos/${PID}/${PID}.mp4`);
+  assert.throws(() => makeVideoPath('../x', PID));
+  assert.equal(pickVideoAsset([A('a', 'cover', 0), { id: 'v', media_kind: 'video', role: 'edited_video' }]).id, 'v');
+  assert.equal(pickVideoAsset([A('a', 'cover', 0)]), null);
+});

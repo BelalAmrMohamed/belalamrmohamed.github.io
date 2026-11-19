@@ -10,6 +10,7 @@ import {
 } from './validators.js';
 import { uploadProjectImage, removeObjects, removeUnreferencedImages } from './images.js';
 import { initAssetsPanel } from './assets-panel.js';
+import { initVideoPanel } from './video-panel.js';
 
 const TABLE = 'portfolio_projects';
 const DRAFT_KEY = 'portfolio_admin_project_draft';
@@ -52,28 +53,33 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
   // Case images (graphic designs). Cover sync keeps the legacy image_url in step.
   const assets = initAssetsPanel({
     getProject: () => editing,
-    syncCover: (url) => {
-      if (!editing) return;
-      const untouched = !pendingFile && !removeRequested
-        && el('projectImage').value.trim() === (editing.image_url || '');
-      editing.image_url = url;
-      if (!untouched) return;
-      const base = JSON.parse(baseline);
-      base.image_url = url || '';
-      baseline = JSON.stringify(base);
-      el('projectImage').value = url || '';
-      renderImage();
-      renderPreview();
-      syncDirtyBadge();
-    },
+    syncCover: (url) => syncCoverShared(url),
   });
+  const videoPanel = initVideoPanel({ getProject: () => editing, syncCover: (url) => syncCoverShared(url) });
+  registerDirty('video-upload', () => open && videoPanel.isUploading());
+  // Keeps the legacy image_url field/baseline in step after the server-side cover changed.
+  function syncCoverShared(url) {
+    if (!editing) return;
+    const untouched = !pendingFile && !removeRequested
+      && el('projectImage').value.trim() === (editing.image_url || '');
+    editing.image_url = url;
+    if (!untouched) return;
+    const base = JSON.parse(baseline);
+    base.image_url = url || '';
+    baseline = JSON.stringify(base);
+    el('projectImage').value = url || '';
+    renderImage();
+    renderPreview();
+    syncDirtyBadge();
+  }
   let assetsKey = '';
   function refreshAssets(force = false) {
     const workType = el('projectWorkType').value;
-    const key = `${editing?.id || 'new'}|${typeFieldsReady() && workType === 'graphic_case'}`;
+    const key = `${editing?.id || 'new'}|${typeFieldsReady() ? workType : ''}`;
     if (!force && key === assetsKey) return;
     assetsKey = key;
     assets.show({ project: editing, workType, ready: typeFieldsReady() });
+    videoPanel.show({ project: editing, workType, ready: typeFieldsReady() });
   }
 
   // ---- form <-> values --------------------------------------------------------------------------
@@ -267,7 +273,7 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
 
   // ---- open / close -----------------------------------------------------------------------------------------------
   async function openEditor(project) {
-    if (open && !(await confirmDiscard(['project-form']))) return;
+    if (open && !(await confirmDiscard(['project-form', 'video-upload']))) return;
     editing = project || null;
     dropPending();
     removeRequested = false;
@@ -278,6 +284,7 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
     el('saveProjectBtn').textContent = project ? 'Save changes' : 'Create project';
     open = true;
     assets.resetChanges();
+    videoPanel.resetChanges();
     refreshAssets(true);
     renderImage();
     updateCounters();
@@ -290,15 +297,16 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
 
   async function close({ force = false } = {}) {
     if (!open) return true;
-    if (!force && !(await confirmDiscard(['project-form']))) return false;
+    if (!force && !(await confirmDiscard(['project-form', 'video-upload']))) return false;
     open = false;
     dropPending();
     editing = null;
     assetsKey = '';
     assets.show({ project: null, workType: '', ready: false });
+    videoPanel.show({ project: null, workType: '', ready: false });
     showList();
     // Images are saved as they change, so the list may need a refresh (cover, counts).
-    if (assets.hasChanges()) { assets.resetChanges(); await onSaved(); }
+    if (assets.hasChanges() || videoPanel.hasChanges()) { assets.resetChanges(); videoPanel.resetChanges(); await onSaved(); }
     return true;
   }
 
@@ -353,11 +361,11 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
       await close({ force: true });
       await onSaved(rows[0]?.id);
       // A new graphic case needs its id before images can be attached: reopen it.
-      if (wasNew && value.work_type === 'graphic_case') {
+      if (wasNew && (value.work_type === 'graphic_case' || value.work_type === 'edited_video')) {
         const created = getProjects().find((p) => p.id === rows[0]?.id);
         if (created) {
           await openEditor(created);
-          toast('Now add this case\'s images below.', { kind: 'info' });
+          toast(value.work_type === 'edited_video' ? 'Now upload its video below.' : 'Now add this case\'s images below.', { kind: 'info' });
         }
       }
     } catch (error) {

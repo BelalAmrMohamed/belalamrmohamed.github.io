@@ -37,3 +37,10 @@
 .featured-group__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .6rem 2rem; margin-bottom: 1.6rem; }
 .featured-group__head h3 { margin: 0; }
 .featured-group .work-card__open { text-decoration: none; color: inherit; }
+
+.work-card__pic .yt-frame { width: 100%; height: 100%; border: 0; display: block; }
+#ytSection h2 { margin: 0 0 2rem; }
+.edited-video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+#editedSection { margin-top: 5rem; }
+#editedSection h2 { margin: 0 0 2rem; }
+.work-card__text p { margin: .4rem 0 0; font-size: 1.5rem; opacity: .85; }

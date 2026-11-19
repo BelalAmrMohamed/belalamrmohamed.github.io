@@ -109,3 +109,30 @@ export function coverSyncPlan({ currentUrl, assets, supabaseUrl, bucket, project
   if ((url || null) === (currentUrl || null)) return { change: false };
   return { change: true, url: url || null };
 }
+
+// ---- edited videos (bucket `portfolio-videos`, MP4 only, owner-approved 50 MB) ------------------
+export const VIDEO_BUCKET = 'portfolio-videos';
+export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+export const VIDEO_TYPES = Object.freeze({ 'video/mp4': 'mp4' });
+
+/** Returns an error message, or null when the file may be uploaded. Takes { type, size }. */
+export function validateVideoFile(file) {
+  if (!file) return 'Choose a video file.';
+  if (!Object.hasOwn(VIDEO_TYPES, file.type)) return 'Use an MP4 file (H.264 video, AAC audio).';
+  if (file.size === 0) return 'That file is empty.';
+  if (file.size > VIDEO_MAX_BYTES) {
+    return `That file is ${(file.size / 1048576).toFixed(1)} MB. The limit is ${VIDEO_MAX_BYTES / 1048576} MB.`;
+  }
+  return null;
+}
+
+/** videos/<project id>/<unique id>.mp4 */
+export function makeVideoPath(projectId, id) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(projectId)) || !/^[0-9a-f-]{36}$/i.test(String(id))) throw new Error('Invalid id.');
+  return `videos/${String(projectId).toLowerCase()}/${String(id).toLowerCase()}.mp4`;
+}
+
+/** The video asset of a case (first by order), or null. */
+export function pickVideoAsset(assets) {
+  return (assets || []).find((a) => a && a.media_kind === 'video' && a.role === 'edited_video') || null;
+}

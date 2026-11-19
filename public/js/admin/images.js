@@ -48,3 +48,23 @@ export async function removeUnreferencedImages(urls, remainingProjects) {
     .filter(Boolean);
   await removeObjects(paths);
 }
+
+/** Storage objects owned by the given projects' portfolio_assets rows (call BEFORE deleting the projects). */
+export async function collectAssetObjects(projectIds) {
+  if (!projectIds.length) return [];
+  const { data, error } = await call(() => client.from('portfolio_assets')
+    .select('bucket, storage_path').in('portfolio_project_id', projectIds));
+  if (error || !data) return []; // best effort: a missing table just means no assets yet
+  return data.filter((a) => a.bucket && a.storage_path);
+}
+
+/** Removes collected objects from their buckets. Best-effort. */
+export async function removeAssetObjects(objects) {
+  const byBucket = {};
+  for (const { bucket, storage_path: path } of objects) (byBucket[bucket] ||= []).push(path);
+  for (const [bucket, paths] of Object.entries(byBucket)) {
+    if (bucket !== IMAGE_BUCKET && bucket !== 'portfolio-videos') continue; // never touch unknown buckets
+    const { error } = await call(() => client.storage.from(bucket).remove(paths));
+    if (error) console.warn(`Could not remove unused files from ${bucket}`, error.message);
+  }
+}

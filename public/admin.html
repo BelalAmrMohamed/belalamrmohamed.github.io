@@ -437,6 +437,7 @@
       <nav class="dashboard-nav" aria-label="Dashboard sections">
         <ul>
           <li><button type="button" class="nav-btn" data-tab="projects"><span class="nav-ico" aria-hidden="true">▦</span>Projects</button></li>
+          <li><button type="button" class="nav-btn" data-tab="videos"><span class="nav-ico" aria-hidden="true">▶</span>Videos</button></li>
           <li><button type="button" class="nav-btn" data-tab="settings"><span class="nav-ico" aria-hidden="true">⚙</span>Settings</button></li>
           <li><button type="button" class="nav-btn" data-tab="ai"><span class="nav-ico" aria-hidden="true">✦</span>AI assistant</button></li>
           <li><button type="button" class="nav-btn" data-tab="admins"><span class="nav-ico" aria-hidden="true">☻</span>Admins</button></li>
@@ -679,6 +680,18 @@
                 <ul id="assetList" class="asset-list"></ul>
                 <p id="assetsStatus" class="hint" role="status" aria-live="polite"></p>
               </section>
+
+              <section id="videoSection" class="dashboard-card assets-section" aria-labelledby="videoTitle" hidden>
+                <div>
+                  <h3 id="videoTitle" class="preview-title">Video</h3>
+                  <p class="hint">MP4 only (H.264 video, AAC audio), up to 50&nbsp;MB. Export the finished video first; uploads are not converted or compressed. Optional poster: a JPEG, PNG, WebP, GIF or AVIF image up to 5&nbsp;MB.</p>
+                </div>
+                <p id="videoNote" class="hint" hidden></p>
+                <div id="videoBody" class="video-body"></div>
+                <input id="videoFile" type="file" accept="video/mp4" hidden>
+                <input id="posterFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden>
+                <p id="videoStatus" class="hint" role="status" aria-live="polite"></p>
+              </section>
               </div>
 
               <aside class="preview dashboard-card" aria-labelledby="previewTitle">
@@ -690,6 +703,46 @@
                 <div id="previewModal" class="pv-modal"></div>
               </aside>
             </div>
+          </div>
+        </section>
+
+        <!-- ================= Videos (YouTube channels) ================= -->
+        <section id="panel-videos" class="dashboard-panel" data-panel="videos" aria-labelledby="h-videos" hidden>
+          <header class="panel-head">
+            <div>
+              <p class="dashboard-eyebrow">YouTube</p>
+              <h2 id="h-videos" tabindex="-1">Videos</h2>
+            </div>
+          </header>
+          <div id="ytState"></div>
+          <div class="dashboard-card yt-card">
+            <h3 class="preview-title">Connect a channel</h3>
+            <form id="ytAddForm" class="yt-add" novalidate>
+              <div class="field">
+                <label class="label" for="ytInput">Handle, channel ID or channel link</label>
+                <input class="input" id="ytInput" type="text" maxlength="300" placeholder="@yourchannel" autocomplete="off" required>
+              </div>
+              <button id="ytLookupBtn" class="btn btn-outline" type="submit">Look up</button>
+            </form>
+            <div id="ytPreview" class="yt-preview"></div>
+          </div>
+          <div class="dashboard-card yt-card">
+            <h3 class="preview-title">Channels</h3>
+            <p id="ytNoChannels" class="hint">No channels connected yet. Videos sync daily and when you press Sync now.</p>
+            <ul id="ytChannels" class="yt-list"></ul>
+          </div>
+          <div class="dashboard-card yt-card">
+            <div class="assets-head">
+              <h3 class="preview-title">Imported videos</h3>
+              <div class="field field-inline">
+                <label class="label" for="ytChannelFilter">Channel</label>
+                <select class="input" id="ytChannelFilter"><option value="">All channels</option></select>
+              </div>
+            </div>
+            <p class="hint">Only public videos marked Visible appear on the site. Your Visible and Featured choices survive every sync.</p>
+            <div id="ytVideoState"></div>
+            <ul id="ytVideos" class="yt-list"></ul>
+            <button id="ytMoreBtn" class="btn btn-outline" type="button" hidden>Load more</button>
           </div>
         </section>
 

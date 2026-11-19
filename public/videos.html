@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html class="no-js ss-preload" lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Videos | Belal Amr</title>
+    <meta name="description" content="Videos from Belal Amr Mohamed's YouTube channels and videos he has edited.">
+    <meta name="author" content="Belal Amr Mohamed">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0088cc">
+    <link rel="canonical" href="https://belal-amr.vercel.app/videos">
+    <link rel="stylesheet" href="/css/vendor.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/category-pages.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://belal-amr.vercel.app/videos">
+    <meta property="og:title" content="Videos | Belal Amr">
+    <meta property="og:description" content="Videos from Belal Amr Mohamed's YouTube channels and videos he has edited.">
+    <meta property="og:image" content="https://belal-amr.vercel.app/images/thumbnail.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Videos | Belal Amr">
+    <meta name="twitter:description" content="Videos from Belal Amr Mohamed's YouTube channels and videos he has edited.">
+</head>
+<body id="top">
+    <div id="preloader"><div id="loader"></div></div>
+    <div class="s-pagewrap">
+        <header data-site-header></header>
+        <main class="s-page">
+            <div class="row">
+                <div class="column lg-12">
+                    <div class="s-page__head">
+                        <h1>Videos</h1>
+                        <p>Videos from my YouTube channels, and videos I edited for others.</p>
+                    </div>
+                    <p id="workStatus" class="work-status" role="status" aria-live="polite">Loading…</p>
+                    <section id="ytSection" aria-labelledby="ytHeading" hidden>
+                        <h2 id="ytHeading">From my YouTube channels</h2>
+                        <ul id="ytGrid" class="work-grid"></ul>
+                    </section>
+                    <section id="editedSection" aria-labelledby="editedHeading" hidden>
+                        <h2 id="editedHeading">Videos I edited</h2>
+                        <ul id="editedGrid" class="work-grid"></ul>
+                    </section>
+                </div>
+            </div>
+        </main>
+        <footer data-site-footer></footer>
+    </div>
+    <script src="/js/plugins.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+    <script src="/js/site-config.js"></script>
+    <script type="module" src="/js/site/videos-page.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(function () {});
+    </script>
+</body>
+</html>

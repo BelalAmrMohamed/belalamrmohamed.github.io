@@ -15,12 +15,13 @@ import { initSettings } from './admin/settings.js';
 import { initAiPanel } from './admin/ai-panel.js';
 import { initAdmins } from './admin/admins.js';
 import { initActivity } from './admin/activity.js';
+import { initYoutube } from './admin/youtube.js';
 
 const authView = $('.login');
 const dashboardView = $('#dashboardView');
 const authStatus = $('#auth-status');
-const TABS = ['projects', 'settings', 'ai', 'admins', 'activity'];
-const TAB_LABEL = { projects: 'Projects', settings: 'Settings', ai: 'AI assistant', admins: 'Admins', activity: 'Activity' };
+const TABS = ['projects', 'videos', 'settings', 'ai', 'admins', 'activity'];
+const TAB_LABEL = { projects: 'Projects', videos: 'Videos', settings: 'Settings', ai: 'AI assistant', admins: 'Admins', activity: 'Activity' };
 
 let activeUserId = null;
 let verifyingUserId = null;
@@ -61,6 +62,7 @@ function buildModules() {
     ai: initAiPanel({ goToTab: (name) => switchTab(name) }),
     admins: initAdmins(),
     activity: initActivity(),
+    videos: initYoutube(),
   };
 }
 
@@ -90,6 +92,7 @@ async function switchTab(name, { fromHash = false } = {}) {
   else if (name === 'ai') modules.ai.load();
   else if (name === 'admins') modules.admins.load();
   else if (name === 'activity') modules.activity.load();
+  else if (name === 'videos') modules.videos.load();
   else if (name === 'projects' && modules.projects.isReady()) modules.projects.load();
 }
 

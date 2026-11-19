@@ -8,6 +8,7 @@ export const NAV_LINKS = [
   { href: WORK_TYPES.website.path, label: 'Websites' },
   { href: WORK_TYPES.app_tool.path, label: 'Apps & Tools' },
   { href: WORK_TYPES.graphic_case.path, label: 'Graphic Designs' },
+  { href: WORK_TYPES.edited_video.path, label: 'Videos' },
   { href: '/#contact', label: 'Say Hello' },
   { href: '/admin', label: 'Admin' },
 ];

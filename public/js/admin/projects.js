@@ -8,7 +8,7 @@ import {
   sortProjects, filterProjects, hasActiveFilters, moveInArray, sameOrder, topSortOrder, stats,
 } from './model.js';
 import { buildExport, parseImport, IMPORT_MAX_BYTES, validateProject, LIMITS, WORK_TYPES, slugify } from './validators.js';
-import { removeUnreferencedImages } from './images.js';
+import { removeUnreferencedImages, collectAssetObjects, removeAssetObjects } from './images.js';
 
 const TABLE = 'portfolio_projects';
 
@@ -485,6 +485,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
     if (!confirmed) return;
 
     const ids = list.map((p) => p.id);
+    const ownedFiles = await collectAssetObjects(ids); // rows cascade away with the project; files would be orphaned
     const ok = await mutate('Delete', async () => {
       const rows = await run(() => client.from(TABLE).delete().in('id', ids).select('id'));
       if (rows.length !== ids.length) throw new Error(`Only ${rows.length} of ${ids.length} projects were deleted.`);
@@ -494,6 +495,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
       if (pendingOrder) pendingOrder = pendingOrder.filter((id) => !ids.includes(id));
       toast(many ? `${ids.length} projects deleted.` : 'Project deleted.', { kind: 'success' });
       removeUnreferencedImages(list.map((p) => p.image_url), projects.filter((p) => !ids.includes(p.id)));
+      removeAssetObjects(ownedFiles);
     }
     await load();
   }
