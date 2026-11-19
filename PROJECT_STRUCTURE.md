@@ -5,6 +5,8 @@
 
 The map is useful for quickly identifying the layout of the project, understanding the relationships between different components, and navigating the codebase. It can also serve as a reference for new contributors to get acquainted with the project's structure.
 
+Run `npm run map` to regenerate this file.
+
 ## Map of Project Structure
 
 ```text
@@ -60,7 +62,15 @@ Belal Amr Mohamed/
 │       ├── _tools.js
 │       └── chat.js
 │
-├── docs/ [7.09 KB, 68 LOC]
+├── docs/ [77.26 KB, 1706 LOC]
+│   ├── components/ [45.97 KB, 1420 LOC]
+│   │   ├── 3D Card Effect.md
+│   │   ├── Animated Shader Hero.md
+│   │   └── Bento Card.md
+│   │
+│   ├── plans/ [27.01 KB, 246 LOC]
+│   │   └── portfolio-platform-upgrade-plan.md
+│   │
 │   ├── HANDOFF.md
 │   └── issues.md
 │
@@ -208,7 +218,7 @@ Belal Amr Mohamed/
 │   ├── site.webmanifest
 │   └── sitemap.xml
 │
-├── scripts/ [40.31 KB, 1103 LOC]
+├── scripts/ [40.35 KB, 1105 LOC]
 │   ├── commit.js
 │   ├── git-changes.js
 │   ├── map.js
@@ -247,11 +257,11 @@ Belal Amr Mohamed/
 |-----------|---------------|
 | `public` | 29296 |
 | `Animated UI Components` | 20031 |
+| `docs` | 1706 |
 | `supabase` | 1533 |
 | `api` | 1248 |
-| `scripts` | 1103 |
-| `(root)` | 422 |
-| `docs` | 68 |
+| `scripts` | 1105 |
+| `(root)` | 424 |
 
 ### Top 10 Largest Code Files
 
@@ -272,10 +282,10 @@ Belal Amr Mohamed/
 
 | Extension | Files | Lines of Code | Size |
 |-----------|-------|---------------|------------|
-| .js | 95 | 34332 | 1.66 MB |
+| .js | 95 | 34334 | 1.66 MB |
 | .sql | 16 | 1163 | 47.84 KB |
+| .md | 11 | 2717 | 117.83 KB |
 | .css | 10 | 14228 | 353.06 KB |
-| .md | 7 | 1077 | 47.33 KB |
 | .json | 4 | 60 | 15.65 KB |
 | .html | 4 | 1938 | 80.74 KB |
 | .txt | 2 | 33 | 1.8 KB |
@@ -283,7 +293,7 @@ Belal Amr Mohamed/
 | .xml | 1 | 9 | 280 B |
 | .mjs | 1 | 362 | 14.02 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **142** | **53701** | **2.23 MB** |
+| **Total** | **146** | **55343** | **2.3 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -295,5 +305,5 @@ Belal Amr Mohamed/
 | .pdf | 1 | 100.13 KB |
 | **Total** | **43** | **2.05 MB** |
 
-**Grand Total Files:** 185  
-**Total Repository Size:** 4.27 MB
+**Grand Total Files:** 189  
+**Total Repository Size:** 4.34 MB
