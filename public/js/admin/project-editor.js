@@ -9,6 +9,7 @@ import {
   validateProject, validateImageFile, WORK_TYPES, isUrlOrSitePath, IMAGE_MAX_BYTES, LIMITS,
 } from './validators.js';
 import { uploadProjectImage, removeObjects, removeUnreferencedImages } from './images.js';
+import { initAssetsPanel } from './assets-panel.js';
 
 const TABLE = 'portfolio_projects';
 const DRAFT_KEY = 'portfolio_admin_project_draft';
@@ -47,6 +48,33 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
   let removeRequested = false;
   let saving = false;
   let open = false;
+
+  // Case images (graphic designs). Cover sync keeps the legacy image_url in step.
+  const assets = initAssetsPanel({
+    getProject: () => editing,
+    syncCover: (url) => {
+      if (!editing) return;
+      const untouched = !pendingFile && !removeRequested
+        && el('projectImage').value.trim() === (editing.image_url || '');
+      editing.image_url = url;
+      if (!untouched) return;
+      const base = JSON.parse(baseline);
+      base.image_url = url || '';
+      baseline = JSON.stringify(base);
+      el('projectImage').value = url || '';
+      renderImage();
+      renderPreview();
+      syncDirtyBadge();
+    },
+  });
+  let assetsKey = '';
+  function refreshAssets(force = false) {
+    const workType = el('projectWorkType').value;
+    const key = `${editing?.id || 'new'}|${typeFieldsReady() && workType === 'graphic_case'}`;
+    if (!force && key === assetsKey) return;
+    assetsKey = key;
+    assets.show({ project: editing, workType, ready: typeFieldsReady() });
+  }
 
   // ---- form <-> values --------------------------------------------------------------------------
   // The type/slug fields exist only after the 20261119000100 migration is applied.
@@ -249,6 +277,8 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
     $('#formTitle').textContent = project ? 'Edit project' : 'New project';
     el('saveProjectBtn').textContent = project ? 'Save changes' : 'Create project';
     open = true;
+    assets.resetChanges();
+    refreshAssets(true);
     renderImage();
     updateCounters();
     renderPreview();
@@ -264,7 +294,11 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
     open = false;
     dropPending();
     editing = null;
+    assetsKey = '';
+    assets.show({ project: null, workType: '', ready: false });
     showList();
+    // Images are saved as they change, so the list may need a refresh (cover, counts).
+    if (assets.hasChanges()) { assets.resetChanges(); await onSaved(); }
     return true;
   }
 
@@ -318,6 +352,14 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
       toast(wasNew ? 'Project created.' : 'Project saved.', { kind: 'success' });
       await close({ force: true });
       await onSaved(rows[0]?.id);
+      // A new graphic case needs its id before images can be attached: reopen it.
+      if (wasNew && value.work_type === 'graphic_case') {
+        const created = getProjects().find((p) => p.id === rows[0]?.id);
+        if (created) {
+          await openEditor(created);
+          toast('Now add this case\'s images below.', { kind: 'info' });
+        }
+      }
     } catch (error) {
       console.error('Project save failed', error);
       if (uploadedPath) removeObjects([uploadedPath]);
@@ -369,6 +411,7 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
   form.addEventListener('submit', save);
   form.addEventListener('input', refresh);
   form.addEventListener('change', refresh);
+  el('projectWorkType').addEventListener('change', () => refreshAssets());
   for (const [field, id] of Object.entries(FIELDS)) {
     if (!ERROR_IDS[field]) continue;
     el(id).addEventListener('blur', () => validateField(field));

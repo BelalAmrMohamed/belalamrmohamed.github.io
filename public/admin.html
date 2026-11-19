@@ -565,6 +565,7 @@
             </header>
 
             <div class="editor-grid">
+              <div class="editor-main">
               <form id="projectForm" class="dashboard-card dashboard-form" novalidate>
                 <p id="formErrorSummary" class="form-summary" role="alert" hidden></p>
                 <input id="projectId" type="hidden">
@@ -664,6 +665,21 @@
                   <button id="cancelEditBtn" class="btn btn-outline" type="button">Cancel</button>
                 </div>
               </form>
+
+              <section id="assetsSection" class="dashboard-card assets-section" aria-labelledby="assetsTitle" hidden>
+                <div class="assets-head">
+                  <div>
+                    <h3 id="assetsTitle" class="preview-title">Case images</h3>
+                    <p class="hint">Logo, thumbnail, banner and other images for this client or project, in display order. JPEG, PNG, WebP, GIF or AVIF, up to 5&nbsp;MB each.</p>
+                  </div>
+                  <button id="addAssetsBtn" class="btn btn-outline btn-sm" type="button" disabled>Add images</button>
+                  <input id="assetFiles" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden>
+                </div>
+                <p id="assetsNote" class="hint" hidden></p>
+                <ul id="assetList" class="asset-list"></ul>
+                <p id="assetsStatus" class="hint" role="status" aria-live="polite"></p>
+              </section>
+              </div>
 
               <aside class="preview dashboard-card" aria-labelledby="previewTitle">
                 <h3 id="previewTitle" class="preview-title">Live preview</h3>
@@ -888,4 +904,4 @@
   <script src="js/site-config.js"></script>
   <script src="js/admin-app.js" type="module"></script>
 </body>
-</html>
+</html>

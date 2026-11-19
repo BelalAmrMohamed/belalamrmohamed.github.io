@@ -19,9 +19,24 @@
 - Known inconsistency: seed row "Calculator App" has `featured=true` with `status='active'`; the admin derives `featured`
   from status, so saving it in the admin will un-feature it. Resolve with the featured/status cleanup (plan §4.1).
 
+## Done in round 3
+- Admin asset manager for graphic cases (`public/js/admin/assets-panel.js`, section `#assetsSection` in `admin.html`): multi-file
+  upload to the existing images bucket under `assets/<project id>/`, role select, alt text, caption, move up/down, remove
+  (row deleted first, file deleted only if nothing references it), 40-image cap, orphan cleanup if the row insert fails.
+  Shown only when Type = Graphic design and the work_type column exists; asset changes save immediately (stated in the UI).
+  A new graphic case reopens in the editor after its first save so images can be attached.
+- Legacy `image_url` follows the cover asset, but only while it is empty or already points into that case's asset folder;
+  a hand-entered cover link is never overwritten (plan 4.2).
+- Shared pure module `public/js/site/asset-model.js` (roles, cover order, paths, reorder, cover-sync plan); used by the admin
+  and by `/graphic-designs`. `tests/asset-model.test.mjs`, run with `npm test` (6 pass).
+- Landing page: "Featured Work" section (`js/site/featured-home.js`), featured items per type with "View all" links. It stays
+  hidden until classified featured items exist; the legacy Works section is unchanged. Service worker `v12`.
+- Browser-checked at 360px against mocked Supabase: upload, cover/role defaults, alt save, reorder, remove + file delete,
+  form not marked dirty by cover sync, home section, gallery dialog, no horizontal scroll. Not run against real Supabase.
+
 ## Next
-1. Apply both migrations (0100 then 0200); audit any live rows beyond the five seeds.
-2. Admin asset manager for graphic cases (upload + roles); landing page featured-by-type.
+1. Apply migrations 0100 then 0200 to the real project; audit live rows beyond the five seeds. (Needs owner access.)
+2. Resolve featured/status duplication (plan 4.1; Calculator App seed row is still inconsistent).
 3. UI components (preview spike), then Videos (bucket, sync API, uploader).
 
 ## Notes

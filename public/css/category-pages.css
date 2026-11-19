@@ -30,3 +30,10 @@
 .asset-gallery figure { margin: 0; }
 .asset-gallery img { margin: 0; width: 100%; height: auto; background: rgba(127,127,127,.15); }
 .asset-gallery figcaption { font-size: 1.3rem; opacity: .75; padding-top: .4rem; }
+
+/* Landing page: featured work by type */
+.s-featured { padding: 6rem 0 2rem; }
+.featured-group { margin-bottom: 4rem; }
+.featured-group__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .6rem 2rem; margin-bottom: 1.6rem; }
+.featured-group__head h3 { margin: 0; }
+.featured-group .work-card__open { text-decoration: none; color: inherit; }

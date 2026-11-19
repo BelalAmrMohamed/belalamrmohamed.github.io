@@ -1,14 +1,9 @@
 // Graphic Designs: one card per client/project, dialog shows its labeled assets.
 import { fetchWorks, fetchAssetsFor, assetUrl, safeUrl } from './portfolio-repo.js';
 import { renderShell } from './shell.js';
+import { ROLE_LABELS, pickCoverAsset } from './asset-model.js';
 
 renderShell();
-
-const ROLE_LABELS = {
-  cover: 'Cover', gallery: 'Image', logo: 'Logo', youtube_thumbnail: 'YouTube thumbnail',
-  opengraph: 'Open Graph image', social_banner: 'Social banner', poster: 'Poster',
-};
-const COVER_ORDER = ['cover', 'logo', 'youtube_thumbnail', 'social_banner', 'opengraph', 'gallery', 'poster'];
 
 const grid = document.getElementById('workGrid');
 const status = document.getElementById('workStatus');
@@ -20,12 +15,8 @@ function setStatus(message) { status.textContent = message; status.hidden = !mes
 const imageAssets = (assets) => (assets || []).filter((a) => a.media_kind === 'image' && assetUrl(a));
 
 function coverUrl(work, assets) {
-  const images = imageAssets(assets);
-  for (const role of COVER_ORDER) {
-    const hit = images.find((a) => a.role === role);
-    if (hit) return assetUrl(hit);
-  }
-  return safeUrl(work.image_url, { allowRelative: true });
+  const hit = pickCoverAsset(imageAssets(assets));
+  return hit ? assetUrl(hit) : safeUrl(work.image_url, { allowRelative: true });
 }
 
 function card(work, assets) {

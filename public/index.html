@@ -19,6 +19,7 @@
     ================================================== -->
     <link rel="stylesheet" href="css/vendor.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/category-pages.css">
     <link rel="stylesheet" href="/src/components/ai-agent/ai-agent.css">
     <link rel="stylesheet" href="/src/components/notifications/notifications.css">
 
@@ -363,6 +364,17 @@
             </section> <!-- end s-about -->
 
 
+            <!-- ### featured work by category (hidden until classified featured items exist)
+            ================================================== -->
+            <section id="featured-work" class="target-section s-featured" aria-labelledby="featured-title" hidden>
+                <div class="row">
+                    <div class="column lg-12">
+                        <h2 id="featured-title" class="text-pretitle">Featured Work</h2>
+                        <div id="featuredByType"></div>
+                    </div>
+                </div>
+            </section>
+
             <!-- ### works
             ================================================== -->
             <section id="works" class="s-works target-section">
@@ -558,6 +570,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
     <script src="js/site-config.js"></script>
     <script src="js/portfolio.js"></script>
+    <script type="module" src="js/site/featured-home.js"></script>
     <script type="module" src="js/ai-agent-bootstrap.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
@@ -580,4 +593,4 @@
     </script>
 </body>
 
-</html>
+</html>
