@@ -305,7 +305,7 @@ Belal Amr Mohamed/
 | `docs` | 1926 |
 | `api` | 1527 |
 | `scripts` | 1105 |
-| `(root)` | 492 |
+| `(root)` | 494 |
 | `tests` | 232 |
 
 ### Top 10 Largest Code Files
@@ -329,7 +329,7 @@ Belal Amr Mohamed/
 |-----------|-------|---------------|------------|
 | .js | 110 | 36846 | 1.78 MB |
 | .sql | 25 | 2240 | 96.09 KB |
-| .md | 12 | 2992 | 144.78 KB |
+| .md | 12 | 2994 | 144.91 KB |
 | .css | 11 | 14488 | 365.83 KB |
 | .html | 10 | 2999 | 132.75 KB |
 | .json | 4 | 77 | 16.26 KB |
@@ -338,7 +338,7 @@ Belal Amr Mohamed/
 | .webmanifest | 1 | 84 | 1.91 KB |
 | .xml | 1 | 36 | 1.01 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **181** | **60804** | **2.56 MB** |
+| **Total** | **181** | **60806** | **2.56 MB** |
 
 ### Binary / Media Files (Physical Size)
 
