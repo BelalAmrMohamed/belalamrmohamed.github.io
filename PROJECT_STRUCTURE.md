@@ -66,13 +66,13 @@ Belal Amr Mohamed/
 │       ├── _youtube.js
 │       └── sync.js
 │
-├── docs/ [94.15 KB, 1876 LOC]
+├── docs/ [102.28 KB, 1926 LOC]
 │   ├── components/ [45.97 KB, 1420 LOC]
 │   │   ├── 3D Card Effect.md
 │   │   ├── Animated Shader Hero.md
 │   │   └── Bento Card.md
 │   │
-│   ├── plans/ [43.9 KB, 416 LOC]
+│   ├── plans/ [52.02 KB, 466 LOC]
 │   │   ├── portfolio-platform-upgrade-plan.md
 │   │   └── portfolio-platform-upgrade-progress.md
 │   │
@@ -255,8 +255,8 @@ Belal Amr Mohamed/
 │   ├── release.js
 │   └── seo-check.mjs
 │
-├── supabase/ [106.96 KB, 2570 LOC]
-│   ├── migrations/ [59.46 KB, 1354 LOC]
+├── supabase/ [109.73 KB, 2614 LOC]
+│   ├── migrations/ [61.18 KB, 1382 LOC]
 │   │   ├── 20261008145231_create_portfolio_admin_schema.sql
 │   │   ├── 20261008145317_add_ai_agent_usage_quota.sql
 │   │   ├── 20261017205126_grant_service_role_read_portfolio_tables.sql
@@ -267,9 +267,10 @@ Belal Amr Mohamed/
 │   │   ├── 20261018000500_portfolio_sync_featured_flag.sql
 │   │   ├── 20261119000100_portfolio_work_types_and_media.sql
 │   │   ├── 20261119000200_portfolio_backfill_work_types.sql
-│   │   └── 20261120000100_portfolio_videos_bucket.sql
+│   │   ├── 20261120000100_portfolio_videos_bucket.sql
+│   │   └── 20261120000200_portfolio_classify_unclassified.sql
 │   │
-│   ├── rollbacks/ [5.31 KB, 96 LOC]
+│   ├── rollbacks/ [6.35 KB, 112 LOC]
 │   │   ├── 20261018000100_rollback.sql
 │   │   ├── 20261018000200_rollback.sql
 │   │   ├── 20261018000300_rollback.sql
@@ -278,6 +279,7 @@ Belal Amr Mohamed/
 │   │   ├── 20261119000100_rollback.sql
 │   │   ├── 20261119000200_rollback.sql
 │   │   ├── 20261120000100_rollback.sql
+│   │   ├── 20261120000200_rollback.sql
 │   │   └── README.md
 │   │
 │   ├── config.toml
@@ -299,11 +301,11 @@ Belal Amr Mohamed/
 |-----------|---------------|
 | `public` | 32877 |
 | `Animated UI Components` | 20031 |
-| `supabase` | 2570 |
-| `docs` | 1876 |
+| `supabase` | 2614 |
+| `docs` | 1926 |
 | `api` | 1527 |
 | `scripts` | 1105 |
-| `(root)` | 491 |
+| `(root)` | 492 |
 | `tests` | 232 |
 
 ### Top 10 Largest Code Files
@@ -326,8 +328,8 @@ Belal Amr Mohamed/
 | Extension | Files | Lines of Code | Size |
 |-----------|-------|---------------|------------|
 | .js | 110 | 36846 | 1.78 MB |
-| .sql | 23 | 2197 | 93.4 KB |
-| .md | 12 | 2940 | 136.54 KB |
+| .sql | 25 | 2240 | 96.09 KB |
+| .md | 12 | 2992 | 144.78 KB |
 | .css | 11 | 14488 | 365.83 KB |
 | .html | 10 | 2999 | 132.75 KB |
 | .json | 4 | 77 | 16.26 KB |
@@ -336,7 +338,7 @@ Belal Amr Mohamed/
 | .webmanifest | 1 | 84 | 1.91 KB |
 | .xml | 1 | 36 | 1.01 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **179** | **60709** | **2.55 MB** |
+| **Total** | **181** | **60804** | **2.56 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -348,5 +350,5 @@ Belal Amr Mohamed/
 | .pdf | 1 | 100.13 KB |
 | **Total** | **43** | **2.05 MB** |
 
-**Grand Total Files:** 222  
-**Total Repository Size:** 4.6 MB
+**Grand Total Files:** 224  
+**Total Repository Size:** 4.61 MB

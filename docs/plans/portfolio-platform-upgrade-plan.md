@@ -1,6 +1,6 @@
 # Portfolio Platform Upgrade — Technical Implementation Plan
 
-**Status (2026-11-20):** Implementation is well advanced. See `portfolio-platform-upgrade-progress.md` for the round-by-round log and the open items. Summary: migrations are applied; Websites, Apps & Tools, Graphic Designs, UI Components and Videos pages exist; the admin has per-type sections (Websites, Apps & Tools, Graphic Designs, UI Components, Edited Videos) plus YouTube; YouTube sync works; video uploads work; UI components are addable from the admin with sandboxed previews; the home Works section shows Featured items of every type plus featured YouTube videos; the header uses a "Work" dropdown. Remaining: admin editor/panels visual redesign, seeding real components, retiring compatibility paths (§8 step 9).  
+**Status (2026-11-20):** Implementation is well advanced. See `portfolio-platform-upgrade-progress.md` for the round-by-round log and the open items. Summary: migrations are applied; Websites, Apps & Tools, Graphic Designs, UI Components and Videos pages exist; the admin has per-type sections (Websites, Apps & Tools, Graphic Designs, UI Components, Edited Videos) plus YouTube; YouTube sync works; video uploads work; UI components are addable from the admin with sandboxed previews; the home Works section shows Featured items of every type plus featured YouTube videos; the header uses a "Work" dropdown. Remaining: admin editor/panels visual redesign, seeding real components, retiring compatibility paths (§8 step 9), and the open items in §12.  
 **Original status:** Planning document.  
 **Audience:** Developer implementing the portfolio upgrade.  
 **Scope:** Product structure, existing-system constraints, data model, admin workflows, public pages, YouTube synchronization, video uploads, security, rollout, and acceptance gates.
@@ -51,7 +51,7 @@ Recommended extensionless URLs, compatible with the current clean-URL configurat
 - `/videos` — separate YouTube channel and edited-video sections.
 - `/admin` — existing admin entry point, extended with type-specific workflows.
 
-Use shared header/footer/navigation markup or a small shared renderer so page navigation and active states do not drift. Keep each route as a static HTML entry point unless the component-preview spike proves a small build step is required. A component detail may initially open in an accessible dialog on the catalog page; separate item URLs are a later SEO decision, since per-item static pages would require generated pages or a new routing/build layer.
+Use shared header/footer/navigation markup or a small shared renderer so page navigation and active states do not drift. Keep each route as a static HTML entry point unless the component-preview spike proves a small build step is required. Every work item has its own page (decided in round 11; see §12): each graphic case, component, website, app/tool, and edited video. The route shape is `/<category>/<slug>`, for example `/websites/encryption-methods`. The mechanism is pending decision H in §12. Until it ships, the accessible dialog on each category page remains the working UI.
 
 For every public route, provide a page title, description, canonical URL, social-sharing metadata, responsive layout, keyboard navigation, visible focus, and a sitemap entry. Update the service-worker asset list/cache version along with any new page shell and shared scripts/styles.
 
@@ -174,7 +174,15 @@ This repo uses timestamped imperative migrations. Create new forward migrations;
 6. **Deploy page shell and Websites/Apps pages:** update shared navigation and home featured list. Add the new static page entry points; keep the old Works section or route available during the transition.
 7. **Deploy graphics/components:** ship graphic gallery and the component preview spike/build workflow after their content/asset queries are stable.
 8. **Deploy Videos:** add channel management, import/backfill, scheduled sync, edited-video upload, and playback page. Start with one channel and a small number of uploaded videos, then add the rest.
-9. **Retire compatibility:** after production verification, remove legacy query paths/fields only in a separate migration and release. Keep a documented rollback path for the last schema and frontend changes.
+9. **Retire compatibility (decided in round 11: no backward compatibility).** Run in this order, each as its own release:
+   a. Back up the live database before any drop. Rollback files can re-add dropped columns, but data comes back only from the backup.
+   b. Move covers into `portfolio_assets` for every type, not only graphic cases: backfill each non-null `image_url` as a `cover` asset (external URL when it is not in the bucket; no binary copy).
+   c. Switch readers and writers to the cover asset: `public/js/portfolio.js`, `public/js/site/*` (graphics, components, videos, category pages, `asset-model.js` cover sync), `public/js/ai-agent-bootstrap.js`, and the admin list, editor, assets panel, and video panel.
+   d. Read featured state only from `status = 'featured'`. `public/js/site/portfolio-repo.js` still filters on `featured`.
+   e. Component previews: move each `preview_path` target into a `.preview/index.html` file row. Then drop the `preview_path` column and its legacy branch in `validatePreviewPath`, delete `public/previews/`, and remove the `/previews/*` header from `vercel.json`. Confirm the database copy of the Sign-in page preview exists first.
+   f. Admin: remove the `#projects` hash alias and the legacy admin verdict and upgrade banner in `public/js/admin-app.js`. Remove the "Needs a type" tab once no row lacks a type.
+   g. Classify or remove every row where `work_type IS NULL` (decision I), then make `work_type` NOT NULL.
+   h. Drop `portfolio_projects.featured` and `portfolio_projects.image_url` in a separate migration, each with a rollback file. Bump the service-worker version and remove the old precache entries.
 
 ## 9. Access control, performance, and operational safeguards
 
@@ -216,18 +224,22 @@ The implementation is ready for launch when:
 - Page metadata, sitemap, service-worker cache behavior, offline fallback, keyboard interaction, and responsive layouts are reviewed on the final routes.
 - Database and frontend rollout can be reversed without deleting existing portfolio media or losing the pre-migration rows.
 
-## 12. Decisions intentionally left for implementation kickoff
+## 12. Implementation decisions
 
-These do not block the architecture, but should be resolved before the related phase:
+Status after round 11. **Decided** items show their round. Items marked **Pending** are listed in the progress file under "Open decisions".
 
-- Final route names/capitalization and whether graphic case dialogs need indexable per-case URLs.
-- Owner-approved mapping of existing live projects into Websites vs. Apps & Tools.
-- Maximum edited-video file size, allowed exact MIME set, and storage/egress budget.
-- Whether public uploaded videos remain directly accessible after an item is unpublished, or whether signed URLs/object deletion are required.
-- Whether YouTube channel deletion means soft disconnect only or explicit purge of imported records.
-- Initial YouTube sync cadence based on current Vercel plan and desired freshness; ship a manual sync regardless.
-- Component preview artifact build path and whether a source-only launch is acceptable if admin-triggered compilation is not safe/simple.
-- Whether work detail pages are needed at launch or an accessible gallery/dialog per category is sufficient.
+- **Route names and capitalization.** Decided [round 2]: lowercase, extensionless routes `/websites`, `/apps-tools`, `/graphic-designs`, `/ui-components`, `/videos`.
+- **Mapping of live projects to Websites vs. Apps & Tools.** Decided [round 2]: apps/tools are Number Systems App, Calculator App, and Basmagi Quiz Platform; websites are Number Systems Website and Encryption Methods. Other rows stay unclassified rather than being guessed. Remaining unclassified rows are handled in §8 step 9g (decision I).
+- **Edited-video maximum size and MIME set.** Decided [round 5]: 50 MB, `video/mp4` only, enforced on the bucket and in the UI. Decided [round 11]: the project-wide Storage upload limit is set to 50 MB, and all migrations are applied to the live project.
+- **Storage and egress budget.** Decided [round 11], by delegation to best practice: set usage alerts in the Supabase dashboard at 70% and 90% of the included storage and egress quota (check the current quota on the Supabase pricing page, since it is not recorded here). Review usage monthly. Keep the uploaded-video count small, and keep long-form video on YouTube. If an alert fires, reassess hosting before raising the limit.
+- **Whether uploaded videos stay reachable after unpublishing.** Decided [round 5]: the `portfolio-videos` bucket is public, so a known direct URL keeps working after an item is unpublished. Truly revoking access means deleting the object. This departs from the §4.5 default (private bucket with signed URLs); it is an explicit owner choice and should not be changed without a new decision.
+- **YouTube channel deletion semantics.** Decided [round 4]: Disconnect is a soft disconnect (sync stops, videos hidden, data kept). Delete is an explicit, confirmed purge of the channel and its imported records.
+- **Initial YouTube sync cadence.** Decided [round 4]: a daily Vercel cron at 03:00 UTC (`vercel.json`), plus a manual "Sync now" control in the admin.
+- **Component preview build path and source-only fallback.** Decided [rounds 5, 7, 9] and confirmed [round 11]: previews are prebuilt, isolated artifacts. There is no live compilation and no build step for previews. React/TSX formats keep the self-contained preview page pasted in the admin. HTML/CSS/JS formats build their preview from their own files.
+- **Whether React component previews need a build step later.** Decided [round 11]: no. Pasted self-contained preview pages are the approach.
+- **Work detail pages.** Decided [round 11]: each work item has its own page (each graphic case, component, website, app/tool, and edited video). The route shape is proposed in §3. The rendering mechanism is decided [round 12]: a build step writes one static HTML page per published item, with real title and social tags. A client-rendered `/<category>/<slug>` fallback covers pages not yet built. A Vercel deploy hook runs after admin saves.
+- **Admin redesign.** Decided [round 11]: keep the dark theme and restructure the layout. The scope covers the project editor, Settings, AI assistant, Admins, and Activity. The look must still meet the rules in `docs/HANDOFF.md` (accessible, works at 360px).
+- **Backward compatibility.** Decided [round 11]: none. All compatibility paths are retired in §8 step 9.
 
 ## References
 

@@ -148,21 +148,59 @@
   preview textarea/button was not browser-checked.
 - Service worker `v18`.
 
+## Done in round 10 (review of the uploaded snapshot, docs only, no code change)
+- Checked the snapshot against this log: `node --test tests/*.test.mjs` passes 21 of 21, and `CACHE_VERSION` is `v18`, as logged in round 9.
+- `public/previews/` now holds only `sign-in-page/`. The sample preview was removed, but no round recorded it.
+- Migrations `20261018000500` (featured/status) and `20261120000100` (videos bucket) are in the snapshot. This log does not record whether they are applied to the live project (open decision C).
+- Plan §12 reconciled: items already answered in rounds 2-9 are marked Decided with their round; the rest are Open.
+
+## Decisions (owner, round 11)
+- A. Admin: keep the dark theme and restructure the layout.
+- B. Admin redesign scope: project editor plus Settings, AI assistant, Admins, and Activity.
+- C. All migrations are applied to the live Supabase project. The Storage upload limit is set to 50 MB.
+- D. Video storage and egress budget: best practice, delegated to the assistant. Recorded in plan §12 as alerts at 70% and 90% of quota, monthly review, small video count, long-form on YouTube.
+- E. Work detail pages: each work item has its own page.
+- F. Compatibility: retire all of it. No backward compatibility.
+- G. React component previews: keep pasting self-contained preview pages.
+
+## Done in round 11 (docs only, no code change)
+- Plan §12 rewritten with the round 11 answers. Plan §3 records separate item pages. Plan §8 step 9 expanded into an ordered retirement list (a–h), based on a code search of the snapshot.
+- Code search, for reference: covers still live in `image_url` for every type. `public/js/site/portfolio-repo.js` still filters on `featured`. `preview_path` and `public/previews/` are still used. `public/js/admin-app.js` still has the `#projects` alias and the legacy verdict.
+
+## Decisions (owner, round 12)
+- H. Item pages: adopt the recommendation. A build step writes one static page per published item, with a client-rendered fallback and a deploy hook after admin saves (plan §12).
+- I. Unclassified rows: the owner listed the six rows (`work_type IS NULL`) but has not yet assigned a type to each. Nothing has been applied.
+
+## Proposed classification for I (not applied; owner to confirm)
+| Title | Status | Proposed `work_type` | Basis |
+| --- | --- | --- | --- |
+| منصة امتحانات بصمجي | active | `app_tool` | Arabic name of the "Basamgy Exams Platform" in the AI template, which is the same product as "Basmagi Quiz Platform" (already `app_tool`). Likely. |
+| OS Projects (MAUI + WinForms) | active | `app_tool` | Software projects, which plan §1 places under Apps & Tools. Likely, not verified. |
+| Clipbook | active | `app_tool` | Name suggests a tool. Not verified. |
+| Mr. Amr Mohamed | featured | unknown | Name only. Could be a profile or case study. Owner to decide. |
+| رحلة في السيرة | featured | unknown | No repo evidence. Owner to decide. |
+| على رفوف المساجد | featured | unknown | No repo evidence. Owner to decide. |
+
+Only three of the six have evidence. The owner should confirm the three proposals and say which type each of the other three is (website, app/tool, graphic design, UI component, or edited video), or that it should be deleted. Featured rows must be classified or deleted, because the home Works section will show them only after they have a type.
+
+## Decisions (owner, round 13)
+- I. Six unclassified rows: website = منصة امتحانات بصمجي, Mr. Amr Mohamed, رحلة في السيرة, على رفوف المساجد; app/tool = OS Projects (MAUI + WinForms), Clipbook.
+
+## Done in round 13 (code, not yet applied to the live project)
+- `supabase/migrations/20261120000200_portfolio_classify_unclassified.sql` (+ rollback, README order). Sets `work_type` by row id, only where it is still NULL, and proposes ASCII slugs when free. No publication, featured, order, link or image data changes.
+- Step 9g is complete once this migration is applied. Owner: run it on the live project, then check that the six rows show in the right admin tabs.
+- Open question from the owner's answer: "رحلة في السيرة" is both a Website and an Android App. The schema has one `work_type` per item, so it is stored as a Website. The Android app link has no field yet. Decide where it goes (a link field, a second item, or a note in the description).
+- Slugs are proposals. The Arabic titles were transliterated (for example `basmagi-exams-platform`, `rihlat-fi-al-sira`). Change them in the admin if you prefer other slugs.
+
 ## Next (for the next conversation)
-1. Admin visual redesign, part 2 (owner wants a totally new layout): restyle the project editor form (sticky save bar, cleaner
-   sections, per-type layouts), and the Settings, AI assistant, Admins and Activity panels. The sidebar/tabs and per-type
-   sections already exist (round 8). Tab ids: `w-website`, `w-app_tool`, `w-graphic_case`, `w-ui_component`, `w-edited_video`,
-   `w-none` (old items without a type), `videos` (YouTube), settings, ai, admins, activity.
-2. Browser-check on the real project: admin component panel (formats, source files, preview textarea, "Show preview"), the home
-   Works section with featured projects + featured YouTube videos, `/ui-components`.
-3. Run `supabase/seed-ui-components.sql` once (if not done) and publish the "Sign-in page" component from the admin.
-   The AI-agent template in `Animated UI Components/` is intentionally skipped for now (owner decision, round 9).
-4. Optional: delete `public/previews/sample-button/` (sample only). Legacy `preview_path` previews under `/previews/` still work.
-5. Retire compatibility paths (plan section 8 step 9) after production verification.
-6. Decide plan section 12 items still open (video size/MIME limits, unpublish behavior, channel purge semantics) and whether
-   React component previews need a build step (currently: paste a self-contained preview page).
+1. Owner: run `20261120000200_portfolio_classify_unclassified.sql` on the live project, and answer the Android-app question above.
+2. Admin redesign, part 2 (A, B): restructure the layout on the dark theme. Cover the project editor (sticky save bar, per-type sections) and Settings, AI, Admins and Activity. Browser-check at 360px and 1280px on mocked Supabase. Not blocked.
+3. Work detail pages (H, E): one static page per published work item for all five types, plus the client fallback. Not blocked.
+4. Compatibility retirement (F): plan §8 step 9, in order a–h. Steps a–g are unblocked once item 1 is applied; step h must wait for item 2 and item 3 (pages must no longer depend on `image_url`).
+5. Owner actions, not doable from here: browser-checks on the live project; run `supabase/seed-ui-components.sql` if it has not been run, then publish "Sign-in page".
 
 ## Notes
 - Public queries on `youtube_channels` must list columns explicitly (anon has column-level SELECT only).
-- Until work types are backfilled, `/websites` and `/apps-tools` are empty and `/` keeps its legacy Works section.
-- Open decisions in plan §12 are still open (video size/MIME limits, unpublish behavior, channel purge semantics).
+- Backfill `20261119000200` was applied in round 4, so `/websites` and `/apps-tools` show the classified rows. The home page Works section shows featured items (round 8).
+- `docs/HANDOFF.md` predates round 4. This log supersedes it, and its "Left to do" list is no longer current.
+- The uploaded zip has no git history, so this log is the only record of changes between rounds.
