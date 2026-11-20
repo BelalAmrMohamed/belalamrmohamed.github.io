@@ -44,6 +44,9 @@ export function initProjects({ editor, onUpgradeNeeded }) {
   let busy = false;
   const selected = new Set();
   const filters = { query: '', status: '', category: '', published: '', workType: '' };
+  let scope = ''; // work type this view is limited to ('' = all, 'none' = unclassified)
+  const inScope = (p) => !scope || (scope === 'none' ? !p.work_type : p.work_type === scope);
+  const scoped = () => projects.filter(inScope);
   let sortMode = 'manual';
 
   registerDirty('reorder', () => hasPendingOrder());
@@ -58,8 +61,9 @@ export function initProjects({ editor, onUpgradeNeeded }) {
 
   function visibleProjects() {
     const base = sortMode === 'manual' ? currentIds().map(byId).filter(Boolean) : sortProjects(projects, sortMode);
-    return filterProjects(base, filters);
+    return filterProjects(base.filter(inScope), filters);
   }
+  const scopedIds = () => currentIds().filter((id) => { const p = byId(id); return p && inScope(p); });
 
   const categories = () =>
     [...new Set(projects.map((p) => p.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
@@ -92,7 +96,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
 
   // ---- rendering ----------------------------------------------------------------------
   function renderStats() {
-    const s = stats(projects);
+    const s = stats(scoped());
     const ready = loadState === 'ready';
     $('#statTotal').textContent = ready ? String(s.total) : '–';
     $('#statPublished').textContent = ready ? String(s.published) : '–';
@@ -109,7 +113,10 @@ export function initProjects({ editor, onUpgradeNeeded }) {
     els.category.value = categories().includes(current) ? current : '';
     filters.category = els.category.value;
     // Type controls only appear once the database has the work_type column.
-    els.workTypeField.hidden = !projects.some((p) => 'work_type' in p);
+    els.workTypeField.hidden = Boolean(scope) || !projects.some((p) => 'work_type' in p);
+    const loose = projects.filter((p) => !p.work_type).length;
+    const navLoose = document.getElementById('navUnclassified');
+    if (navLoose) { navLoose.hidden = !loose || !projects.some((p) => 'work_type' in p); document.getElementById('navUnclassifiedCount').textContent = String(loose); }
     els.categoryOptions.replaceChildren(...categories().map((c) => h('option', { value: c })));
   }
 
@@ -175,7 +182,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
       els.state.append(stateBlock({
         kind: 'empty', title: 'No projects yet',
         message: 'Add your first project and it will appear on your public portfolio.',
-        action: { label: 'New project', onClick: () => editor.open(null) },
+        action: { label: 'Add one', onClick: () => editor.open(null, { workType: presetType() }) },
       }));
     } else if (!visible.length) {
       els.state.append(stateBlock({
@@ -184,9 +191,9 @@ export function initProjects({ editor, onUpgradeNeeded }) {
         action: { label: 'Clear filters', onClick: clearFilters },
       }));
     }
-    const ids = currentIds();
+    const ids = scopedIds();
     visible.forEach((project) => els.list.append(projectItem(project, ids)));
-    els.count.textContent = projects.length ? `${visible.length} of ${projects.length} shown` : '';
+    els.count.textContent = projects.length ? `${visible.length} of ${scoped().length} shown` : '';
     renderBars(visible);
     renderHint();
   }
@@ -248,6 +255,11 @@ export function initProjects({ editor, onUpgradeNeeded }) {
 
   // ---- reordering -----------------------------------------------------------------------
   function setOrder(ids, focusId, focusAction) {
+    if (scope && ids.length < currentIds().length) {
+      // Reordered only this type's items: put them back into the slots they occupied in the full order.
+      const mine = new Set(ids); let i = 0;
+      ids = currentIds().map((id) => (mine.has(id) ? ids[i++] : id));
+    }
     pendingOrder = ids;
     render();
     if (focusId) {
@@ -260,7 +272,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
 
   function moveBy(id, delta, focusAction = delta < 0 ? 'up' : 'down') {
     if (!canReorder()) return;
-    const ids = currentIds();
+    const ids = scopedIds();
     const from = ids.indexOf(id);
     const to = Math.min(Math.max(from + delta, 0), ids.length - 1);
     if (from < 0 || from === to) return;
@@ -275,7 +287,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
       moveBy(project.id, arrows[event.key], 'handle');
     } else if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault();
-      const ids = currentIds();
+      const ids = scopedIds();
       const at = ids.indexOf(project.id);
       moveBy(project.id, event.key === 'Home' ? -at : ids.length - 1 - at, 'handle');
     }
@@ -349,7 +361,7 @@ export function initProjects({ editor, onUpgradeNeeded }) {
       rows.forEach((row) => { row.style.order = ''; });
       if (!commit) return;
       const ids = order.map((row) => row.dataset.id);
-      if (sameOrder(ids, currentIds())) return;
+      if (sameOrder(ids, scopedIds())) return;
       setOrder(ids, item.dataset.id, 'handle');
       announce(`${byId(item.dataset.id).title} moved to position ${ids.indexOf(item.dataset.id) + 1} of ${ids.length}.`);
     };
@@ -590,7 +602,8 @@ export function initProjects({ editor, onUpgradeNeeded }) {
   $('#bulkArchive').addEventListener('click', bulkArchive);
   $('#bulkDelete').addEventListener('click', () => remove([...selected].map(byId).filter(Boolean)));
   $('#bulkClear').addEventListener('click', () => { selected.clear(); render(); });
-  $('#newProjectBtn').addEventListener('click', () => editor.open(null));
+  const presetType = () => (scope && scope !== 'none' ? scope : '');
+  $('#newProjectBtn').addEventListener('click', () => editor.open(null, { workType: presetType() }));
   $('#exportBtn').addEventListener('click', exportJson);
   const importInput = $('#importFile');
   $('#importBtn').addEventListener('click', () => importInput.click());
@@ -605,7 +618,21 @@ export function initProjects({ editor, onUpgradeNeeded }) {
     await load();
   });
 
+  const SINGULAR = { website: 'website', app_tool: 'app or tool', graphic_case: 'graphic design', ui_component: 'UI component', edited_video: 'edited video' };
+  function setScope(type, label) {
+    scope = type || '';
+    selected.clear();
+    $('#h-projects').textContent = label || 'Works';
+    $('#projectsEyebrow').textContent = scope === 'none' ? 'Older items without a type: open one and choose its type' : 'Your work';
+    $('#newProjectLabel').textContent = scope && scope !== 'none' ? `New ${SINGULAR[scope]}` : 'New item';
+    for (const [id, filterValue] of [['filterWorkType', '']]) { $(`#${id}`).value = filterValue; }
+    filters.workType = '';
+    renderFilterOptions();
+    render();
+  }
+
   return {
+    setScope,
     load,
     getProjects: () => projects,
     isReady: () => loadState === 'ready',

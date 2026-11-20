@@ -84,3 +84,41 @@ export function validateVariantDraft({ preview, depsText, files }) {
   if (files.length && files.filter((f) => f.is_entry).length !== 1) errors.push('Mark exactly one file as the entry file.');
   return errors;
 }
+
+// ---- previews stored with the component (no deploy needed) ----------------------------------
+// A variant's preview page lives in a reserved file row. It is only ever rendered inside a sandboxed iframe
+// (sandbox="allow-scripts", no allow-same-origin) via srcdoc, so it runs in an opaque origin with no access to this site.
+export const PREVIEW_FILE = '.preview/index.html';
+export const PREVIEW_CSP = "default-src 'none'; script-src 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob: https:; font-src data: https://fonts.gstatic.com; media-src data: blob: https:; connect-src 'none'";
+
+export const sourceFiles = (files) => (files || []).filter((f) => f.path !== PREVIEW_FILE);
+
+const norm = (p) => String(p).replace(/^\.\//, '').replace(/^\//, '');
+
+function withCsp(html) {
+  const meta = `<meta http-equiv="Content-Security-Policy" content="${PREVIEW_CSP}">`;
+  return /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (m) => `${m}${meta}`) : `<!doctype html><html><head>${meta}</head><body>${html}</body></html>`;
+}
+
+// Inlines same-component CSS/JS referenced from an HTML entry file.
+export function inlineAssets(html, files) {
+  const byPath = new Map(files.map((f) => [norm(f.path), f.source]));
+  return html
+    .replace(/<link\b[^>]*\bhref=["']([^"']+)["'][^>]*>/gi, (tag, href) =>
+      (/rel=["']?stylesheet/i.test(tag) && byPath.has(norm(href))) ? `<style>${byPath.get(norm(href))}</style>` : tag)
+    .replace(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (tag, src) =>
+      byPath.has(norm(src)) ? `<script>${byPath.get(norm(src)).replace(/<\/script/gi, '<\\/script')}</script>` : tag);
+}
+
+// The document to show in the sandboxed preview frame, or null when the variant has no previewable page.
+export function previewDocument(variant) {
+  const files = variant.files || [];
+  const explicit = files.find((f) => f.path === PREVIEW_FILE && f.source.trim());
+  if (explicit) return withCsp(explicit.source);
+  if (variant.format === 'html_css_js') {
+    const src = sourceFiles(files);
+    const entry = src.find((f) => f.is_entry && /\.html?$/i.test(f.path)) || src.find((f) => /\.html?$/i.test(f.path));
+    if (entry) return withCsp(inlineAssets(entry.source, src));
+  }
+  return null;
+}

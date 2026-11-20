@@ -6,6 +6,7 @@ import { client, run } from './api.js';
 import { toast, confirmDialog } from './ui.js';
 import {
   FORMATS, orderFiles, validateVariantDraft, parseDependencies, formatDependencies, validatePreviewPath, validateFilePath,
+  PREVIEW_FILE, sourceFiles, previewDocument,
 } from '../site/component-model.js';
 
 export function initComponentPanel({ getProject }) {
@@ -44,10 +45,21 @@ export function initComponentPanel({ getProject }) {
 
   function formatBlock(format) {
     const existing = variants[format];
-    const rows = (existing?.files || []).map((f) => ({ id: f.id, path: f.path, source: f.source, is_entry: f.is_entry }));
+    const previewRow = (existing?.files || []).find((f) => f.path === PREVIEW_FILE) || null;
+    const rows = sourceFiles(existing?.files || []).map((f) => ({ id: f.id, path: f.path, source: f.source, is_entry: f.is_entry }));
     if (!rows.length) rows.push({ id: null, path: format === 'react_ts_tailwind' ? 'src/Component.tsx' : 'index.html', source: '', is_entry: true });
 
-    const preview = h('input', { type: 'text', value: existing?.row.preview_path || '', placeholder: '/previews/my-component/index.html', 'aria-label': `${FORMATS[format].label} preview path` });
+    const preview = { value: existing?.row.preview_path || '' }; // legacy path, kept as is
+    const previewText = h('textarea', { rows: 8, spellcheck: false, class: 'cmp-admin-source', 'aria-label': `${FORMATS[format].label} preview page`,
+      placeholder: format === 'html_css_js' ? 'Optional. Leave empty to build the preview from your HTML/CSS/JS files.' : 'Paste one self-contained HTML page that shows the component (for example Tailwind CDN + the compiled component).' }, previewRow?.source || '');
+    const previewHost = h('div', { class: 'cmp-admin-preview' });
+    const showPreview = () => {
+      const doc = previewDocument({ format, files: [...rows.map((r) => ({ ...r })), ...(previewText.value.trim() ? [{ path: PREVIEW_FILE, source: previewText.value, is_entry: false }] : [])] });
+      if (!doc) { previewHost.replaceChildren(h('p', { class: 'hint' }, 'Nothing to preview yet: add an HTML file, or paste a preview page.')); return; }
+      const frame = h('iframe', { class: 'cmp-preview', title: 'Preview', sandbox: 'allow-scripts', referrerpolicy: 'no-referrer' });
+      frame.srcdoc = doc;
+      previewHost.replaceChildren(frame);
+    };
     const deps = h('input', { type: 'text', value: formatDependencies(existing?.row.dependencies), placeholder: format === 'react_ts_tailwind' ? 'react@18.3.1, react-dom@18.3.1, tailwindcss@3.4.17' : '', 'aria-label': `${FORMATS[format].label} dependencies` });
     const errorBox = h('p', { class: 'field-error', role: 'alert', hidden: true });
     const filesBox = h('div', { class: 'cmp-admin-files' });
@@ -72,7 +84,7 @@ export function initComponentPanel({ getProject }) {
           preview_path: validatePreviewPath(preview.value).value,
           dependencies: parseDependencies(deps.value).value,
           entry_file: draftFiles.find((f) => f.is_entry).path,
-          build_state: validatePreviewPath(preview.value).value ? 'built' : 'none',
+          build_state: (previewText.value.trim() || format === 'html_css_js') ? 'built' : 'none',
           updated_at: new Date().toISOString(),
         }, { onConflict: 'portfolio_project_id,format' }).select('id').single());
         const keep = draftFiles.filter((f) => f.id).map((f) => f.id);
@@ -80,6 +92,14 @@ export function initComponentPanel({ getProject }) {
           const values = { variant_id: variantRow.id, path: validateFilePath(f.path).value, source: f.source, is_entry: !!f.is_entry, sort_order: order, updated_at: new Date().toISOString() };
           if (f.id) await run(() => client.from('portfolio_component_files').update(values).eq('id', f.id).select('id'));
           else { const row = await run(() => client.from('portfolio_component_files').insert(values).select('id').single()); keep.push(row.id); }
+        }
+        // The preview page is a reserved file row; empty text removes it.
+        let previewId = previewRow?.id || null;
+        if (previewText.value.trim()) {
+          const pv = { variant_id: variantRow.id, path: PREVIEW_FILE, source: previewText.value, is_entry: false, sort_order: 999, updated_at: new Date().toISOString() };
+          if (previewId) await run(() => client.from('portfolio_component_files').update(pv).eq('id', previewId).select('id'));
+          else { const r = await run(() => client.from('portfolio_component_files').insert(pv).select('id').single()); previewId = r.id; }
+          keep.push(previewId);
         }
         // Removals last, so a failed save never loses source that was only partly rewritten.
         const stale = (existing?.files || []).map((f) => f.id).filter((id) => !keep.includes(id));
@@ -98,9 +118,11 @@ export function initComponentPanel({ getProject }) {
 
     return h('fieldset', { class: 'cmp-admin-format' },
       h('legend', {}, `${FORMATS[format].label}${existing ? '' : ' (not added)'}`),
-      h('label', { class: 'hint' }, 'Preview path (prebuilt page committed under /previews/; leave empty for none)'), preview,
       h('label', { class: 'hint' }, 'Dependencies (exact versions, allowlisted)'), deps,
       filesBox,
+      h('label', { class: 'hint' }, 'Preview page (what visitors see running; shown in a sandboxed frame)'), previewText,
+      h('div', { class: 'image-buttons' }, h('button', { class: 'btn btn-outline btn-sm', type: 'button', onclick: showPreview }, 'Show preview')),
+      previewHost,
       h('div', { class: 'image-buttons' },
         h('button', { class: 'btn btn-outline btn-sm', type: 'button', onclick: () => { rows.push({ id: null, path: '', source: '', is_entry: false }); paintFiles(); } }, 'Add file'),
         h('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: save }, existing ? 'Save format' : 'Add format'),

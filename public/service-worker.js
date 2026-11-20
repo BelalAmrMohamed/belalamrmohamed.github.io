@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v16";
+const CACHE_VERSION = "v18";
 const CACHE_NAME = `belal-portfolio-cache-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
 
@@ -40,7 +40,6 @@ const filesToCache = [
   "js/site/category-page.js",
   "js/site/graphics-page.js",
   "js/site/asset-model.js",
-  "js/site/featured-home.js",
   "js/site/videos-page.js",
   "js/site/components-page.js",
   "js/site/component-model.js",

@@ -191,6 +191,22 @@
     applySettingHooks(settings);
   }
 
+  // Featured YouTube videos join the Works section. RLS only returns visible, public videos of connected channels.
+  async function loadFeaturedVideos(client) {
+    try {
+      const { data, error } = await client.from('youtube_videos')
+        .select('youtube_video_id, title, thumbnail_url, sort_order')
+        .eq('featured', true).eq('is_visible', true).eq('privacy_status', 'public')
+        .order('sort_order', { ascending: true }).limit(12);
+      if (error) throw error;
+      return (data || []).filter((v) => /^[A-Za-z0-9_-]{11}$/.test(v.youtube_video_id || '')).map((v) => ({
+        title: v.title, category: 'YouTube video', summary: '',
+        image_url: /^https:\/\//.test(v.thumbnail_url || '') ? v.thumbnail_url : null,
+        project_url: `https://www.youtube.com/watch?v=${v.youtube_video_id}`, github_url: null,
+      }));
+    } catch (e) { console.warn('Featured videos unavailable', e); return []; }
+  }
+
   async function loadPortfolio() {
     if (!window.supabase || !config.supabaseUrl || !config.publishableKey) {
       console.error('Portfolio Supabase configuration is missing.');
@@ -200,21 +216,22 @@
 
     const client = window.supabase.createClient(config.supabaseUrl, config.publishableKey);
     try {
-      const [{ data, error }] = await Promise.all([
+      const [{ data, error }, videos] = await Promise.all([
         client
           .from('portfolio_projects')
           .select('id, title, summary, category, project_url, github_url, image_url, featured, status, is_published')
           .eq('is_published', true)
           .neq('status', 'archived')
+          .eq('status', 'featured') // the home Works section shows featured items of every type
           .order('sort_order', { ascending: true })
           .order('created_at', { ascending: false }),
-        // Settings are cosmetic: if they fail, the projects must still render.
-        loadPublicSettings(client).catch((settingsError) => {
-          console.warn('Public settings failed to load', settingsError);
-        }),
+        loadFeaturedVideos(client),
       ]);
+      loadPublicSettings(client).catch((settingsError) => { // cosmetic: projects must still render
+        console.warn('Public settings failed to load', settingsError);
+      });
       if (error) throw error;
-      window.BELAL_PORTFOLIO_PROJECTS = data || [];
+      window.BELAL_PORTFOLIO_PROJECTS = [...(data || []), ...(videos || [])];
       renderProjects(window.BELAL_PORTFOLIO_PROJECTS);
     } catch (error) {
       console.error('Public portfolio data failed to load', error);

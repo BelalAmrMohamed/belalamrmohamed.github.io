@@ -3,7 +3,7 @@
 // with sandbox="allow-scripts" (no allow-same-origin), so it gets an opaque origin and cannot touch this page.
 import { fetchWorks, fetchComponentVariants, safeUrl } from './portfolio-repo.js';
 import { renderShell } from './shell.js';
-import { FORMATS, languageOf, orderFiles, orderVariants, downloadName, validatePreviewPath } from './component-model.js';
+import { FORMATS, languageOf, orderFiles, orderVariants, downloadName, validatePreviewPath, previewDocument, sourceFiles } from './component-model.js';
 
 renderShell();
 
@@ -82,7 +82,7 @@ function openDetail(it) {
 
 function showVariant(body, variants, index) {
   const variant = variants[index];
-  const files = orderFiles(variant.files);
+  const files = orderFiles(sourceFiles(variant.files));
   let fileIndex = 0;
   body.replaceChildren();
 
@@ -97,14 +97,15 @@ function showVariant(body, variants, index) {
     body.appendChild(tabs);
   }
 
+  const doc = previewDocument(variant);
   const preview = validatePreviewPath(variant.preview_path);
-  if (preview.ok && preview.value) {
+  if (doc || (preview.ok && preview.value)) {
     const frame = el('iframe', 'cmp-preview');
     frame.setAttribute('sandbox', 'allow-scripts'); // deliberately NOT allow-same-origin
     frame.setAttribute('referrerpolicy', 'no-referrer');
     frame.setAttribute('loading', 'lazy');
     frame.title = 'Component preview';
-    frame.src = preview.value;
+    if (doc) frame.srcdoc = doc; else frame.src = preview.value;
     body.append(el('h3', 'cmp-h', 'Preview'), frame);
   } else {
     body.appendChild(el('p', 'work-status', 'No live preview for this format yet.'));

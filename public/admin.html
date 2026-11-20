@@ -8,6 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#0b0c0e">
+  <script>try{if(Object.keys(localStorage).some(function(k){return /^sb-.*-auth-token$/.test(k)})){document.documentElement.classList.add('auth-pending');setTimeout(function(){document.documentElement.classList.remove('auth-pending')},8000)}}catch(e){}</script>
   <link rel="stylesheet" href="css/admin-dashboard.css">
 
   <style>
@@ -316,6 +321,7 @@
   <section class="login" data-slot="login">
 
     <!-- Animated lines: page background on phones, left panel on desktop -->
+    <div class="auth-splash" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span>Opening dashboard…</div>
     <div class="bg-paths" id="floating-paths" aria-hidden="true"></div>
 
     <!-- ============ Left: brand + quote ============ -->
@@ -421,9 +427,9 @@
     <header class="dashboard-topbar">
       <a class="dashboard-brand" href="/" aria-label="Belal — home">Belal<span>.</span></a>
       <div class="dashboard-account">
-        <a class="btn btn-outline btn-sm" href="/" target="_blank" rel="noopener noreferrer">View site<span class="sr-only"> (opens in a new tab)</span></a>
+        <a class="btn btn-outline btn-sm btn-icon" href="/" target="_blank" rel="noopener noreferrer"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>View site<span class="sr-only"> (opens in a new tab)</span></a>
         <span id="userEmail" class="account-email"></span>
-        <button id="signOutBtn" class="btn btn-outline btn-sm" type="button">Sign out</button>
+        <button id="signOutBtn" class="btn btn-outline btn-sm btn-icon" type="button"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9"/></svg>Sign out</button>
       </div>
     </header>
 
@@ -435,13 +441,25 @@
 
     <div class="dashboard-shell">
       <nav class="dashboard-nav" aria-label="Dashboard sections">
+        <p class="nav-group">Work</p>
         <ul>
-          <li><button type="button" class="nav-btn" data-tab="projects"><span class="nav-ico" aria-hidden="true">▦</span>Projects</button></li>
-          <li><button type="button" class="nav-btn" data-tab="videos"><span class="nav-ico" aria-hidden="true">▶</span>Videos</button></li>
-          <li><button type="button" class="nav-btn" data-tab="settings"><span class="nav-ico" aria-hidden="true">⚙</span>Settings</button></li>
-          <li><button type="button" class="nav-btn" data-tab="ai"><span class="nav-ico" aria-hidden="true">✦</span>AI assistant</button></li>
-          <li><button type="button" class="nav-btn" data-tab="admins"><span class="nav-ico" aria-hidden="true">☻</span>Admins</button></li>
-          <li><button type="button" class="nav-btn" data-tab="activity"><span class="nav-ico" aria-hidden="true">≡</span>Activity</button></li>
+          <li><button type="button" class="nav-btn" data-tab="w-website"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span class="nav-label">Websites</span></button></li>
+          <li><button type="button" class="nav-btn" data-tab="w-app_tool"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="nav-label">Apps &amp; Tools</span></button></li>
+          <li><button type="button" class="nav-btn" data-tab="w-graphic_case"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.8 2-1.8 0-1-.7-1.4-.7-2.2 0-.9.7-1.5 1.6-1.5H17a4 4 0 0 0 4-4C21 6.7 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg><span class="nav-label">Graphic Designs</span></button></li>
+          <li><button type="button" class="nav-btn" data-tab="w-ui_component"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/></svg><span class="nav-label">UI Components</span></button></li>
+          <li><button type="button" class="nav-btn" data-tab="w-edited_video"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></svg><span class="nav-label">Edited Videos</span></button></li>
+          <li id="navUnclassified" hidden><button type="button" class="nav-btn" data-tab="w-none"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="3"/></svg><span class="nav-label">Needs a type</span><span id="navUnclassifiedCount" class="nav-count"></span></button></li>
+        </ul>
+        <p class="nav-group">Channels</p>
+        <ul>
+          <li><button type="button" class="nav-btn" data-tab="videos"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 8.5a3 3 0 0 0-2-2C18.2 6 12 6 12 6s-6.200 0-8 .5a3 3 0 0 0-2 2C1.500 10.300 1.500 12 1.500 12s0 1.700.5 3.500a3 3 0 0 0 2 2C5.800 18 12 18 12 18s6.200 0 8-.5a3 3 0 0 0 2-2c.5-1.800.5-3.500.5-3.500s0-1.700-.5-3.500z"/><path d="m10 9.500 4.500 2.500-4.500 2.500z"/></svg><span class="nav-label">YouTube</span></button></li>
+        </ul>
+        <p class="nav-group">Site</p>
+        <ul>
+          <li><button type="button" class="nav-btn" data-tab="settings"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.400 15a1.700 1.700 0 0 0 .3 1.800l.1.1a2 2 0 1 1-2.800 2.800l-.1-.1a1.700 1.700 0 0 0-1.800-.3 1.700 1.700 0 0 0-1 1.500V21a2 2 0 1 1-4 0v-.1a1.700 1.700 0 0 0-1.100-1.500 1.700 1.700 0 0 0-1.800.3l-.1.1a2 2 0 1 1-2.800-2.800l.1-.1a1.700 1.700 0 0 0 .3-1.800 1.700 1.700 0 0 0-1.500-1H3a2 2 0 1 1 0-4h.1a1.700 1.700 0 0 0 1.500-1.100 1.700 1.700 0 0 0-.3-1.800l-.1-.1a2 2 0 1 1 2.800-2.800l.1.1a1.700 1.700 0 0 0 1.800.3H9a1.700 1.700 0 0 0 1-1.500V3a2 2 0 1 1 4 0v.1a1.700 1.700 0 0 0 1 1.500 1.700 1.700 0 0 0 1.800-.3l.1-.1a2 2 0 1 1 2.800 2.800l-.1.1a1.700 1.700 0 0 0-.3 1.800V9a1.700 1.700 0 0 0 1.500 1H21a2 2 0 1 1 0 4h-.1a1.700 1.700 0 0 0-1.500 1z"/></svg><span class="nav-label">Settings</span></button></li>
+          <li><button type="button" class="nav-btn" data-tab="ai"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.800 5.200L19 10l-5.200 1.800L12 17l-1.800-5.200L5 10l5.200-1.800zM19 16l.8 2.200L22 19l-2.200.8L19 22l-.8-2.200L16 19l2.200-.8z"/></svg><span class="nav-label">AI assistant</span></button></li>
+          <li><button type="button" class="nav-btn" data-tab="admins"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.500"/><path d="M2.500 20a6.500 6.500 0 0 1 13 0M16 4.500a3.500 3.500 0 0 1 0 7M18 14.500a6.500 6.500 0 0 1 3.500 5.500"/></svg><span class="nav-label">Admins</span></button></li>
+          <li><button type="button" class="nav-btn" data-tab="activity"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span class="nav-label">Activity</span></button></li>
         </ul>
       </nav>
 
@@ -453,11 +471,11 @@
           <div id="projectsListView">
             <header class="panel-head">
               <div>
-                <p class="dashboard-eyebrow">Your work</p>
-                <h2 id="h-projects" tabindex="-1">Projects</h2>
+                <p id="projectsEyebrow" class="dashboard-eyebrow">Your work</p>
+                <h2 id="h-projects" tabindex="-1">Works</h2>
               </div>
               <div class="panel-actions">
-                <button id="newProjectBtn" class="btn btn-default" type="button">New project</button>
+                <button id="newProjectBtn" class="btn btn-default btn-icon" type="button"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span id="newProjectLabel">New</span></button>
                 <button id="exportBtn" class="btn btn-outline" type="button">Export JSON</button>
                 <button id="importBtn" class="btn btn-outline" type="button">Import JSON</button>
                 <input id="importFile" type="file" accept="application/json,.json" hidden>
@@ -695,7 +713,7 @@
               <section id="componentSection" class="dashboard-card assets-section" aria-labelledby="componentTitle" hidden>
                 <div>
                   <h3 id="componentTitle" class="preview-title">Component formats</h3>
-                  <p class="hint">Source is stored as text and never run in the admin. The public preview is a prebuilt page under <code>/previews/</code> shown in a sandboxed frame. Changes here are saved immediately, per format.</p>
+                  <p class="hint">Add a format, paste or type its source files, add a preview page, then press Add format. The preview runs only inside a sandboxed frame with no access to this site. Changes here are saved immediately, per format.</p>
                 </div>
                 <p id="componentNote" class="hint" hidden></p>
                 <div id="componentBody"></div>
@@ -719,7 +737,7 @@
           <header class="panel-head">
             <div>
               <p class="dashboard-eyebrow">YouTube</p>
-              <h2 id="h-videos" tabindex="-1">Videos</h2>
+              <h2 id="h-videos" tabindex="-1">YouTube</h2>
             </div>
           </header>
           <div id="ytState"></div>
@@ -965,4 +983,4 @@
   <script src="js/site-config.js"></script>
   <script src="js/admin-app.js" type="module"></script>
 </body>
-</html>
+</html>

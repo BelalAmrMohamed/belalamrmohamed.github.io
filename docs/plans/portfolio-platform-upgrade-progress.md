@@ -107,11 +107,60 @@
 - Browser-checked with mocked Supabase at 1280/360: catalog, search, format tabs, preview frame runs sandboxed, source with
   `<script>` shown as text (no execution), no horizontal scroll. Admin component panel was NOT browser-checked. Not run against real Supabase.
 
-## Next
-1. Fix the YouTube key (see round 7), then connect the channel and Sync now.
-2. Browser-check the admin component panel on the real project; replace the sample preview with real ones.
-3. Seed real components from `Animated UI Components/*.md` (convert to source files + prebuilt previews).
-4. Landing page "Videos" featured group; retire compatibility paths (plan 8 step 9) after production verification.
+## Decisions (owner, round 8)
+- Convert the two items in `Animated UI Components/`. YouTube videos verified working. Home Works section = featured items of
+  every type (status `featured` is the single source of truth); the "View all" featured block is removed.
+
+## Done in round 8
+- Home: the legacy Works section (`js/portfolio.js`) now loads published, non-archived items with `status='featured'` of any type,
+  ordered by sort_order. The separate "Featured Work" block and `featured-home.js` are gone. Cards still open the details popup.
+  Not covered yet: featured YouTube videos (`youtube_videos.featured`) are not shown on the home page.
+- Admin sign-in flash: an inline head script marks `html.auth-pending` when a Supabase session key exists in localStorage; the
+  login card is hidden behind a small "Opening dashboard..." splash until the session check resolves (`setView` clears it; an
+  8 s fallback reveals the login if the script fails). Without a stored session the login shows immediately.
+- Admin redesign (first pass): sidebar regrouped as Work (Websites, Apps & Tools, Graphic Designs, UI Components, Edited Videos,
+  and "Needs a type" with a count when old rows lack a type) / Channels (YouTube) / Site (Settings, AI, Admins, Activity), with SVG
+  icons instead of glyphs; the old "Projects" tab is gone (`#projects` links open Websites). Each Work section is the existing
+  list/editor scoped to one type: "New website/app or tool/..." pre-selects the type, stats/search/reorder apply to that type
+  (reordering keeps the other types' slots in the full order). Topbar buttons have icons. Favicon + apple-touch icon added.
+  NOT redone: the inner layout of the editor form and the Settings/AI/Admins/Activity panels (still the old look).
+- Components: `public/previews/sign-in-page/` (from `sign-in-page-template.md`, MIT attribution kept in its header) and
+  `supabase/seed-ui-components.sql` which creates it as an unpublished component with its source. Run it once, then publish it
+  in Admin > UI Components. The AI-agent template is a multi-file app tied to Supabase/API routes; not converted (open decision).
+- Service worker `v17`. Browser-checked with mocked Supabase at 1280/390: no login flash with a stored session, type sections,
+  scoped lists, preset type on new items. Home page not browser-checked with mocked data.
+
+## Decisions (owner, round 9)
+- AI-agent template: skip for now. Priority: the owner must be able to add UI components from the admin alone.
+- Admin tabs wanted: Websites, Apps & Tools, Graphic Designs, UI Components (the round 8 sidebar already provides these).
+- Featured YouTube videos appear in the home Works section.
+
+## Done in round 9
+- UI components are fully addable from the admin, no deploy: each format has source files plus a **preview page** stored with the
+  component as a reserved file row (`.preview/index.html`, hidden from the source viewer). The public page and the admin's
+  "Show preview" button render it only in `<iframe sandbox="allow-scripts" srcdoc>` (opaque origin, no allow-same-origin) with an
+  injected CSP (no network except Tailwind/jsDelivr/unpkg scripts and Google Fonts). HTML/CSS/JS formats need no separate preview:
+  the page is built from the entry HTML with its own CSS/JS files inlined. React/TSX formats need a pasted self-contained preview
+  page (no compilation, as decided). Legacy `preview_path` and `/previews/` files still work. No migration.
+- Per-type editor fields: websites/apps/graphic/UI/video show only the link fields that fit (hidden values are kept).
+- Home Works section now also shows featured, visible, public YouTube videos (card opens the details popup with a YouTube link).
+- Tests: 21 pass. Browser-checked (mocked Supabase): preview built from html+css+js ran inside the sandboxed frame. The new admin
+  preview textarea/button was not browser-checked.
+- Service worker `v18`.
+
+## Next (for the next conversation)
+1. Admin visual redesign, part 2 (owner wants a totally new layout): restyle the project editor form (sticky save bar, cleaner
+   sections, per-type layouts), and the Settings, AI assistant, Admins and Activity panels. The sidebar/tabs and per-type
+   sections already exist (round 8). Tab ids: `w-website`, `w-app_tool`, `w-graphic_case`, `w-ui_component`, `w-edited_video`,
+   `w-none` (old items without a type), `videos` (YouTube), settings, ai, admins, activity.
+2. Browser-check on the real project: admin component panel (formats, source files, preview textarea, "Show preview"), the home
+   Works section with featured projects + featured YouTube videos, `/ui-components`.
+3. Run `supabase/seed-ui-components.sql` once (if not done) and publish the "Sign-in page" component from the admin.
+   The AI-agent template in `Animated UI Components/` is intentionally skipped for now (owner decision, round 9).
+4. Optional: delete `public/previews/sample-button/` (sample only). Legacy `preview_path` previews under `/previews/` still work.
+5. Retire compatibility paths (plan section 8 step 9) after production verification.
+6. Decide plan section 12 items still open (video size/MIME limits, unpublish behavior, channel purge semantics) and whether
+   React component previews need a build step (currently: paste a self-contained preview page).
 
 ## Notes
 - Public queries on `youtube_channels` must list columns explicitly (anon has column-level SELECT only).

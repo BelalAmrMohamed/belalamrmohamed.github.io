@@ -74,9 +74,28 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
     renderPreview();
     syncDirtyBadge();
   }
+  // Each type only shows the link fields that make sense for it (values in hidden fields are kept).
+  const TYPE_FIELDS = {
+    website: { url: 'Website URL', github: 'Source code (optional)' },
+    app_tool: { url: 'App URL', github: 'GitHub URL' },
+    graphic_case: { url: 'Case link, e.g. Behance (optional)', github: null },
+    ui_component: { url: null, github: 'Source repository (optional)' },
+    edited_video: { url: 'Video link (optional)', github: null },
+  };
+  function applyTypeLayout(workType) {
+    const cfg = TYPE_FIELDS[workType] || { url: 'Project URL', github: 'GitHub URL' };
+    for (const [key, id, labelFor] of [['url', 'projectUrl', 'projectUrl'], ['github', 'projectGithub', 'projectGithub']]) {
+      const field = el(id).closest('.field');
+      if (!field) continue;
+      field.hidden = cfg[key] === null;
+      const label = field.querySelector(`label[for="${labelFor}"]`);
+      if (label && cfg[key]) label.textContent = cfg[key];
+    }
+  }
   let assetsKey = '';
   function refreshAssets(force = false) {
     const workType = el('projectWorkType').value;
+    applyTypeLayout(typeFieldsReady() ? workType : '');
     const key = `${editing?.id || 'new'}|${typeFieldsReady() ? workType : ''}`;
     if (!force && key === assetsKey) return;
     assetsKey = key;
@@ -275,13 +294,14 @@ export function initEditor({ getProjects, onSaved, showList, showEditor }) {
   }
 
   // ---- open / close -----------------------------------------------------------------------------------------------
-  async function openEditor(project) {
+  async function openEditor(project, opts = {}) {
     if (open && !(await confirmDiscard(['project-form', 'video-upload']))) return;
     editing = project || null;
     dropPending();
     removeRequested = false;
     clearErrors();
     writeValues(project);
+    if (!project && opts.workType && typeFieldsReady()) el('projectWorkType').value = opts.workType; // new item in a typed section
     $('#projectId').value = project?.id || '';
     $('#formTitle').textContent = project ? 'Edit project' : 'New project';
     el('saveProjectBtn').textContent = project ? 'Save changes' : 'Create project';

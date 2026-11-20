@@ -20,8 +20,18 @@ import { initYoutube } from './admin/youtube.js';
 const authView = $('.login');
 const dashboardView = $('#dashboardView');
 const authStatus = $('#auth-status');
-const TABS = ['projects', 'videos', 'settings', 'ai', 'admins', 'activity'];
-const TAB_LABEL = { projects: 'Projects', videos: 'Videos', settings: 'Settings', ai: 'AI assistant', admins: 'Admins', activity: 'Activity' };
+const WORK_TABS = {
+  'w-website': 'website', 'w-app_tool': 'app_tool', 'w-graphic_case': 'graphic_case',
+  'w-ui_component': 'ui_component', 'w-edited_video': 'edited_video', 'w-none': 'none',
+};
+const TABS = [...Object.keys(WORK_TABS), 'videos', 'settings', 'ai', 'admins', 'activity'];
+const TAB_LABEL = {
+  'w-website': 'Websites', 'w-app_tool': 'Apps & Tools', 'w-graphic_case': 'Graphic Designs', 'w-ui_component': 'UI Components',
+  'w-edited_video': 'Edited Videos', 'w-none': 'Needs a type', videos: 'YouTube', settings: 'Settings', ai: 'AI assistant',
+  admins: 'Admins', activity: 'Activity',
+};
+const DEFAULT_TAB = 'w-website';
+const normalizeTab = (name) => (name === 'projects' ? DEFAULT_TAB : name); // old #projects links
 
 let activeUserId = null;
 let verifyingUserId = null;
@@ -40,6 +50,7 @@ function toggleBusy(isBusy) {
 }
 
 function setView(isAuthenticated) {
+  document.documentElement.classList.remove('auth-pending'); // reveal whichever view is right
   authView.classList.toggle('hidden', isAuthenticated);
   dashboardView.classList.toggle('hidden', !isAuthenticated);
   document.title = isAuthenticated ? 'Dashboard | Belal Amr' : 'Sign in | Belal Amr';
@@ -68,7 +79,8 @@ function buildModules() {
 
 // ---- tabs ------------------------------------------------------------------------------------------
 async function switchTab(name, { fromHash = false } = {}) {
-  if (!TABS.includes(name)) name = 'projects';
+  name = normalizeTab(name);
+  if (!TABS.includes(name)) name = DEFAULT_TAB;
   if (name === activeTab) return;
 
   if (anyDirty() && !(await confirmDiscard())) {
@@ -79,21 +91,23 @@ async function switchTab(name, { fromHash = false } = {}) {
   if (modules.editor.isOpen()) await modules.editor.close({ force: true });
 
   activeTab = name;
-  $$('[data-panel]').forEach((panel) => { panel.hidden = panel.dataset.panel !== name; });
+  const panelName = name in WORK_TABS ? 'projects' : name;
+  if (name in WORK_TABS) modules.projects.setScope(WORK_TABS[name], TAB_LABEL[name]);
+  $$('[data-panel]').forEach((panel) => { panel.hidden = panel.dataset.panel !== panelName; });
   $$('.nav-btn').forEach((button) => {
     if (button.dataset.tab === name) button.setAttribute('aria-current', 'page');
     else button.removeAttribute('aria-current');
   });
   if (location.hash !== `#${name}`) history.replaceState(null, '', `#${name}`);
   document.title = `${TAB_LABEL[name]} | Dashboard | Belal Amr`;
-  $(`#h-${name}`)?.focus({ preventScroll: true });
+  $(`#h-${panelName}`)?.focus({ preventScroll: true });
 
   if (name === 'settings') modules.settings.load({ quiet: modules.settings.isLoaded() });
   else if (name === 'ai') modules.ai.load();
   else if (name === 'admins') modules.admins.load();
   else if (name === 'activity') modules.activity.load();
   else if (name === 'videos') modules.videos.load();
-  else if (name === 'projects' && modules.projects.isReady()) modules.projects.load();
+  else if (panelName === 'projects' && modules.projects.isReady()) modules.projects.load();
 }
 
 // ---- sign-in state --------------------------------------------------------------------------------------
@@ -155,9 +169,9 @@ async function acceptSessionUser(user) {
   setView(true);
 
   modules ||= buildModules();
-  const startTab = location.hash.replace('#', '');
+  const startTab = normalizeTab(location.hash.replace('#', ''));
   activeTab = null;
-  await switchTab(TABS.includes(startTab) ? startTab : 'projects');
+  await switchTab(TABS.includes(startTab) ? startTab : DEFAULT_TAB);
   await modules.projects.load();
   modules.editor.offerDraft();
 }

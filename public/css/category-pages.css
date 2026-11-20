@@ -32,11 +32,6 @@
 .asset-gallery figcaption { font-size: 1.3rem; opacity: .75; padding-top: .4rem; }
 
 /* Landing page: featured work by type */
-.s-featured { padding: 6rem 0 2rem; }
-.featured-group { margin-bottom: 4rem; }
-.featured-group__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .6rem 2rem; margin-bottom: 1.6rem; }
-.featured-group__head h3 { margin: 0; }
-.featured-group .work-card__open { text-decoration: none; color: inherit; }
 
 .work-card__pic .yt-frame { width: 100%; height: 100%; border: 0; display: block; }
 #ytSection h2 { margin: 0 0 2rem; }
@@ -62,3 +57,5 @@
 .cmp-meta { font-size: 1.25rem; margin: .8rem 0; color: var(--color-text-light, inherit); }
 .cmp-filebar { display: flex; gap: 1rem; margin: 0 0 1rem; }
 @media (max-width: 600px) { .cmp-preview { height: 28rem; } .cmp-search input { min-width: 0; width: 100%; } }
+
+.cmp-admin-preview { margin-top: 1rem; }

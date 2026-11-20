@@ -845,3 +845,21 @@ form.modal-body .modal-actions { padding: 0.75rem 0 0.5rem; }
 .video-progress { display: grid; gap: 0.4rem; width: 100%; justify-items: start; }
 .video-progress progress { width: 100%; }
 .video-poster-thumb { max-width: 12rem; height: auto; border-radius: 4px; border: 1px solid var(--border); }
+
+/* ---- round 8: sidebar groups, icons, login splash ---- */
+.nav-group { margin: 1.1rem 0 .35rem; padding: 0 .85rem; font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-foreground); }
+.nav-group:first-child { margin-top: 0; }
+.nav-btn { display: flex; align-items: center; gap: .7rem; }
+.nav-ico { width: 18px; height: 18px; flex: none; opacity: .75; }
+.nav-btn[aria-current="page"] .nav-ico { opacity: 1; }
+.nav-label { flex: 1; text-align: left; }
+.nav-count { min-width: 1.4rem; padding: .05rem .4rem; border-radius: 999px; background: var(--accent-yellow, #eabe7c); color: #111; font-size: .72rem; font-weight: 700; text-align: center; }
+.btn-icon { display: inline-flex; align-items: center; gap: .45rem; }
+.btn-ico { width: 16px; height: 16px; flex: none; }
+.auth-splash { display: none; }
+.auth-pending .login { display: none !important; }
+.auth-pending .auth-splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; gap: .8rem; background: #0b0c0e; color: #9ca3af; font: 500 .95rem system-ui, sans-serif; z-index: 50; }
+.auth-splash .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.2); border-top-color: #eabe7c; border-radius: 50%; animation: authspin .8s linear infinite; }
+@keyframes authspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .auth-splash .spinner { animation: none; } }
+@media (max-width: 900px) { .nav-group { display: none; } .dashboard-nav { display: flex; gap: .4rem; overflow-x: auto; } .dashboard-nav ul { display: flex; gap: .4rem; width: max-content; } .nav-ico { width: 16px; height: 16px; } }

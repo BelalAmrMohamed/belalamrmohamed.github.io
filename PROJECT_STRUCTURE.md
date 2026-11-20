@@ -66,25 +66,25 @@ Belal Amr Mohamed/
 │       ├── _youtube.js
 │       └── sync.js
 │
-├── docs/ [88.41 KB, 1826 LOC]
+├── docs/ [94.15 KB, 1876 LOC]
 │   ├── components/ [45.97 KB, 1420 LOC]
 │   │   ├── 3D Card Effect.md
 │   │   ├── Animated Shader Hero.md
 │   │   └── Bento Card.md
 │   │
-│   ├── plans/ [38.15 KB, 366 LOC]
+│   ├── plans/ [43.9 KB, 416 LOC]
 │   │   ├── portfolio-platform-upgrade-plan.md
 │   │   └── portfolio-platform-upgrade-progress.md
 │   │
 │   ├── HANDOFF.md
 │   └── issues.md
 │
-├── public/ [3.38 MB, 32118 LOC]
+├── public/ [3.42 MB, 32877 LOC]
 │   ├── assets/ [26.59 KB, 0 LOC]
 │   │   └── images/ [26.59 KB, 0 LOC]
 │   │       └── el-bash-mebasmag--no-bg.png
 │   │
-│   ├── css/ [146.32 KB, 6172 LOC]
+│   ├── css/ [147.71 KB, 6187 LOC]
 │   │   ├── admin-dashboard.css
 │   │   ├── category-pages.css
 │   │   ├── styles.css
@@ -132,8 +132,8 @@ Belal Amr Mohamed/
 │   │   ├── about-photo@2x.png
 │   │   └── thumbnail.jpg
 │   │
-│   ├── js/ [430.15 KB, 5569 LOC]
-│   │   ├── admin/ [146.94 KB, 3319 LOC]
+│   ├── js/ [439.88 KB, 5708 LOC]
+│   │   ├── admin/ [152.64 KB, 3388 LOC]
 │   │   │   ├── activity.js
 │   │   │   ├── admins.js
 │   │   │   ├── ai-panel.js
@@ -152,7 +152,7 @@ Belal Amr Mohamed/
 │   │   │   ├── video-panel.js
 │   │   │   └── youtube.js
 │   │   │
-│   │   ├── site/ [43.66 KB, 1034 LOC]
+│   │   ├── site/ [45.83 KB, 1073 LOC]
 │   │   │   ├── asset-model.js
 │   │   │   ├── category-page.js
 │   │   │   ├── component-model.js
@@ -170,8 +170,8 @@ Belal Amr Mohamed/
 │   │   ├── portfolio.js
 │   │   └── site-config.js
 │   │
-│   ├── previews/ [766 B, 9 LOC]
-│   │   └── sample-button/ [766 B, 9 LOC]
+│   ├── previews/ [23.37 KB, 609 LOC]
+│   │   └── sign-in-page/ [23.37 KB, 609 LOC]
 │   │       └── index.html
 │   │
 │   ├── screenshots/ [175.11 KB, 0 LOC]
@@ -255,7 +255,7 @@ Belal Amr Mohamed/
 │   ├── release.js
 │   └── seo-check.mjs
 │
-├── supabase/ [82.61 KB, 1938 LOC]
+├── supabase/ [106.96 KB, 2570 LOC]
 │   ├── migrations/ [59.46 KB, 1354 LOC]
 │   │   ├── 20261008145231_create_portfolio_admin_schema.sql
 │   │   ├── 20261008145317_add_ai_agent_usage_quota.sql
@@ -282,9 +282,10 @@ Belal Amr Mohamed/
 │   │
 │   ├── config.toml
 │   ├── schema.sql
+│   ├── seed-ui-components.sql
 │   └── seed.sql
 │
-└── tests/ [13.78 KB, 215 LOC]
+└── tests/ [14.94 KB, 232 LOC]
     ├── asset-model.test.mjs
     ├── component-model.test.mjs
     └── youtube-sync.test.mjs
@@ -296,14 +297,14 @@ Belal Amr Mohamed/
 
 | Directory | Lines of Code |
 |-----------|---------------|
-| `public` | 32118 |
+| `public` | 32877 |
 | `Animated UI Components` | 20031 |
-| `supabase` | 1938 |
-| `docs` | 1826 |
+| `supabase` | 2570 |
+| `docs` | 1876 |
 | `api` | 1527 |
 | `scripts` | 1105 |
 | `(root)` | 491 |
-| `tests` | 215 |
+| `tests` | 232 |
 
 ### Top 10 Largest Code Files
 
@@ -318,24 +319,24 @@ Belal Amr Mohamed/
 | `Animated UI Components/Professional-AI-Agent-Template.md/public/src/shared/markdown.js` | 2389 |
 | `Animated UI Components/Professional-AI-Agent-Template.md/public/src/shared/markdown-css.js` | 1280 |
 | `public/src/shared/markdown-css.js` | 1280 |
-| `public/admin.html` | 968 |
+| `public/admin.html` | 986 |
 
 ### Code Files
 
 | Extension | Files | Lines of Code | Size |
 |-----------|-------|---------------|------------|
-| .js | 110 | 36708 | 1.77 MB |
-| .sql | 22 | 1565 | 69.04 KB |
-| .md | 12 | 2890 | 130.8 KB |
-| .css | 11 | 14473 | 364.45 KB |
-| .html | 10 | 2393 | 104.78 KB |
+| .js | 110 | 36846 | 1.78 MB |
+| .sql | 23 | 2197 | 93.4 KB |
+| .md | 12 | 2940 | 136.54 KB |
+| .css | 11 | 14488 | 365.83 KB |
+| .html | 10 | 2999 | 132.75 KB |
 | .json | 4 | 77 | 16.26 KB |
-| .mjs | 4 | 577 | 27.8 KB |
+| .mjs | 4 | 594 | 28.96 KB |
 | .txt | 2 | 33 | 1.8 KB |
 | .webmanifest | 1 | 84 | 1.91 KB |
-| .xml | 1 | 36 | 1.02 KB |
+| .xml | 1 | 36 | 1.01 KB |
 | .toml | 1 | 415 | 15.62 KB |
-| **Total** | **178** | **59251** | **2.49 MB** |
+| **Total** | **179** | **60709** | **2.55 MB** |
 
 ### Binary / Media Files (Physical Size)
 
@@ -347,5 +348,5 @@ Belal Amr Mohamed/
 | .pdf | 1 | 100.13 KB |
 | **Total** | **43** | **2.05 MB** |
 
-**Grand Total Files:** 221  
-**Total Repository Size:** 4.53 MB
+**Grand Total Files:** 222  
+**Total Repository Size:** 4.6 MB

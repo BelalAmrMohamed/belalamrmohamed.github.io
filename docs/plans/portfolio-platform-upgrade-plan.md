@@ -1,6 +1,7 @@
 # Portfolio Platform Upgrade — Technical Implementation Plan
 
-**Status:** Planning document; no application or database changes have been made.  
+**Status (2026-11-20):** Implementation is well advanced. See `portfolio-platform-upgrade-progress.md` for the round-by-round log and the open items. Summary: migrations are applied; Websites, Apps & Tools, Graphic Designs, UI Components and Videos pages exist; the admin has per-type sections (Websites, Apps & Tools, Graphic Designs, UI Components, Edited Videos) plus YouTube; YouTube sync works; video uploads work; UI components are addable from the admin with sandboxed previews; the home Works section shows Featured items of every type plus featured YouTube videos; the header uses a "Work" dropdown. Remaining: admin editor/panels visual redesign, seeding real components, retiring compatibility paths (§8 step 9).  
+**Original status:** Planning document.  
 **Audience:** Developer implementing the portfolio upgrade.  
 **Scope:** Product structure, existing-system constraints, data model, admin workflows, public pages, YouTube synchronization, video uploads, security, rollout, and acceptance gates.
 
